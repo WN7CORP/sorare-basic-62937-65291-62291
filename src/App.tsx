@@ -139,6 +139,14 @@ import JogosJuridicos from "./pages/JogosJuridicos";
 import JogoConfig from "./pages/JogoConfig";
 import JogoRouter from "./pages/jogos/JogoRouter";
 import OAB from "./pages/OAB";
+import MeuBrasil from "./pages/MeuBrasil";
+import MeuBrasilHistoria from "./pages/MeuBrasilHistoria";
+import MeuBrasilSistemas from "./pages/MeuBrasilSistemas";
+import MeuBrasilJuristas from "./pages/MeuBrasilJuristas";
+import MeuBrasilInstituicoes from "./pages/MeuBrasilInstituicoes";
+import MeuBrasilCasos from "./pages/MeuBrasilCasos";
+import MeuBrasilArtigo from "./pages/MeuBrasilArtigo";
+import MeuBrasilBusca from "./pages/MeuBrasilBusca";
 
 const queryClient = new QueryClient();
 
@@ -280,6 +288,14 @@ const App = () => {
               <Route path="/novidades" element={<Novidades />} />
               <Route path="/suporte" element={<Suporte />} />
               <Route path="/assistente-pessoal" element={<AssistentePessoal />} />
+              <Route path="/meu-brasil" element={<MeuBrasil />} />
+              <Route path="/meu-brasil/historia" element={<MeuBrasilHistoria />} />
+              <Route path="/meu-brasil/sistemas" element={<MeuBrasilSistemas />} />
+              <Route path="/meu-brasil/juristas" element={<MeuBrasilJuristas />} />
+              <Route path="/meu-brasil/instituicoes" element={<MeuBrasilInstituicoes />} />
+              <Route path="/meu-brasil/casos" element={<MeuBrasilCasos />} />
+              <Route path="/meu-brasil/busca" element={<MeuBrasilBusca />} />
+              <Route path="/meu-brasil/artigo/:titulo" element={<MeuBrasilArtigo />} />
               <Route path="/simulacao-juridica" element={<SimulacaoJuridica />} />
               <Route path="/simulacao-juridica/modo" element={<SimulacaoEscolhaModo />} />
               <Route path="/simulacao-juridica/areas" element={<SimulacaoAreas />} />

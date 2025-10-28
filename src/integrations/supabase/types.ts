@@ -3451,6 +3451,84 @@ export type Database = {
         }
         Relationships: []
       }
+      wikipedia_cache: {
+        Row: {
+          conteudo: Json
+          created_at: string
+          id: number
+          imagens: Json | null
+          links_relacionados: Json | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          conteudo: Json
+          created_at?: string
+          id?: number
+          imagens?: Json | null
+          links_relacionados?: Json | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          conteudo?: Json
+          created_at?: string
+          id?: number
+          imagens?: Json | null
+          links_relacionados?: Json | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      wikipedia_favoritos: {
+        Row: {
+          categoria: string
+          created_at: string
+          id: number
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          id?: number
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          id?: number
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wikipedia_historico: {
+        Row: {
+          categoria: string
+          created_at: string
+          id: number
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          id?: number
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          id?: number
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

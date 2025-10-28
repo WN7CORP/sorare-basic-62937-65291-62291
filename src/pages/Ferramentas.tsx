@@ -1,10 +1,18 @@
 import { useNavigate } from "react-router-dom";
-import { Gavel, Film, Scale, ScanText, Newspaper, GraduationCap, MessageCircle } from "lucide-react";
+import { Gavel, Film, Scale, ScanText, Newspaper, GraduationCap, MessageCircle, MapPin } from "lucide-react";
 
 const Ferramentas = () => {
   const navigate = useNavigate();
 
   const ferramentas = [
+    {
+      id: "meu-brasil",
+      titulo: "Meu Brasil",
+      descricao: "História, juristas, casos famosos e instituições brasileiras",
+      icon: MapPin,
+      path: "/meu-brasil",
+      iconColor: "bg-green-500",
+    },
     {
       id: "assistente-pessoal",
       titulo: "Assistente Pessoal",
