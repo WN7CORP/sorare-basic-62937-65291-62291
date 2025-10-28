@@ -2547,6 +2547,213 @@ export type Database = {
         }
         Relationships: []
       }
+      meu_brasil_casos: {
+        Row: {
+          ano: number | null
+          conteudo_melhorado: Json | null
+          conteudo_original: Json | null
+          created_at: string | null
+          id: number
+          imagens: Json | null
+          nome: string
+          pessoas_envolvidas: Json | null
+          timeline: Json | null
+          tipo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ano?: number | null
+          conteudo_melhorado?: Json | null
+          conteudo_original?: Json | null
+          created_at?: string | null
+          id?: number
+          imagens?: Json | null
+          nome: string
+          pessoas_envolvidas?: Json | null
+          timeline?: Json | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ano?: number | null
+          conteudo_melhorado?: Json | null
+          conteudo_original?: Json | null
+          created_at?: string | null
+          id?: number
+          imagens?: Json | null
+          nome?: string
+          pessoas_envolvidas?: Json | null
+          timeline?: Json | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      meu_brasil_historia: {
+        Row: {
+          ano_fim: number | null
+          ano_inicio: number | null
+          conteudo_melhorado: Json | null
+          conteudo_original: Json | null
+          created_at: string | null
+          id: number
+          imagens: Json | null
+          marcos_importantes: Json | null
+          periodo: string
+          titulo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ano_fim?: number | null
+          ano_inicio?: number | null
+          conteudo_melhorado?: Json | null
+          conteudo_original?: Json | null
+          created_at?: string | null
+          id?: number
+          imagens?: Json | null
+          marcos_importantes?: Json | null
+          periodo: string
+          titulo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ano_fim?: number | null
+          ano_inicio?: number | null
+          conteudo_melhorado?: Json | null
+          conteudo_original?: Json | null
+          created_at?: string | null
+          id?: number
+          imagens?: Json | null
+          marcos_importantes?: Json | null
+          periodo?: string
+          titulo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      meu_brasil_instituicoes: {
+        Row: {
+          conteudo_melhorado: Json | null
+          conteudo_original: Json | null
+          created_at: string | null
+          id: number
+          imagens: Json | null
+          logo_url: string | null
+          nome: string
+          sigla: string | null
+          tipo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          conteudo_melhorado?: Json | null
+          conteudo_original?: Json | null
+          created_at?: string | null
+          id?: number
+          imagens?: Json | null
+          logo_url?: string | null
+          nome: string
+          sigla?: string | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          conteudo_melhorado?: Json | null
+          conteudo_original?: Json | null
+          created_at?: string | null
+          id?: number
+          imagens?: Json | null
+          logo_url?: string | null
+          nome?: string
+          sigla?: string | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      meu_brasil_juristas: {
+        Row: {
+          area: string | null
+          categoria: string
+          conteudo_melhorado: Json | null
+          conteudo_original: Json | null
+          created_at: string | null
+          foto_url: string | null
+          id: number
+          imagens: Json | null
+          links_relacionados: Json | null
+          nome: string
+          periodo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          area?: string | null
+          categoria: string
+          conteudo_melhorado?: Json | null
+          conteudo_original?: Json | null
+          created_at?: string | null
+          foto_url?: string | null
+          id?: number
+          imagens?: Json | null
+          links_relacionados?: Json | null
+          nome: string
+          periodo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          area?: string | null
+          categoria?: string
+          conteudo_melhorado?: Json | null
+          conteudo_original?: Json | null
+          created_at?: string | null
+          foto_url?: string | null
+          id?: number
+          imagens?: Json | null
+          links_relacionados?: Json | null
+          nome?: string
+          periodo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      meu_brasil_sistemas: {
+        Row: {
+          bandeira_url: string | null
+          comparacao_brasil: Json | null
+          conteudo_melhorado: Json | null
+          conteudo_original: Json | null
+          created_at: string | null
+          id: number
+          imagens: Json | null
+          pais: string
+          tipo_sistema: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bandeira_url?: string | null
+          comparacao_brasil?: Json | null
+          conteudo_melhorado?: Json | null
+          conteudo_original?: Json | null
+          created_at?: string | null
+          id?: number
+          imagens?: Json | null
+          pais: string
+          tipo_sistema?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bandeira_url?: string | null
+          comparacao_brasil?: Json | null
+          conteudo_melhorado?: Json | null
+          conteudo_original?: Json | null
+          created_at?: string | null
+          id?: number
+          imagens?: Json | null
+          pais?: string
+          tipo_sistema?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       noticias_juridicas_cache: {
         Row: {
           analise_gerada_em: string | null

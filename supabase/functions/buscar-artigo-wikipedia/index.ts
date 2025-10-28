@@ -56,7 +56,129 @@ Deno.serve(async (req) => {
         throw new Error('Título é obrigatório para buscar artigo');
       }
 
-      // Verificar cache (válido por 7 dias)
+      // Verificar cache nas tabelas específicas primeiro
+      let cachedData = null;
+      
+      if (categoria === 'jurista') {
+        const { data } = await supabase
+          .from('meu_brasil_juristas')
+          .select('*')
+          .eq('nome', titulo)
+          .single();
+        
+        if (data && data.conteudo_melhorado) {
+          cachedData = {
+            titulo: data.nome,
+            conteudo: data.conteudo_melhorado.resumo_executivo || '',
+            html: '',
+            imagens: data.imagens || [],
+            links_relacionados: data.links_relacionados || [],
+            foto_url: data.foto_url,
+            conteudo_completo: data.conteudo_melhorado
+          };
+        }
+      } else if (categoria === 'instituicao') {
+        const { data } = await supabase
+          .from('meu_brasil_instituicoes')
+          .select('*')
+          .eq('nome', titulo)
+          .single();
+        
+        if (data && data.conteudo_melhorado) {
+          cachedData = {
+            titulo: data.nome,
+            conteudo: data.conteudo_melhorado.resumo_executivo || '',
+            html: '',
+            imagens: data.imagens || [],
+            links_relacionados: [],
+            logo_url: data.logo_url,
+            conteudo_completo: data.conteudo_melhorado
+          };
+        }
+      } else if (categoria === 'caso') {
+        const { data } = await supabase
+          .from('meu_brasil_casos')
+          .select('*')
+          .eq('nome', titulo)
+          .single();
+        
+        if (data && data.conteudo_melhorado) {
+          cachedData = {
+            titulo: data.nome,
+            conteudo: data.conteudo_melhorado.resumo_executivo || '',
+            html: '',
+            imagens: data.imagens || [],
+            links_relacionados: [],
+            conteudo_completo: data.conteudo_melhorado
+          };
+        }
+      } else if (categoria === 'sistema') {
+        const { data } = await supabase
+          .from('meu_brasil_sistemas')
+          .select('*')
+          .eq('pais', titulo)
+          .single();
+        
+        if (data && data.conteudo_melhorado) {
+          cachedData = {
+            titulo: data.pais,
+            conteudo: data.conteudo_melhorado.resumo_executivo || '',
+            html: '',
+            imagens: data.imagens || [],
+            links_relacionados: [],
+            bandeira_url: data.bandeira_url,
+            conteudo_completo: data.conteudo_melhorado
+          };
+        }
+      } else if (categoria === 'historia') {
+        const { data } = await supabase
+          .from('meu_brasil_historia')
+          .select('*')
+          .eq('periodo', titulo)
+          .single();
+        
+        if (data && data.conteudo_melhorado) {
+          cachedData = {
+            titulo: data.periodo,
+            conteudo: data.conteudo_melhorado.resumo_executivo || '',
+            html: '',
+            imagens: data.imagens || [],
+            links_relacionados: [],
+            conteudo_completo: data.conteudo_melhorado
+          };
+        }
+      }
+
+      // Se encontrou no cache específico, retornar
+      if (cachedData) {
+        console.log('Retornando do cache específico:', titulo);
+        
+        // Registrar histórico
+        const authHeader = req.headers.get('Authorization');
+        if (authHeader && categoria) {
+          try {
+            const token = authHeader.replace('Bearer ', '');
+            const { data: { user } } = await supabase.auth.getUser(token);
+            
+            if (user) {
+              await supabase.from('wikipedia_historico').insert({
+                user_id: user.id,
+                titulo,
+                categoria
+              });
+            }
+          } catch (e) {
+            console.log('Erro ao registrar histórico (usuário não autenticado)');
+          }
+        }
+
+        return new Response(
+          JSON.stringify(cachedData),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Verificar cache genérico (válido por 7 dias)
       const { data: cached } = await supabase
         .from('wikipedia_cache')
         .select('*')
@@ -65,20 +187,24 @@ Deno.serve(async (req) => {
         .single();
 
       if (cached) {
-        console.log('Retornando artigo do cache:', titulo);
+        console.log('Retornando artigo do cache genérico:', titulo);
         
-        // Registrar histórico (se tiver user_id no header)
+        // Registrar histórico
         const authHeader = req.headers.get('Authorization');
         if (authHeader && categoria) {
-          const token = authHeader.replace('Bearer ', '');
-          const { data: { user } } = await supabase.auth.getUser(token);
-          
-          if (user) {
-            await supabase.from('wikipedia_historico').insert({
-              user_id: user.id,
-              titulo,
-              categoria
-            });
+          try {
+            const token = authHeader.replace('Bearer ', '');
+            const { data: { user } } = await supabase.auth.getUser(token);
+            
+            if (user) {
+              await supabase.from('wikipedia_historico').insert({
+                user_id: user.id,
+                titulo,
+                categoria
+              });
+            }
+          } catch (e) {
+            console.log('Erro ao registrar histórico');
           }
         }
 
@@ -122,10 +248,40 @@ Deno.serve(async (req) => {
       const htmlResponse = await fetch(htmlUrl);
       const htmlData = await htmlResponse.json();
 
-      // Extrair imagens
+      // Extrair imagens (foto principal e outras)
       const imagens: string[] = [];
       if (page.original?.source) {
         imagens.push(page.original.source);
+      }
+      
+      // Buscar mais imagens do artigo
+      const imagesUrl = `https://pt.wikipedia.org/w/api.php?` +
+        `action=query&titles=${encodeURIComponent(titulo)}` +
+        `&prop=images&format=json&utf8=1&imlimit=10`;
+      
+      const imagesResponse = await fetch(imagesUrl);
+      const imagesData = await imagesResponse.json();
+      const pageImages = Object.values(imagesData.query?.pages || {})[0] as any;
+      
+      if (pageImages?.images) {
+        for (const img of pageImages.images) {
+          // Buscar URL da imagem
+          const imgUrl = `https://pt.wikipedia.org/w/api.php?` +
+            `action=query&titles=${encodeURIComponent(img.title)}` +
+            `&prop=imageinfo&iiprop=url&format=json`;
+          
+          try {
+            const imgResponse = await fetch(imgUrl);
+            const imgData = await imgResponse.json();
+            const imgPage = Object.values(imgData.query?.pages || {})[0] as any;
+            
+            if (imgPage?.imageinfo?.[0]?.url) {
+              imagens.push(imgPage.imageinfo[0].url);
+            }
+          } catch (e) {
+            console.log('Erro ao buscar imagem:', e);
+          }
+        }
       }
 
       // Extrair links relacionados

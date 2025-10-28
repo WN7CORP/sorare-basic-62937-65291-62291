@@ -147,6 +147,7 @@ import MeuBrasilInstituicoes from "./pages/MeuBrasilInstituicoes";
 import MeuBrasilCasos from "./pages/MeuBrasilCasos";
 import MeuBrasilArtigo from "./pages/MeuBrasilArtigo";
 import MeuBrasilBusca from "./pages/MeuBrasilBusca";
+import PopularMeuBrasil from "./pages/PopularMeuBrasil";
 
 const queryClient = new QueryClient();
 
@@ -296,6 +297,7 @@ const App = () => {
               <Route path="/meu-brasil/casos" element={<MeuBrasilCasos />} />
               <Route path="/meu-brasil/busca" element={<MeuBrasilBusca />} />
               <Route path="/meu-brasil/artigo/:titulo" element={<MeuBrasilArtigo />} />
+              <Route path="/popular-meu-brasil" element={<PopularMeuBrasil />} />
               <Route path="/simulacao-juridica" element={<SimulacaoJuridica />} />
               <Route path="/simulacao-juridica/modo" element={<SimulacaoEscolhaModo />} />
               <Route path="/simulacao-juridica/areas" element={<SimulacaoAreas />} />

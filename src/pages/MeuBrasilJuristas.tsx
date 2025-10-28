@@ -112,8 +112,22 @@ const MeuBrasilJuristas = () => {
                   onClick={() => navigate(`/meu-brasil/artigo/${encodeURIComponent(jurista.nome)}`)}
                   className="w-full bg-card border border-border rounded-lg p-4 text-left hover:border-accent transition-colors"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                  <div className="flex items-start gap-4">
+                    <div className="w-16 h-16 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                      <img 
+                        src={`https://pt.wikipedia.org/wiki/Special:FilePath/${encodeURIComponent(jurista.nome)}.jpg`}
+                        alt={jurista.nome}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            parent.innerHTML = `<div class="w-full h-full flex items-center justify-center"><svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>`;
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-base mb-1">{jurista.nome}</h3>
                       <p className="text-sm text-muted-foreground mb-1">
                         {jurista.area}
@@ -121,9 +135,6 @@ const MeuBrasilJuristas = () => {
                       <span className="text-xs text-accent">
                         {jurista.periodo}
                       </span>
-                    </div>
-                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                      <Users className="w-6 h-6 text-muted-foreground" />
                     </div>
                   </div>
                 </button>

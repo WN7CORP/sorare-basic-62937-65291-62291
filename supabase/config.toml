@@ -1,1 +1,10 @@
 project_id = "izspjvegxdfgkgibpyst"
+
+[functions.buscar-artigo-wikipedia]
+verify_jwt = false
+
+[functions.enriquecer-conteudo-meu-brasil]
+verify_jwt = false
+
+[functions.popular-meu-brasil]
+verify_jwt = false
