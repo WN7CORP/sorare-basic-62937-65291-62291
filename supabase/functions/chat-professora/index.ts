@@ -82,13 +82,14 @@ Sua resposta DEVE:
     if (mode === 'lesson') {
       systemPrompt = deepMode 
         ? `Professora de direito: análise PROFUNDA com exemplos jurisprudenciais, doutrina e casos práticos.
-Responda em blocos curtos nesta ordem: Lei → Explicação → Carrossel (2-3 cards) → Infográfico (steps). Envie cada bloco assim que estiver pronto.
-Use [COMPARAÇÃO:{cards}] para diferenças, [INFOGRÁFICO:{steps}] para processos.
-[SUGESTÕES] ao final.${cfContext || ''}`
-        : `Professora de direito: cite lei/artigo primeiro, linguagem simples.
-Responda em blocos curtos nesta ordem: Lei → Explicação → Carrossel (2-3 cards) → Infográfico (steps). Envie cada bloco assim que estiver pronto.
-Use [COMPARAÇÃO:{cards}] para diferenças, [INFOGRÁFICO:{steps}] para processos.
-Max 300 palavras. [SUGESTÕES] ao final.${cfContext || ''}`;
+**ORDEM RIGOROSA:** Lei → Explicação → [COMPARAÇÃO] → [INFOGRÁFICO] → [SUGESTÕES]
+- Envie cada bloco ASSIM QUE estiver pronto (não espere completar tudo)
+- [SUGESTÕES] com 3-4 perguntas curtas (5-8 palavras, terminando com "?")${cfContext || ''}`
+        : `Professora de direito: cite lei/artigo PRIMEIRO, linguagem simples.
+**ORDEM RIGOROSA:** Lei → Explicação → [COMPARAÇÃO] → [INFOGRÁFICO] → [SUGESTÕES]
+- Envie cada bloco ASSIM QUE estiver pronto (não espere completar tudo)
+- [SUGESTÕES] com 3-4 perguntas curtas (5-8 palavras, terminando com "?")
+Max 300 palavras.${cfContext || ''}`;
     } else if (mode === 'recommendation') {
       const { data: livrosEstudos } = await supabase.from('BIBLIOTECA-ESTUDOS').select('*').limit(100);
       const { data: livrosOAB } = await supabase.from('BIBILIOTECA-OAB').select('*').limit(100);
@@ -106,11 +107,15 @@ Use funções para retornar materiais diretamente. Sem texto explicativo.${cfCon
     } else {
       systemPrompt = deepMode
         ? `Assistente jurídica: análise DETALHADA com fundamentação completa, jurisprudência e exemplos práticos.
-Use [COMPARAÇÃO:{cards}], [INFOGRÁFICO:{steps}], [ESTATÍSTICAS:{stats}].
-[SUGESTÕES] ao final.${cfContext || ''}
+**ORDEM:** Explicação → [COMPARAÇÃO] → [INFOGRÁFICO] → [SUGESTÕES]
+- Envie cada bloco ASSIM QUE estiver pronto
+- [SUGESTÕES] com 3-4 perguntas curtas terminando com "?"${cfContext || ''}
 ${fileAnalysisPrefix}`
-        : `Assistente jurídica: cite lei/artigo PRIMEIRO. Use [COMPARAÇÃO:{cards}] para diferenças, [INFOGRÁFICO:{steps}] para processos.
-Max 250 palavras. [SUGESTÕES] ao final.${cfContext || ''}
+        : `Assistente jurídica: cite lei/artigo PRIMEIRO.
+**ORDEM:** Explicação → [COMPARAÇÃO] → [INFOGRÁFICO] → [SUGESTÕES]
+- Envie cada bloco ASSIM QUE estiver pronto
+- [SUGESTÕES] com 3-4 perguntas curtas terminando com "?"
+Max 250 palavras.${cfContext || ''}
 ${fileAnalysisPrefix}`;
     }
 
@@ -171,8 +176,8 @@ ${fileAnalysisPrefix}`;
       generationConfig: {
         temperature: deepMode ? 0.7 : 0.6,
         maxOutputTokens: deepMode 
-          ? (mode === 'lesson' ? 8000 : 5000)
-          : (mode === 'lesson' ? 3000 : 2000),
+          ? (mode === 'lesson' ? 6000 : 4500)
+          : (mode === 'lesson' ? 2200 : 1600),
         topP: 0.95,
         topK: 40,
         stopSequences: [],
@@ -320,7 +325,13 @@ ${fileAnalysisPrefix}`;
           console.error('❌ [CHAT-PROFESSORA] Erro no transform:', transformError);
         }
       },
-      flush() {
+      flush(controller) {
+        // Garantir envio de [DONE] se ainda não foi enviado
+        if (firstTokenReceived && chunksSent > 0) {
+          console.log(`✨ [CHAT-PROFESSORA] Flush: enviando [DONE] final`);
+          controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+        }
+        
         if (!firstTokenReceived) {
           console.error('⚠️ [CHAT-PROFESSORA] Streaming finalizado sem receber nenhum token!');
           console.error('⚠️ [CHAT-PROFESSORA] Possível problema: API não retornou dados ou CORS bloqueou');

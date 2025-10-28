@@ -299,16 +299,32 @@ const ChatProfessora = () => {
     };
     setMessages([...updatedMessages, assistantMessage]);
     
-    // Timeout de 30 segundos para detectar problemas
+    // Watchdog de inatividade adaptativo
     const requestStartTime = Date.now();
-    const timeoutId = setTimeout(() => {
-      if (abortControllerRef.current) {
-        const elapsedTime = Date.now() - requestStartTime;
-        console.error(`⏱️ Timeout: Professora não respondeu em 30 segundos (${elapsedTime}ms)`);
-        abortControllerRef.current.abort();
-        sonnerToast.error('A Professora está demorando demais para responder. Tente novamente com uma pergunta mais simples.');
+    const firstTokenTimeoutMs = 12000; // 12s para primeiro token
+    const inactivityTimeoutMs = 10000; // 10s entre chunks
+    let lastChunkTime = Date.now();
+    let firstTokenReceived = false;
+    
+    const watchdogInterval = setInterval(() => {
+      const now = Date.now();
+      const elapsed = now - requestStartTime;
+      const timeSinceLastChunk = now - lastChunkTime;
+      
+      if (!firstTokenReceived && elapsed > firstTokenTimeoutMs) {
+        console.error(`⏱️ Watchdog: Nenhum token recebido em ${elapsed}ms (limite: ${firstTokenTimeoutMs}ms)`);
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+          clearInterval(watchdogInterval);
+        }
+      } else if (firstTokenReceived && timeSinceLastChunk > inactivityTimeoutMs) {
+        console.error(`⏱️ Watchdog: Sem chunks há ${timeSinceLastChunk}ms (limite: ${inactivityTimeoutMs}ms)`);
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+          clearInterval(watchdogInterval);
+        }
       }
-    }, 30000);
+    }, 1000); // Verificar a cada segundo
     
     try {
       abortControllerRef.current = new AbortController();
@@ -353,8 +369,6 @@ const ChatProfessora = () => {
       let accumulatedText = '';
       let buffer = '';
       let chunksReceived = 0;
-      let firstTokenReceived = false;
-      let lastUpdateTime = Date.now();
       
       if (reader) {
         console.log('📖 Frontend: Iniciando leitura do stream');
@@ -391,12 +405,13 @@ const ChatProfessora = () => {
               const parsed = JSON.parse(payloadStr);
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
-                // Log do primeiro token
+                // Log do primeiro token e resetar watchdog
                 if (!firstTokenReceived) {
                   const latency = Date.now() - requestStartTime;
                   console.log(`🎉 Frontend: Primeiro token recebido após ${latency}ms`);
                   firstTokenReceived = true;
                 }
+                lastChunkTime = Date.now(); // Resetar watchdog
                 
                 accumulatedText += content;
                 
@@ -430,6 +445,9 @@ const ChatProfessora = () => {
           }
         }
         
+        // Parar watchdog
+        clearInterval(watchdogInterval);
+        
         // Verificar se recebeu algum conteúdo
         if (!accumulatedText) {
           console.error('❌ Frontend: Stream terminou mas nenhum conteúdo foi recebido!');
@@ -456,23 +474,45 @@ const ChatProfessora = () => {
         return newMessages;
       });
       setUploadedFiles([]);
+      clearInterval(watchdogInterval);
     } catch (error: any) {
       const totalTime = Date.now() - requestStartTime;
       console.error(`❌ Frontend: Erro no streaming após ${totalTime}ms:`, error);
       console.error('❌ Frontend: Stack:', error?.stack);
+      clearInterval(watchdogInterval);
       
-      if (error.name !== 'AbortError') {
-        const errorMessage = error.message || 'Erro ao processar sua pergunta. Verifique os logs para mais detalhes.';
+      // Preservar resposta parcial se houver conteúdo
+      if (error.name === 'AbortError') {
+        console.log(`⚠️ Frontend: Request cancelado após ${totalTime}ms`);
+        
+        // Buscar último conteúdo acumulado da última mensagem
+        setMessages(prev => {
+          const lastMsg = prev[prev.length - 1];
+          if (lastMsg?.role === 'assistant' && lastMsg.content && lastMsg.content.length > 10) {
+            // Há conteúdo parcial: manter e marcar como finalizado
+            const newMessages = [...prev];
+            newMessages[newMessages.length - 1] = {
+              ...lastMsg,
+              isStreaming: false
+            };
+            
+            sonnerToast.warning('Resposta parcial. Use "Aprofundar" para completar.');
+            return newMessages;
+          } else {
+            // Sem conteúdo: remover mensagem vazia
+            sonnerToast.error('A Professora está demorando demais. Tente com pergunta mais simples.');
+            return prev.slice(0, -1);
+          }
+        });
+      } else {
+        // Erro não-AbortError: remover mensagem e mostrar toast
+        const errorMessage = error.message || 'Erro ao processar sua pergunta.';
         sonnerToast.error(errorMessage, {
           description: 'Tente novamente em alguns instantes.'
         });
         setMessages(prev => prev.slice(0, -1));
-      } else {
-        console.log(`⚠️ Frontend: Request cancelado pelo usuário após ${totalTime}ms`);
-        setMessages(prev => prev.slice(0, -1));
       }
     } finally {
-      clearTimeout(timeoutId);
       if (streamMode === 'chat') {
         setIsLoading(false);
       } else {
@@ -1140,6 +1180,38 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                       return fixed;
                     };
 
+                    // Extrair sugestões durante streaming
+                    const extractSuggestions = (content: string): string[] => {
+                      const match = content.match(/\[SUGESTÕES\]([\s\S]*?)(?:\[\/SUGESTÕES\]|$)/);
+                      if (!match) return [];
+                      const raw = match[1];
+                      const lines = raw.split('\n')
+                        .map(l => l.trim())
+                        .filter(l => l && l.includes('?'));
+                      return lines.length >= 2 ? lines : [];
+                    };
+                    
+                    const suggestions = extractSuggestions(message.content);
+                    
+                    // Fallback: se não houver sugestões após finalizado, gerar localmente
+                    const generateFallbackSuggestions = (content: string): string[] => {
+                      const headings = (content.match(/^#{1,3}\s+(.+)$/gm) || [])
+                        .map(h => h.replace(/^#{1,3}\s+/, '').trim())
+                        .slice(0, 2);
+                      
+                      const fallbacks = [
+                        headings[0] ? `Mostrar exemplo prático de ${headings[0]}?` : "Ver jurisprudência sobre o tema?",
+                        headings[1] ? `Comparar ${headings[0]} vs ${headings[1]}?` : "Explicar com infográfico?",
+                        "Gerar questões de fixação?",
+                        "Ver resumo em tópicos?"
+                      ];
+                      return fallbacks.slice(0, 4);
+                    };
+                    
+                    const finalSuggestions = !message.isStreaming && suggestions.length === 0 
+                      ? generateFallbackSuggestions(message.content) 
+                      : suggestions;
+
                     const baseContent = message.content.replace(/\[SUGESTÕES\][\s\S]*?\[\/SUGESTÕES\]/g, '');
                     const safeContent = message.isStreaming ? stripIncompleteBlocks(baseContent) : autoCloseBlocks(baseContent);
 
@@ -1256,44 +1328,45 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                       </div>
                       )}
                       
-                      {!message.isStreaming && index === messages.length - 1 && (() => {
-                        // Extrair sugestões se existirem
-                        const suggestionsMatch = message.content.match(/\[SUGESTÕES\]([\s\S]*?)\[\/SUGESTÕES\]/);
-                        const suggestions = suggestionsMatch 
-                          ? suggestionsMatch[1]
-                              .split('\n')
-                              .map(s => s.trim())
-                              .filter(s => s && !s.includes('[') && !s.includes(']'))
-                          : [];
-
-                        return (
-                          <>
-                            {/* Sugestões como balões clicáveis */}
-                            {suggestions.length > 0 && (
-                              <div className="mt-4 space-y-2">
-                                <p className="text-xs font-semibold text-muted-foreground">💡 Sugestões de perguntas:</p>
-                                <div className="flex flex-wrap gap-2">
-                                  {suggestions.map((suggestion, idx) => (
-                                    <Card
-                                      key={idx}
-                                      className="cursor-pointer hover:bg-accent/20 transition-colors border-accent/30 px-3 py-2"
-                                      onClick={() => {
-                                        setInput(suggestion);
-                                        setTimeout(() => sendMessage(), 100);
-                                      }}
-                                    >
-                                      <p className="text-[14px]">{suggestion}</p>
-                                    </Card>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Métricas - só mostrar quando terminar o streaming */}
-                            {!message.isStreaming && message.metrics && (
-                              <div className="mt-4 pt-4 border-t border-border/50">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                  <div className="bg-primary/5 rounded-lg p-3 border border-primary/10">
+                      {finalSuggestions.length > 0 && (
+                        <div className="mt-4 pt-3 border-t border-border/50">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Lightbulb className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-medium text-muted-foreground">Sugestões:</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {finalSuggestions.map((sug, idx) => (
+                              <Button
+                                key={idx}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setInput(sug);
+                                  setTimeout(() => sendMessage(), 100);
+                                }}
+                                className="text-xs h-auto py-1.5 px-3"
+                              >
+                                {sug}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {!message.isStreaming && (
+                        <MessageActionsChat
+                          content={message.content.replace(/\[SUGESTÕES\][\s\S]*?\[\/SUGESTÕES\]/g, '')}
+                          onCreateLesson={() => handleCreateLesson(message.content)}
+                          onSummarize={() => handleSummarize(message.content)}
+                          onGenerateFlashcards={() => handleGenerateFlashcards(message.content)}
+                          onGenerateQuestions={() => handleGenerateQuestions(message.content)}
+                        />
+                      )}
+                      
+                      {!message.isStreaming && message.metrics && (
+                        <div className="mt-4 pt-4 border-t border-border/50">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="bg-primary/5 rounded-lg p-3 border border-primary/10">
                                     <div className="text-xs text-muted-foreground mb-1">Palavras</div>
                                     <div className="text-lg font-bold text-primary">{message.metrics.wordCount}</div>
                                   </div>
@@ -1320,25 +1393,11 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                                       <Badge key={idx} variant="secondary" className="text-xs">
                                         {topic}
                                       </Badge>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                            
-                            {/* Barra de ações - só mostrar quando terminar o streaming */}
-                            {!message.isStreaming && (
-                              <MessageActionsChat
-                                content={message.content.replace(/\[SUGESTÕES\][\s\S]*?\[\/SUGESTÕES\]/g, '')}
-                                onCreateLesson={() => handleCreateLesson(message.content)}
-                                onSummarize={() => handleSummarize(message.content)}
-                                onGenerateFlashcards={() => handleGenerateFlashcards(message.content)}
-                                onGenerateQuestions={() => handleGenerateQuestions(message.content)}
-                              />
-                            )}
-                          </>
-                        );
-                      })()}
+                                     ))}
+                                   </div>
+                                 )}
+                               </div>
+                             )}
                     </>
                   })() : <p className="text-[15px] leading-[1.4] whitespace-pre-wrap">{message.content}</p>}
                   
