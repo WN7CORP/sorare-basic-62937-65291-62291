@@ -133,22 +133,22 @@ const EleicoesEleitorado = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-secondary/50 rounded-lg">
-                  <p className="text-3xl font-bold text-accent">{dados.totalEleitores?.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground mt-1">Total de Eleitores</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center p-3 bg-secondary/50 rounded-lg">
+                  <p className="text-xl md:text-2xl lg:text-3xl font-bold text-accent">{dados.totalEleitores?.toLocaleString() || 0}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-1">Total de Eleitores</p>
                 </div>
-                <div className="text-center p-4 bg-secondary/50 rounded-lg">
-                  <p className="text-3xl font-bold text-accent">{dados.aptos?.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground mt-1">Aptos a Votar</p>
+                <div className="text-center p-3 bg-secondary/50 rounded-lg">
+                  <p className="text-xl md:text-2xl lg:text-3xl font-bold text-accent">{dados.aptos?.toLocaleString() || 0}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-1">Aptos a Votar</p>
                 </div>
-                <div className="text-center p-4 bg-secondary/50 rounded-lg">
-                  <p className="text-3xl font-bold text-accent">{dados.biometria}%</p>
-                  <p className="text-sm text-muted-foreground mt-1">Com Biometria</p>
+                <div className="text-center p-3 bg-secondary/50 rounded-lg">
+                  <p className="text-xl md:text-2xl lg:text-3xl font-bold text-accent">{dados.biometria || 0}%</p>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-1">Com Biometria</p>
                 </div>
-                <div className="text-center p-4 bg-secondary/50 rounded-lg">
-                  <p className="text-3xl font-bold text-accent">{dados.zonas}</p>
-                  <p className="text-sm text-muted-foreground mt-1">Zonas Eleitorais</p>
+                <div className="text-center p-3 bg-secondary/50 rounded-lg">
+                  <p className="text-xl md:text-2xl lg:text-3xl font-bold text-accent">{dados.zonas || 0}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-1">Zonas Eleitorais</p>
                 </div>
               </div>
             </CardContent>
@@ -160,15 +160,15 @@ const EleicoesEleitorado = () => {
                 <CardTitle>Distribuição por Gênero</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie
                       data={dados.porGenero}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={(entry) => `${entry.genero}: ${entry.percentual}%`}
-                      outerRadius={100}
+                      label={(entry) => `${entry.genero}: ${entry.percentual?.toFixed(1) || 0}%`}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="quantidade"
                     >
@@ -189,13 +189,13 @@ const EleicoesEleitorado = () => {
                 <CardTitle>Distribuição por Faixa Etária</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={dados.porFaixaEtaria}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="faixa" />
-                    <YAxis />
+                    <XAxis dataKey="faixa" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} />
                     <Tooltip />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: '12px' }} />
                     <Bar dataKey="quantidade" fill="#00D4A1" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -209,13 +209,13 @@ const EleicoesEleitorado = () => {
                 <CardTitle>Distribuição por Escolaridade</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={dados.porEscolaridade} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="nivel" type="category" width={150} />
+                    <XAxis type="number" tick={{ fontSize: 10 }} />
+                    <YAxis dataKey="nivel" type="category" width={120} tick={{ fontSize: 9 }} />
                     <Tooltip />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: '12px' }} />
                     <Bar dataKey="quantidade" fill="#8884d8" />
                   </BarChart>
                 </ResponsiveContainer>

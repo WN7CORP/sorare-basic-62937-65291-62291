@@ -167,23 +167,23 @@ const EleicoesResultados = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-accent">{resultados.totalVotos?.toLocaleString('pt-BR')}</p>
-                  <p className="text-sm text-muted-foreground">Total de Votos</p>
+                  <p className="text-xl md:text-2xl font-bold text-accent">{resultados.totalVotos?.toLocaleString('pt-BR') || 0}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Total de Votos</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-accent">{resultados.comparecimento}%</p>
-                  <p className="text-sm text-muted-foreground">Comparecimento</p>
+                  <p className="text-xl md:text-2xl font-bold text-accent">{resultados.comparecimento || 0}%</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Comparecimento</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-accent">{resultados.abstencao}%</p>
-                  <p className="text-sm text-muted-foreground">Abstenção</p>
+                  <p className="text-xl md:text-2xl font-bold text-accent">{resultados.abstencao || 0}%</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Abstenção</p>
                 </div>
                 {resultados.candidatos && (
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-accent">{resultados.candidatos}</p>
-                    <p className="text-sm text-muted-foreground">Candidatos</p>
+                    <p className="text-xl md:text-2xl font-bold text-accent">{resultados.candidatos}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Candidatos</p>
                   </div>
                 )}
               </div>
@@ -212,13 +212,19 @@ const EleicoesResultados = () => {
                   <CardTitle>Votação por Candidato</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={resultados.votacao}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="nome" angle={-45} textAnchor="end" height={100} />
-                      <YAxis />
+                      <XAxis 
+                        dataKey="nome" 
+                        angle={-45} 
+                        textAnchor="end" 
+                        height={80} 
+                        tick={{ fontSize: 10 }}
+                      />
+                      <YAxis tick={{ fontSize: 10 }} />
                       <Tooltip />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: '12px' }} />
                       <Bar dataKey="votos" fill="#00D4A1" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -230,15 +236,15 @@ const EleicoesResultados = () => {
                   <CardTitle>Distribuição de Votos</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
                       <Pie
                         data={resultados.distribuicao}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={(entry) => `${entry.nome}: ${entry.percentual.toFixed(1)}%`}
-                        outerRadius={80}
+                        label={(entry) => `${entry.nome.split(' ')[0]}: ${entry.percentual.toFixed(1)}%`}
+                        outerRadius={70}
                         fill="#8884d8"
                         dataKey="votos"
                       >
