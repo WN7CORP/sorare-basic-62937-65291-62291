@@ -541,6 +541,36 @@ export type Database = {
         }
         Relationships: []
       }
+      cache_candidatos_tse: {
+        Row: {
+          ano: number
+          created_at: string | null
+          dados: Json
+          id: number
+          sq_candidato: number
+          uf: string
+          updated_at: string | null
+        }
+        Insert: {
+          ano: number
+          created_at?: string | null
+          dados: Json
+          id?: number
+          sq_candidato: number
+          uf: string
+          updated_at?: string | null
+        }
+        Update: {
+          ano?: number
+          created_at?: string | null
+          dados?: Json
+          id?: number
+          sq_candidato?: number
+          uf?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       cache_pesquisas: {
         Row: {
           created_at: string
@@ -1687,6 +1717,42 @@ export type Database = {
         }
         Relationships: []
       }
+      eleitorado_perfil: {
+        Row: {
+          ano_referencia: number | null
+          created_at: string | null
+          escolaridade: string | null
+          faixa_etaria: string | null
+          genero: string | null
+          id: number
+          municipio: string | null
+          quantidade: number
+          uf: string
+        }
+        Insert: {
+          ano_referencia?: number | null
+          created_at?: string | null
+          escolaridade?: string | null
+          faixa_etaria?: string | null
+          genero?: string | null
+          id?: number
+          municipio?: string | null
+          quantidade: number
+          uf: string
+        }
+        Update: {
+          ano_referencia?: number | null
+          created_at?: string | null
+          escolaridade?: string | null
+          faixa_etaria?: string | null
+          genero?: string | null
+          id?: number
+          municipio?: string | null
+          quantidade?: number
+          uf?: string
+        }
+        Relationships: []
+      }
       "ESTAGIO-BLOG": {
         Row: {
           artigo_melhorado: string | null
@@ -2667,6 +2733,54 @@ export type Database = {
           quantidade_doutores?: number | null
           tipo?: string | null
           universidade?: string
+        }
+        Relationships: []
+      }
+      resultados_eleicoes: {
+        Row: {
+          ano: number
+          cargo: string
+          created_at: string | null
+          id: number
+          nome_candidato: string
+          numero: string
+          partido: string
+          percentual_votos: number | null
+          situacao: string | null
+          sq_candidato: number
+          turno: number
+          uf: string
+          votos: number
+        }
+        Insert: {
+          ano: number
+          cargo: string
+          created_at?: string | null
+          id?: number
+          nome_candidato: string
+          numero: string
+          partido: string
+          percentual_votos?: number | null
+          situacao?: string | null
+          sq_candidato: number
+          turno?: number
+          uf: string
+          votos: number
+        }
+        Update: {
+          ano?: number
+          cargo?: string
+          created_at?: string | null
+          id?: number
+          nome_candidato?: string
+          numero?: string
+          partido?: string
+          percentual_votos?: number | null
+          situacao?: string | null
+          sq_candidato?: number
+          turno?: number
+          uf?: string
+          votos?: number
         }
         Relationships: []
       }
