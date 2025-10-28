@@ -23,6 +23,7 @@ export default {
 				sans: ['Inter', 'system-ui', 'sans-serif'],
 				'serif-content': ['Source Serif 4', 'Georgia', 'serif'],
 				'cinzel': ['Cinzel', 'serif'],
+				'condensed': ['Oswald', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',

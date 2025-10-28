@@ -30,12 +30,12 @@ export const LivroCarouselCard = ({ titulo, capaUrl, onClick }: LivroCarouselCar
           </div>
         )}
         
-        {/* Gradient overlay - black from bottom to transparent */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+        {/* Gradient overlay - dark from bottom fading to transparent top */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
         
         {/* Title overlay at bottom */}
         <div className="absolute bottom-0 left-0 right-0 p-3">
-          <h4 className="text-sm md:text-base font-bold text-white line-clamp-3 drop-shadow-lg leading-tight">
+          <h4 className="text-sm md:text-base font-condensed font-light text-white line-clamp-3 drop-shadow-lg leading-tight tracking-wide">
             {titulo}
           </h4>
         </div>
