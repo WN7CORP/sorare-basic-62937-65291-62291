@@ -5,6 +5,8 @@ import { BottomNav } from "./BottomNav";
 import { DesktopTopNav } from "./DesktopTopNav";
 import { AppSidebar } from "./AppSidebar";
 import { DesktopChatPanel } from "./DesktopChatPanel";
+import { VideoPlaylistSidebar } from "./VideoPlaylistSidebar";
+import { ResumosSidebar } from "./ResumosSidebar";
 import { useDeviceType } from "@/hooks/use-device-type";
 
 interface LayoutProps {
@@ -44,14 +46,25 @@ export const Layout = ({ children }: LayoutProps) => {
 
   // DESKTOP LAYOUT (>= 1024px)
   if (isDesktop) {
+    // Detectar se deve mostrar sidebar de playlists
+    const isVideoPlayer = location.pathname === '/videoaulas/player';
+    const isResumoView = location.pathname.includes('/resumos-juridicos/prontos/') && 
+                         location.pathname.split('/').length > 4;
+
     return (
       <div className="h-screen flex flex-col w-full bg-background text-foreground">
         <DesktopTopNav />
         
         <div className="flex-1 flex overflow-hidden w-full">
-          {/* Sidebar Esquerda */}
+          {/* Sidebar Esquerda - CONDICIONAL */}
           <div className="w-64 flex-shrink-0">
-            <AppSidebar />
+            {isVideoPlayer ? (
+              <VideoPlaylistSidebar />
+            ) : isResumoView ? (
+              <ResumosSidebar />
+            ) : (
+              <AppSidebar />
+            )}
           </div>
 
           {/* Conteúdo Central */}

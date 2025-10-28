@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, GraduationCap, Wrench, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { VLibrasButton } from "@/components/VLibrasButton";
 
 export const DesktopTopNav = () => {
   const navigate = useNavigate();
@@ -29,28 +30,32 @@ export const DesktopTopNav = () => {
           </h1>
         </div>
 
-        <nav className="flex items-center gap-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
+        <div className="flex items-center gap-4">
+          <nav className="flex items-center gap-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
 
-            return (
-              <button
-                key={item.id}
-                onClick={() => navigate(item.path)}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium",
-                  active
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                )}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(item.path)}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium",
+                    active
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+          
+          <VLibrasButton />
+        </div>
       </div>
     </header>
   );

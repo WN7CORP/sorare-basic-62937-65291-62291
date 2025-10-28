@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, GraduationCap, Minimize2, Maximize2, Video, BookOpen, Scale, Lightbulb } from "lucide-react";
+import { Send, Loader2, GraduationCap, Minimize2, Maximize2, Video, BookOpen, Scale, Lightbulb, Paperclip, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLocation } from "react-router-dom";
+import { FileUploadModal } from "@/components/FileUploadModal";
 
 type ChatMode = "study" | "realcase";
 
@@ -194,6 +195,8 @@ export const DesktopChatPanel = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mode, setMode] = useState<ChatMode>("study");
+  const [selectedFiles, setSelectedFiles] = useState<Array<{file: File, preview: string}>>([]);
+  const [showFileModal, setShowFileModal] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const location = useLocation();
@@ -219,8 +222,24 @@ export const DesktopChatPanel = () => {
     setMessages([]);
   };
 
+  const handleFileSelect = (file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setSelectedFiles(prev => [...prev, {
+        file,
+        preview: reader.result as string
+      }]);
+    };
+    reader.readAsDataURL(file);
+    setShowFileModal(false);
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if ((!input.trim() && selectedFiles.length === 0) || isLoading) return;
 
     const userMessage: Message = {
       role: "user",
@@ -232,10 +251,17 @@ export const DesktopChatPanel = () => {
     setIsLoading(true);
 
     try {
+      // Converter arquivos para base64
+      const filesData = selectedFiles.map(f => ({
+        data: f.preview,
+        type: f.file.type,
+        name: f.file.name
+      }));
+
       const { data, error } = await supabase.functions.invoke("chat-professora", {
         body: {
           messages: [...messages, userMessage],
-          files: [],
+          files: filesData,
           mode: mode,
           context: {
             page: location.pathname,
@@ -252,6 +278,7 @@ export const DesktopChatPanel = () => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      setSelectedFiles([]);
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
       toast({
@@ -437,9 +464,48 @@ export const DesktopChatPanel = () => {
         )}
       </ScrollArea>
 
+      {/* Preview de arquivos anexados */}
+      {selectedFiles.length > 0 && (
+        <div className="p-2 border-t border-border">
+          <div className="flex gap-2 flex-wrap">
+            {selectedFiles.map((fileData, idx) => (
+              <div key={idx} className="relative group">
+                {fileData.file.type.startsWith('image/') ? (
+                  <img 
+                    src={fileData.preview} 
+                    alt="Preview" 
+                    className="w-16 h-16 rounded-lg object-cover border border-border"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-lg bg-secondary border border-border flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                )}
+                <button
+                  onClick={() => removeFile(idx)}
+                  className="absolute -top-1 -right-1 bg-destructive rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-3 h-3 text-destructive-foreground" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="p-4 border-t border-border">
         <div className="flex gap-2">
+          <Button
+            onClick={() => setShowFileModal(true)}
+            disabled={isLoading}
+            size="icon"
+            variant="ghost"
+            className="shrink-0"
+          >
+            <Paperclip className="w-4 h-4" />
+          </Button>
+          
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -448,9 +514,10 @@ export const DesktopChatPanel = () => {
             disabled={isLoading}
             className="flex-1 text-sm"
           />
+          
           <Button
             onClick={sendMessage}
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || (!input.trim() && selectedFiles.length === 0)}
             size="icon"
             className="shrink-0"
           >
@@ -458,6 +525,13 @@ export const DesktopChatPanel = () => {
           </Button>
         </div>
       </div>
+
+      {/* Modal de upload */}
+      <FileUploadModal
+        open={showFileModal}
+        onClose={() => setShowFileModal(false)}
+        onFileSelect={handleFileSelect}
+      />
     </div>
   );
 };
