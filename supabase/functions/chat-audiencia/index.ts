@@ -1,0 +1,172 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { messages, files } = await req.json();
+    const DIREITO_PREMIUM_API_KEY = Deno.env.get('DIREITO_PREMIUM_API_KEY');
+
+    if (!DIREITO_PREMIUM_API_KEY) {
+      throw new Error('DIREITO_PREMIUM_API_KEY não configurada');
+    }
+
+    const systemPrompt = `Você é o Assistente de Simulação de Audiência, um simulador jurídico profissional e interativo. Seu papel é representar todas as partes de uma audiência (juiz, advogado, testemunha, promotor, réu) de forma realista e didática, conforme o contexto do caso informado pelo usuário.
+
+Seu objetivo é treinar estudantes e profissionais de Direito para audiências reais, ajudando-os a desenvolver raciocínio jurídico, domínio processual, oratória e estratégia.
+
+Funções principais:
+- Reproduzir o ambiente de uma audiência de forma fiel (linguagem técnica, formalidade adequada e dinâmica processual).
+- Formular perguntas de forma coerente com o papel representado.
+- Corrigir falas e sugerir respostas mais adequadas juridicamente.
+- Explicar ao final como o usuário se saiu, apontando acertos e falhas.
+
+Instruções de comportamento:
+- Seja realista, porém didático.
+- Explique fundamentos legais quando solicitado.
+- Use a formalidade de uma audiência, mas adapte o nível de complexidade conforme o usuário (iniciante ou profissional).
+- Quando o usuário quiser "encerrar a audiência", faça um resumo do desempenho.
+
+Tom: profissional, neutro e formativo — como um professor que também é advogado experiente.
+
+**CRÍTICO - Sugestões de Perguntas:**
+Ao final de CADA resposta, você DEVE incluir 2-3 sugestões de perguntas/tópicos que a pessoa pode explorar, no formato:
+
+[SUGESTÕES]
+Pergunta relevante 1 baseada no contexto?
+Pergunta relevante 2 que aprofunda o assunto?
+Pergunta relevante 3 relacionada ao tema?
+[/SUGESTÕES]`;
+
+    // Preparar conteúdo para API do Gemini
+    const parts: any[] = [];
+    
+    let conversationText = systemPrompt + '\n\n';
+    
+    if (files && files.length > 0) {
+      conversationText += '\n**INSTRUÇÃO CRÍTICA**: Arquivos foram anexados. Você DEVE analisar o conteúdo REAL destes arquivos. NÃO invente ou suponha nada. Leia e descreva exatamente o que está nos documentos/imagens.\n\n';
+    }
+    
+    for (const msg of messages) {
+      conversationText += `${msg.role === 'user' ? 'Usuário' : 'Assistente'}: ${msg.content}\n\n`;
+    }
+    
+    parts.push({ text: conversationText });
+
+    const lastUserMessage = messages[messages.length - 1];
+    const isFileOnly = files && files.length > 0 && (!lastUserMessage?.content || lastUserMessage.content === 'Por favor, analise o arquivo anexado.');
+    
+    // Adicionar imagens/PDFs se houver
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const base64Data = file.data.includes('base64,') 
+          ? file.data.split('base64,')[1] 
+          : file.data;
+        
+        if (file.type.startsWith('image/')) {
+          let mimeType = 'image/jpeg';
+          if (file.data.includes('image/png')) mimeType = 'image/png';
+          else if (file.data.includes('image/webp')) mimeType = 'image/webp';
+          else if (file.data.includes('image/gif')) mimeType = 'image/gif';
+          
+          parts.push({
+            inlineData: {
+              mimeType: mimeType,
+              data: base64Data
+            }
+          });
+        } else if (file.type === 'application/pdf' || file.name?.endsWith('.pdf')) {
+          parts.push({
+            inlineData: {
+              mimeType: 'application/pdf',
+              data: base64Data
+            }
+          });
+        }
+      }
+    }
+
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + DIREITO_PREMIUM_API_KEY, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: parts
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2000,
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Erro da API Gemini:', response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'quota_exceeded',
+            message: '⏱️ Limite de perguntas atingido. Por favor, aguarde alguns minutos e tente novamente.'
+          }),
+          {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+      
+      throw new Error(`Erro da API Gemini: ${response.status}`);
+    }
+
+    const data = await response.json();
+    let assistantMessage = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!assistantMessage) {
+      throw new Error('Resposta inválida da API Gemini');
+    }
+
+    // Extrair sugestões de perguntas
+    const suggestionsMatch = assistantMessage.match(/\[SUGESTÕES\]([\s\S]*?)\[\/SUGESTÕES\]/);
+    let suggestions = null;
+    if (suggestionsMatch) {
+      const suggestionsText = suggestionsMatch[1].trim();
+      suggestions = suggestionsText.split('\n').filter((s: string) => s.trim().length > 0);
+      assistantMessage = assistantMessage.replace(/\[SUGESTÕES\][\s\S]*?\[\/SUGESTÕES\]/g, '').trim();
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        message: assistantMessage,
+        showActions: isFileOnly || assistantMessage.length > 200,
+        suggestions
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  } catch (error) {
+    console.error('Erro no chat-audiencia:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        message: 'Desculpe, ocorreu um erro. Por favor, tente novamente.'
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+});
