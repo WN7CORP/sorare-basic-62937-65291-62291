@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, files, mode, extractedText } = await req.json();
+    const { messages, files, mode, extractedText, deepMode = false } = await req.json();
     const DIREITO_PREMIUM_API_KEY = Deno.env.get('DIREITO_PREMIUM_API_KEY');
     const DIREITO_PREMIUM_API_KEY_RESERVA = Deno.env.get('DIREITO_PREMIUM_API_KEY_RESERVA');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -80,27 +80,13 @@ Sua resposta DEVE:
     let systemPrompt = '';
     
     if (mode === 'lesson') {
-      systemPrompt = `Você é uma professora de direito didática e direta.
-
-REGRAS:
-1. Cite artigos/leis primeiro
-2. Explique em linguagem simples
-3. Use # apenas para título principal, ## para seções (max 4)
-4. Use [COMPARAÇÃO] para comparar 2-3 conceitos (sempre em carrossel)
-5. Use [INFOGRÁFICO] para processos/etapas sequenciais
-6. Seja BREVE mas completa (max 400 palavras)
-
-FORMATO CARROSSEL (use SEMPRE ao comparar):
-[COMPARAÇÃO: Título]
-{"cards": [{"title": "...", "description": "...", "example": "...", "icon": "⚖️"}]}
-[/COMPARAÇÃO]
-
-FORMATO INFOGRÁFICO (use para processos):
-[INFOGRÁFICO: Título]
-{"steps": [{"number": 1, "title": "...", "description": "...", "icon": "📝"}]}
-[/INFOGRÁFICO]
-
-[SUGESTÕES] no final com 3 perguntas.${cfContext ? `\n\nCONTEXTO CF:${cfContext}` : ''}`;
+      systemPrompt = deepMode 
+        ? `Professora de direito: análise PROFUNDA com exemplos jurisprudenciais, doutrina e casos práticos.
+Use [COMPARAÇÃO:{cards}] para diferenças, [INFOGRÁFICO:{steps}] para processos.
+[SUGESTÕES] ao final.${cfContext || ''}`
+        : `Professora de direito: cite lei/artigo primeiro, linguagem simples.
+Use [COMPARAÇÃO:{cards}] para diferenças, [INFOGRÁFICO:{steps}] para processos.
+Max 300 palavras. [SUGESTÕES] ao final.${cfContext || ''}`;
     } else if (mode === 'recommendation') {
       const { data: livrosEstudos } = await supabase.from('BIBLIOTECA-ESTUDOS').select('*').limit(100);
       const { data: livrosOAB } = await supabase.from('BIBILIOTECA-OAB').select('*').limit(100);
@@ -116,45 +102,20 @@ MATERIAIS: Estudos (${areasEstudos.join(', ')}), OAB (${areasOAB.join(', ')}), V
 
 Use funções para retornar materiais diretamente. Sem texto explicativo.${cfContext ? `\n\nCONTEXTO CF:${cfContext}` : ''}`;
     } else {
-      systemPrompt = `Você é uma assistente jurídica rápida e prática.
-
-REGRAS:
-1. Cite lei/artigo PRIMEIRO
-2. Linguagem clara e direta
-3. Use [COMPARAÇÃO] para comparar 2-3 conceitos
-4. Use [INFOGRÁFICO] para etapas/processos
-5. [ATENÇÃO] apenas se CRÍTICO
-6. Máximo 300 palavras
-
-CARROSSEL (ao comparar institutos, tipos, diferenças):
-[COMPARAÇÃO: Título]
-{"cards": [{"title": "...", "description": "...", "example": "...", "icon": "⚖️"}]}
-[/COMPARAÇÃO]
-
-INFOGRÁFICO (processos passo a passo):
-[INFOGRÁFICO: Título]
-{"steps": [{"number": 1, "title": "...", "description": "...", "icon": "📝"}]}
-[/INFOGRÁFICO]
-
-ESTATÍSTICAS (dados numéricos):
-[ESTATÍSTICAS]
-{"stats": [{"label": "...", "value": "...", "icon": "⏰"}]}
-[/ESTATÍSTICAS]
-
-[SUGESTÕES] ao final com 3 perguntas.${cfContext ? `\n\nCONTEXTO CF:${cfContext}` : ''}
+      systemPrompt = deepMode
+        ? `Assistente jurídica: análise DETALHADA com fundamentação completa, jurisprudência e exemplos práticos.
+Use [COMPARAÇÃO:{cards}], [INFOGRÁFICO:{steps}], [ESTATÍSTICAS:{stats}].
+[SUGESTÕES] ao final.${cfContext || ''}
+${fileAnalysisPrefix}`
+        : `Assistente jurídica: cite lei/artigo PRIMEIRO. Use [COMPARAÇÃO:{cards}] para diferenças, [INFOGRÁFICO:{steps}] para processos.
+Max 250 palavras. [SUGESTÕES] ao final.${cfContext || ''}
 ${fileAnalysisPrefix}`;
     }
 
     // Construir mensagens no formato Gemini com suporte multimodal
     let geminiContents: any[] = [];
     
-    // Adicionar system prompt como primeira mensagem do usuário
-    geminiContents.push({
-      role: 'user',
-      parts: [{ text: systemPrompt }]
-    });
-    
-    // Comprimir histórico: enviar apenas últimas 5 mensagens + system prompt
+    // Comprimir histórico: enviar apenas últimas 5 mensagens (sem system prompt no contents)
     const recentMessages = messages.slice(-5);
     
     // Processar mensagens incluindo arquivos
@@ -202,18 +163,33 @@ ${fileAnalysisPrefix}`;
 
     const payload = {
       contents: geminiContents,
+      systemInstruction: {
+        parts: [{ text: systemPrompt }]
+      },
       generationConfig: {
-        temperature: 0.6,
-        maxOutputTokens: mode === 'lesson' ? 2500 : 1500,
+        temperature: deepMode ? 0.7 : 0.6,
+        maxOutputTokens: deepMode 
+          ? (mode === 'lesson' ? 8000 : 5000)
+          : (mode === 'lesson' ? 3000 : 2000),
         topP: 0.95,
         topK: 40,
+        stopSequences: [],
       },
+      safetySettings: [
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
+      ]
     };
 
+    // Escolher modelo baseado em deepMode
+    const model = deepMode ? 'gemini-2.5-flash' : 'gemini-2.0-flash-exp';
+    
     // Função auxiliar para fazer requisição à API
     const fetchGemini = async (apiKey: string) => {
       return await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?key=${apiKey}&alt=sse`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`,
         {
           method: 'POST',
           headers: {
@@ -225,14 +201,15 @@ ${fileAnalysisPrefix}`;
     };
 
     console.log('🚀 [CHAT-PROFESSORA] Requisição recebida');
-    console.log('📊 [CHAT-PROFESSORA] Modo:', mode);
+    console.log('📊 [CHAT-PROFESSORA] Modo:', mode, deepMode ? '(PROFUNDO)' : '(RÁPIDO)');
+    console.log('🤖 [CHAT-PROFESSORA] Modelo:', model);
     console.log('💬 [CHAT-PROFESSORA] Número de mensagens:', messages.length);
     console.log('📎 [CHAT-PROFESSORA] Arquivos anexados:', files?.length || 0);
     
     const startTime = Date.now();
     const payloadSize = JSON.stringify(payload).length;
-    console.log(`📦 [CHAT-PROFESSORA] Tamanho do payload: ${payloadSize} bytes (${messages.length} mensagens)`);
-    console.log('🤖 [CHAT-PROFESSORA] Iniciando chamada à API Gemini 2.5 Flash...');
+    console.log(`📦 [CHAT-PROFESSORA] Tamanho do payload: ${payloadSize} bytes`);
+    console.log(`🎯 [CHAT-PROFESSORA] MaxTokens: ${payload.generationConfig.maxOutputTokens}`);
     
     // Tentar com a chave principal
     let response = await fetchGemini(DIREITO_PREMIUM_API_KEY);
@@ -313,7 +290,21 @@ ${fileAnalysisPrefix}`;
                 
                 // Verificar se finalizou
                 if (parsed.candidates?.[0]?.finishReason) {
+                  const finishReason = parsed.candidates[0].finishReason;
+                  const safetyRatings = parsed.candidates[0].safetyRatings;
                   const totalTime = Date.now() - startTime;
+                  
+                  console.log(`🏁 [CHAT-PROFESSORA] FinishReason: ${finishReason}`);
+                  
+                  if (finishReason === 'SAFETY') {
+                    console.warn(`⚠️ [CHAT-PROFESSORA] Bloqueado por filtro de segurança!`);
+                    console.warn(`⚠️ [CHAT-PROFESSORA] Safety ratings:`, JSON.stringify(safetyRatings));
+                  } else if (finishReason === 'MAX_TOKENS') {
+                    console.warn(`⚠️ [CHAT-PROFESSORA] Atingiu limite de tokens (${tokenCount})`);
+                  } else if (finishReason === 'STOP') {
+                    console.log(`✅ [CHAT-PROFESSORA] Finalização normal`);
+                  }
+                  
                   console.log(`✅ [CHAT-PROFESSORA] Streaming finalizado após ${totalTime}ms`);
                   console.log(`📊 [CHAT-PROFESSORA] Total: ${tokenCount} tokens, ${chunksSent} chunks enviados`);
                   controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));

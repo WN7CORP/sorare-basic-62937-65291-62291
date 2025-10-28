@@ -278,7 +278,7 @@ const ChatProfessora = () => {
       setIsLoading(false);
     }
   };
-  const streamResponse = async (userMessage: string, streamMode: 'chat' | 'lesson' = 'chat', filesOverride?: UploadedFile[], extractedText?: string) => {
+  const streamResponse = async (userMessage: string, streamMode: 'chat' | 'lesson' = 'chat', filesOverride?: UploadedFile[], extractedText?: string, deepMode: boolean = false) => {
     if (streamMode === 'chat') {
       setIsLoading(true);
     } else {
@@ -327,7 +327,8 @@ const ChatProfessora = () => {
           messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
           files: filesOverride ?? uploadedFiles,
           mode: mode,
-          extractedText: extractedText || undefined
+          extractedText: extractedText || undefined,
+          deepMode: deepMode
         }),
         signal: abortControllerRef.current.signal
       });
@@ -510,8 +511,9 @@ const ChatProfessora = () => {
   };
   const handleCreateLesson = async (content: string) => {
     const topic = messages.find(m => m.role === 'user')?.content || 'este tema';
-    const lessonPrompt = `Crie uma aula COMPLETA e DETALHADA sobre: ${topic}`;
-    await streamResponse(lessonPrompt, 'lesson');
+    const lessonPrompt = `Aprofunde mais sobre: "${topic}". 
+Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e análise crítica completa.`;
+    await streamResponse(lessonPrompt, 'chat', undefined, undefined, true);
   };
 
   const handleSummarize = async (content: string) => {
