@@ -253,8 +253,11 @@ ${fileAnalysisPrefix}`;
     console.log('📊 [CHAT-PROFESSORA] Modo:', mode);
     console.log('💬 [CHAT-PROFESSORA] Número de mensagens:', messages.length);
     console.log('📎 [CHAT-PROFESSORA] Arquivos anexados:', files?.length || 0);
-    console.log('🤖 [CHAT-PROFESSORA] Iniciando chamada à API Gemini 2.5 Flash...');
+    
     const startTime = Date.now();
+    const payloadSize = JSON.stringify(payload).length;
+    console.log(`📦 [CHAT-PROFESSORA] Tamanho do payload: ${payloadSize} bytes (${messages.length} mensagens)`);
+    console.log('🤖 [CHAT-PROFESSORA] Iniciando chamada à API Gemini 2.5 Flash...');
     
     // Tentar com a chave principal
     let response = await fetchGemini(DIREITO_PREMIUM_API_KEY);
@@ -286,7 +289,8 @@ ${fileAnalysisPrefix}`;
       throw new Error(`Erro da API Gemini: ${response.status}`);
     }
 
-    console.log('✅ [CHAT-PROFESSORA] Resposta HTTP OK, iniciando streaming...');
+    const apiLatency = Date.now() - startTime;
+    console.log(`✅ [CHAT-PROFESSORA] Resposta HTTP OK em ${apiLatency}ms, iniciando streaming...`);
     let firstTokenReceived = false;
     let tokenCount = 0;
     let chunksSent = 0;

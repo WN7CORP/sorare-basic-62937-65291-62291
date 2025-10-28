@@ -21,7 +21,7 @@ import ChatFlashcardsModal from "@/components/ChatFlashcardsModal";
 import ChatQuestoesModal from "@/components/ChatQuestoesModal";
 import { getDocument, GlobalWorkerOptions, version as pdfjsVersion } from "pdfjs-dist";
 import { motion } from "framer-motion";
-import { TypingIndicator } from "@/components/simulacao/TypingIndicator";
+import { SmartLoadingIndicator } from "@/components/chat/SmartLoadingIndicator";
 
 interface Message {
   role: "user" | "assistant";
@@ -297,14 +297,16 @@ const ChatProfessora = () => {
     };
     setMessages([...updatedMessages, assistantMessage]);
     
-    // Timeout de 60 segundos para detectar problemas
+    // Timeout de 30 segundos para detectar problemas
+    const requestStartTime = Date.now();
     const timeoutId = setTimeout(() => {
       if (abortControllerRef.current) {
-        console.error('⏱️ Timeout: Professora não respondeu em 60 segundos');
+        const elapsedTime = Date.now() - requestStartTime;
+        console.error(`⏱️ Timeout: Professora não respondeu em 30 segundos (${elapsedTime}ms)`);
         abortControllerRef.current.abort();
-        sonnerToast.error('A Professora está demorando demais para responder. Tente novamente.');
+        sonnerToast.error('A Professora está demorando demais para responder. Tente novamente com uma pergunta mais simples.');
       }
-    }, 60000);
+    }, 30000);
     
     try {
       abortControllerRef.current = new AbortController();
@@ -348,6 +350,7 @@ const ChatProfessora = () => {
       let accumulatedText = '';
       let buffer = '';
       let chunksReceived = 0;
+      let firstTokenReceived = false;
       let lastUpdateTime = Date.now();
       
       if (reader) {
@@ -385,6 +388,13 @@ const ChatProfessora = () => {
               const parsed = JSON.parse(payloadStr);
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
+                // Log do primeiro token
+                if (!firstTokenReceived) {
+                  const latency = Date.now() - requestStartTime;
+                  console.log(`🎉 Frontend: Primeiro token recebido após ${latency}ms`);
+                  firstTokenReceived = true;
+                }
+                
                 accumulatedText += content;
                 
                 // Atualizar UI IMEDIATAMENTE a cada token (sem throttle)
@@ -422,6 +432,11 @@ const ChatProfessora = () => {
           console.error('❌ Frontend: Stream terminou mas nenhum conteúdo foi recebido!');
           throw new Error('A Professora não está respondendo. Tente novamente.');
         }
+        
+        // Log final de performance
+        const totalTime = Date.now() - requestStartTime;
+        const messageSize = accumulatedText.length;
+        console.log(`✅ Frontend: Resposta completa em ${totalTime}ms (${chunksReceived} chunks, ${messageSize} caracteres)`);
       }
 
       // Finalizar streaming e calcular métricas
@@ -439,7 +454,8 @@ const ChatProfessora = () => {
       });
       setUploadedFiles([]);
     } catch (error: any) {
-      console.error('❌ Frontend: Erro no streaming:', error);
+      const totalTime = Date.now() - requestStartTime;
+      console.error(`❌ Frontend: Erro no streaming após ${totalTime}ms:`, error);
       console.error('❌ Frontend: Stack:', error?.stack);
       
       if (error.name !== 'AbortError') {
@@ -447,6 +463,9 @@ const ChatProfessora = () => {
         sonnerToast.error(errorMessage, {
           description: 'Tente novamente em alguns instantes.'
         });
+        setMessages(prev => prev.slice(0, -1));
+      } else {
+        console.log(`⚠️ Frontend: Request cancelado pelo usuário após ${totalTime}ms`);
         setMessages(prev => prev.slice(0, -1));
       }
     } finally {
@@ -771,7 +790,15 @@ const ChatProfessora = () => {
                 {/* Mostrar "digitando..." se é assistente, está streaming e não tem conteúdo ainda */}
                 {message.role === 'assistant' && message.isStreaming && !message.content && (
                   <div className="mb-4 px-4">
-                    <TypingIndicator nome="Professora" />
+                    <SmartLoadingIndicator 
+                      nome="Professora" 
+                      onCancel={() => {
+                        if (abortControllerRef.current) {
+                          abortControllerRef.current.abort();
+                          sonnerToast.info('Cancelado pelo usuário');
+                        }
+                      }}
+                    />
                   </div>
                 )}
                 
