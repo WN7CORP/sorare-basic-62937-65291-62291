@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import { formatForWhatsApp } from "@/lib/formatWhatsApp";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useDeviceType } from "@/hooks/use-device-type";
 interface Resumo {
   id: number;
   subtema: string;
@@ -37,6 +38,7 @@ const ResumosProntosView = () => {
     toast
   } = useToast();
   const isMobile = useIsMobile();
+  const { isDesktop } = useDeviceType();
   const [searchTerm, setSearchTerm] = useState("");
   const [resumoSelecionado, setResumoSelecionado] = useState<Resumo | null>(null);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
@@ -53,6 +55,19 @@ const ResumosProntosView = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Listen to sidebar events
+  useEffect(() => {
+    const handleSelectResumo = (e: CustomEvent) => {
+      const resumo = e.detail;
+      setResumoSelecionado(resumo);
+      if (!resumosGerados.has(resumo.id) && gerandoResumoId === null) {
+        gerarResumo(resumo);
+      }
+    };
+    window.addEventListener('selectResumo' as any, handleSelectResumo);
+    return () => window.removeEventListener('selectResumo' as any, handleSelectResumo);
+  }, [resumosGerados, gerandoResumoId]);
   const {
     data: resumos,
     isLoading
@@ -348,46 +363,49 @@ const ResumosProntosView = () => {
       </div>
 
       <div className="flex max-w-7xl mx-auto">
-        <div className={isMobile ? "w-full px-3 py-4" : "w-80 border-r px-3 py-4"}>
-          <div className="space-y-2">
-            {resumosFiltrados.map(resumo => <Card key={resumo.id} className={`cursor-pointer transition-all hover:shadow-md hover:border-primary ${resumoSelecionado?.id === resumo.id && !isMobile ? "border-primary bg-primary/5" : ""} ${gerandoResumoId === resumo.id ? "opacity-50" : ""}`} onClick={() => {
-            setResumoSelecionado(resumo);
-            if (!resumosGerados.has(resumo.id) && gerandoResumoId === null) {
-              gerarResumo(resumo);
-            }
-            if (isMobile) {
-              setShowMobilePreview(true);
-            }
-          }}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-lg font-bold text-primary">
-                        {resumo["ordem subtema"]}
-                      </span>
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm leading-tight">
-                        {resumo.subtema}
-                      </h3>
-                      {gerandoResumoId === resumo.id && <span className="text-xs text-muted-foreground mt-1 block">
-                          Gerando...
-                        </span>}
-                    </div>
+        {/* Apenas renderizar sidebar se não for desktop, pois o Layout já cuida disso */}
+        {!isDesktop && (
+          <div className={isMobile ? "w-full px-3 py-4" : "w-80 border-r px-3 py-4"}>
+            <div className="space-y-2">
+              {resumosFiltrados.map(resumo => <Card key={resumo.id} className={`cursor-pointer transition-all hover:shadow-md hover:border-primary ${resumoSelecionado?.id === resumo.id && !isMobile ? "border-primary bg-primary/5" : ""} ${gerandoResumoId === resumo.id ? "opacity-50" : ""}`} onClick={() => {
+              setResumoSelecionado(resumo);
+              if (!resumosGerados.has(resumo.id) && gerandoResumoId === null) {
+                gerarResumo(resumo);
+              }
+              if (isMobile) {
+                setShowMobilePreview(true);
+              }
+            }}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-lg font-bold text-primary">
+                          {resumo["ordem subtema"]}
+                        </span>
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm leading-tight">
+                          {resumo.subtema}
+                        </h3>
+                        {gerandoResumoId === resumo.id && <span className="text-xs text-muted-foreground mt-1 block">
+                            Gerando...
+                          </span>}
+                      </div>
 
-                    <div className="flex-shrink-0">
-                      {resumosGerados.has(resumo.id) ? <div className="w-7 h-7 rounded-full bg-green-500/20 flex items-center justify-center">
-                          <span className="text-green-600 dark:text-green-400 text-base">✓</span>
-                        </div> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+                      <div className="flex-shrink-0">
+                        {resumosGerados.has(resumo.id) ? <div className="w-7 h-7 rounded-full bg-green-500/20 flex items-center justify-center">
+                            <span className="text-green-600 dark:text-green-400 text-base">✓</span>
+                          </div> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>)}
+                  </CardContent>
+                </Card>)}
+            </div>
           </div>
-        </div>
+        )}
 
-        {!isMobile && <div className="flex-1 p-6">
+        {!isMobile && <div className={isDesktop ? "flex-1 p-6" : "flex-1 p-6"}>
             {resumoSelecionado ? !resumosGerados.has(resumoSelecionado.id) ? <Card>
                   <CardContent className="p-8">
                     <div className="text-center space-y-4">

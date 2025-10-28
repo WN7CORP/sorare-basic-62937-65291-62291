@@ -1,5 +1,5 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Search, FileText } from "lucide-react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { ArrowLeft, Search, FileText, Check, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,24 +13,39 @@ interface Resumo {
 
 export const ResumosSidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { area, tema } = useParams();
   const [resumos, setResumos] = useState<Resumo[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedResumoId, setSelectedResumoId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadResumos = async () => {
       if (!area || !tema) return;
+      
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("RESUMO")
+          .select("id, subtema, \"ordem subtema\"")
+          .eq("area", decodeURIComponent(area))
+          .eq("tema", decodeURIComponent(tema))
+          .not("subtema", "is", null)
+          .order("ordem subtema", { ascending: true });
 
-      const { data } = await supabase
-        .from("RESUMO")
-        .select("id, subtema, \"ordem subtema\"")
-        .eq("area", decodeURIComponent(area))
-        .eq("tema", decodeURIComponent(tema))
-        .not("subtema", "is", null)
-        .order("ordem subtema", { ascending: true });
+        if (error) {
+          console.error("Erro ao carregar resumos:", error);
+          return;
+        }
 
-      if (data) setResumos(data as any[]);
+        if (data) {
+          setResumos(data as any[]);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar resumos:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     loadResumos();
   }, [area, tema]);
@@ -68,23 +83,40 @@ export const ResumosSidebar = () => {
 
       {/* Lista de subtemas */}
       <ScrollArea className="flex-1">
-        <div className="p-2 space-y-1">
-          {filteredResumos.map((resumo) => (
-            <button
-              key={resumo.id}
-              onClick={() => setSelectedResumoId(resumo.id)}
-              className={cn(
-                "w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left",
-                selectedResumoId === resumo.id
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-secondary"
-              )}
-            >
-              <FileText className="w-4 h-4 shrink-0" />
-              <span className="text-sm flex-1 line-clamp-2">{resumo.subtema}</span>
-            </button>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="p-4 text-center">
+            <div className="text-sm text-muted-foreground">Carregando...</div>
+          </div>
+        ) : filteredResumos.length === 0 ? (
+          <div className="p-4 text-center">
+            <div className="text-sm text-muted-foreground">
+              {searchTerm ? "Nenhum resultado encontrado" : "Nenhum subtema disponível"}
+            </div>
+          </div>
+        ) : (
+          <div className="p-2 space-y-1">
+            {filteredResumos.map((resumo) => (
+              <button
+                key={resumo.id}
+                onClick={() => {
+                  // Trigger resumo selection via URL state or query param
+                  window.dispatchEvent(new CustomEvent('selectResumo', { detail: resumo }));
+                }}
+                className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left hover:bg-secondary group"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <span className="text-xs font-bold text-primary">
+                    {resumo["ordem subtema"]}
+                  </span>
+                </div>
+                <span className="text-sm flex-1 line-clamp-2 font-medium group-hover:text-primary">
+                  {resumo.subtema}
+                </span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              </button>
+            ))}
+          </div>
+        )}
       </ScrollArea>
     </div>
   );
