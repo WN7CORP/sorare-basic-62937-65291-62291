@@ -28,9 +28,10 @@ const ProposicoesRecentesGrid = () => {
         <div className="flex items-center justify-between px-1">
           <h2 className="md:text-lg text-foreground font-normal text-base">Projetos de Lei Recentes</h2>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="animate-pulse">
+      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+        <div className="flex gap-3 md:gap-4 md:grid md:grid-cols-[repeat(4.5,minmax(0,1fr))]">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="animate-pulse min-w-[45%] md:min-w-0">
               <div className="bg-muted rounded-xl aspect-square mb-2" />
               <div className="bg-muted h-4 rounded w-3/4 mb-2" />
               <div className="bg-muted h-3 rounded w-full mb-1" />
@@ -38,6 +39,7 @@ const ProposicoesRecentesGrid = () => {
             </div>
           ))}
         </div>
+      </div>
       </div>
     );
   }
@@ -58,8 +60,9 @@ const ProposicoesRecentesGrid = () => {
         </button>
       </div>
       
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-        {proposicoes.map((proposicao: any) => {
+      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+        <div className="flex gap-3 md:gap-4 md:grid md:grid-cols-[repeat(4.5,minmax(0,1fr))]">
+          {proposicoes.map((proposicao: any) => {
           const nomeAutorLimpo = proposicao.autor_principal_nome?.replace(/^Senado Federal\s*-\s*/i, '').trim();
           const dataFormatada = proposicao.data_apresentacao 
             ? new Date(proposicao.data_apresentacao).toLocaleDateString('pt-BR', {
@@ -73,7 +76,7 @@ const ProposicoesRecentesGrid = () => {
             <Card
               key={proposicao.id_proposicao}
               onClick={() => navigate(`/camara-deputados/proposicao/${proposicao.id_proposicao}`)}
-              className="overflow-hidden cursor-pointer transition-all hover:scale-[1.02] hover:shadow-xl border border-border hover:border-accent/50 shadow-lg bg-card"
+              className="overflow-hidden cursor-pointer transition-all hover:scale-[1.02] hover:shadow-xl border border-border hover:border-accent/50 shadow-lg bg-card min-w-[45%] md:min-w-0"
             >
               {/* Foto do autor */}
               <div className="aspect-square relative bg-secondary overflow-hidden">
@@ -136,6 +139,7 @@ const ProposicoesRecentesGrid = () => {
             </Card>
           );
         })}
+        </div>
       </div>
     </div>
   );
