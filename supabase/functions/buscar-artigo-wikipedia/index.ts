@@ -217,13 +217,15 @@ Deno.serve(async (req) => {
       // Buscar da Wikipedia
       console.log('Buscando artigo da Wikipedia:', titulo);
 
-      // Obter conteúdo do artigo
+      // Obter conteúdo COMPLETO do artigo com MAIS imagens
       const articleUrl = `https://pt.wikipedia.org/w/api.php?` +
         `action=query&titles=${encodeURIComponent(titulo)}` +
-        `&prop=extracts|pageimages|links` +
+        `&prop=extracts|pageimages|images|categories` +
         `&format=json&utf8=1` +
-        `&explaintext=1&exintro=0` +
-        `&piprop=original&pllimit=20`;
+        `&explaintext=0&exintro=0` +
+        `&piprop=original&pithumbsize=500` +
+        `&imlimit=50&cllimit=50` +
+        `&redirects=1`;
 
       const articleResponse = await fetch(articleUrl);
       const articleData = await articleResponse.json();

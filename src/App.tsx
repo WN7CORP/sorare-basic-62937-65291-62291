@@ -143,6 +143,7 @@ import MeuBrasil from "./pages/MeuBrasil";
 import MeuBrasilHistoria from "./pages/MeuBrasilHistoria";
 import MeuBrasilSistemas from "./pages/MeuBrasilSistemas";
 import MeuBrasilJuristas from "./pages/MeuBrasilJuristas";
+import MeuBrasilJuristaView from "./pages/MeuBrasilJuristaView";
 import MeuBrasilInstituicoes from "./pages/MeuBrasilInstituicoes";
 import MeuBrasilCasos from "./pages/MeuBrasilCasos";
 import MeuBrasilArtigo from "./pages/MeuBrasilArtigo";
@@ -293,6 +294,7 @@ const App = () => {
               <Route path="/meu-brasil/historia" element={<MeuBrasilHistoria />} />
               <Route path="/meu-brasil/sistemas" element={<MeuBrasilSistemas />} />
               <Route path="/meu-brasil/juristas" element={<MeuBrasilJuristas />} />
+              <Route path="/meu-brasil/jurista/:nome" element={<MeuBrasilJuristaView />} />
               <Route path="/meu-brasil/instituicoes" element={<MeuBrasilInstituicoes />} />
               <Route path="/meu-brasil/casos" element={<MeuBrasilCasos />} />
               <Route path="/meu-brasil/busca" element={<MeuBrasilBusca />} />

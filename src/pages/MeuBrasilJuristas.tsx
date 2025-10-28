@@ -109,8 +109,8 @@ const MeuBrasilJuristas = () => {
               {filtrarJuristas(cat.lista).map((jurista) => (
                 <button
                   key={jurista.nome}
-                  onClick={() => navigate(`/meu-brasil/artigo/${encodeURIComponent(jurista.nome)}`)}
-                  className="w-full bg-card border border-border rounded-lg p-4 text-left hover:border-accent transition-colors"
+                  onClick={() => navigate(`/meu-brasil/jurista/${encodeURIComponent(jurista.nome)}`)}
+                  className="w-full bg-card border border-border rounded-lg p-4 text-left hover:border-primary hover:shadow-md transition-all group"
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-16 h-16 rounded-full overflow-hidden bg-muted flex-shrink-0">
@@ -128,13 +128,20 @@ const MeuBrasilJuristas = () => {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-base mb-1">{jurista.nome}</h3>
+                      <h3 className="font-bold text-base mb-1 group-hover:text-primary transition-colors">
+                        {jurista.nome}
+                      </h3>
                       <p className="text-sm text-muted-foreground mb-1">
                         {jurista.area}
                       </p>
-                      <span className="text-xs text-accent">
-                        {jurista.periodo}
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-accent">
+                          {jurista.periodo}
+                        </span>
+                        <span className="text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                          Ver artigo →
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </button>
