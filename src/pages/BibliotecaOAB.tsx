@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, BookOpen, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BibliotecaIntro } from "@/components/BibliotecaIntro";
@@ -25,8 +25,22 @@ interface BibliotecaItem {
 const BibliotecaOAB = () => {
   const navigate = useNavigate();
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
-  const [showIntro, setShowIntro] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const { data: capa } = useQuery({
+    queryKey: ["capa-biblioteca-oab"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("CAPA-BIBILIOTECA")
+        .select("*")
+        .eq("Biblioteca", "Biblioteca da OAB")
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const {
     data: items,
     isLoading
@@ -85,14 +99,7 @@ const BibliotecaOAB = () => {
       .filter((item): item is [string, typeof areaGroups[string]] => item !== null)
       .sort(([a], [b]) => a.localeCompare(b, 'pt-BR'));
   }, [areaGroups, searchTerm]);
-  const sobreTexto = `A Biblioteca da OAB reúne os materiais oficiais e essenciais da Ordem dos Advogados do Brasil, fundamentais para sua formação e prática profissional.
 
-Aqui você encontrará obras de referência, manuais, guias práticos e documentos que todo estudante e profissional do Direito precisa conhecer. O acervo contempla desde materiais preparatórios para o Exame de Ordem até orientações sobre ética e exercício profissional.
-
-Esta biblioteca é indispensável para quem busca não apenas aprovação na OAB, mas também uma compreensão profunda dos princípios e responsabilidades da advocacia brasileira.`;
-  if (showIntro) {
-    return <BibliotecaIntro titulo="Biblioteca da OAB" sobre={sobreTexto} capaUrl={items?.[0]?.["Capa-area"] || null} onAcessar={() => setShowIntro(false)} />;
-  }
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-[50vh]">
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
@@ -138,51 +145,55 @@ Esta biblioteca é indispensável para quem busca não apenas aprovação na OAB
   }
 
   // Mostrar tela principal com carrosséis
-  return <div className="px-2 py-4 max-w-7xl mx-auto pb-20 animate-fade-in">
-      <div className="mb-6 px-1">
-        <h1 className="text-xl md:text-2xl font-bold mb-1">Biblioteca da OAB</h1>
-        <p className="text-sm text-muted-foreground">
-          Explore livros por área do Direito
-        </p>
-      </div>
-
-      {/* Barra de Pesquisa Global */}
-      <Card className="mb-6 mx-1">
-        <CardContent className="p-4">
-          <div className="flex gap-2">
-            <Input 
-              placeholder="Buscar área ou livro..." 
-              value={searchTerm} 
-              onChange={e => setSearchTerm(e.target.value)} 
-              className="text-base" 
-            />
-            <Button variant="outline" size="icon" className="shrink-0">
-              <Search className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Lista de seções com carrosséis */}
-      <div className="space-y-8">
-        {areasFiltradas.length > 0 ? (
-          areasFiltradas.map(([area, data]) => (
-            <AreaLivrosCarousel
-              key={area}
-              area={area}
-              livros={data.livros}
-              onVerTodos={(area) => setSelectedArea(area)}
-              onLivroClick={(id) => navigate(`/biblioteca-oab/${id}`)}
-            />
-          ))
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">
-              Nenhum resultado encontrado para "{searchTerm}"
-            </p>
-          </div>
+  return (
+    <div className="min-h-screen pb-20">
+      {/* Header com Capa */}
+      <div className="relative h-64 md:h-80 overflow-hidden">
+        {capa?.capa && (
+          <img src={capa.capa} alt="Biblioteca da OAB" className="absolute inset-0 w-full h-full object-cover" />
         )}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/80" />
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="absolute top-4 left-4 text-white hover:bg-white/20 z-10">
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <div className="absolute bottom-6 left-6 right-6 text-white">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-primary/90 rounded-lg">
+              <BookOpen className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold">Biblioteca da OAB</h1>
+              <p className="text-sm text-white/90 mt-1">Explore livros por área do Direito</p>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>;
+
+      <div className="px-2 py-6 max-w-7xl mx-auto animate-fade-in">
+        <Card className="mb-6 mx-1">
+          <CardContent className="p-4">
+            <div className="flex gap-2">
+              <Input placeholder="Buscar área ou livro..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="text-base" />
+              <Button variant="outline" size="icon" className="shrink-0">
+                <Search className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-8">
+          {areasFiltradas.length > 0 ? (
+            areasFiltradas.map(([area, data]) => (
+              <AreaLivrosCarousel key={area} area={area} livros={data.livros} onVerTodos={(area) => setSelectedArea(area)} onLivroClick={(id) => navigate(`/biblioteca-oab/${id}`)} />
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Nenhum resultado encontrado para "{searchTerm}"</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 export default BibliotecaOAB;
