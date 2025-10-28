@@ -1091,7 +1091,59 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                       return elements.length > 0 ? elements : null;
                     };
 
-                    const parsedContent = parseSpecialContent(message.content.replace(/\[SUGESTÕES\][\s\S]*?\[\/SUGESTÕES\]/g, ''));
+                    // Helpers: ocultar blocos incompletos durante streaming e fechar tags ausentes após fim
+                    const stripIncompleteBlocks = (content: string) => {
+                      const tags = ['COMPARAÇÃO', 'CARROSSEL', 'ETAPAS', 'TIPOS', 'INFOGRÁFICO', 'ESTATÍSTICAS'];
+                      let result = content;
+                      for (const t of tags) {
+                        // Se abriu e não fechou ainda, remove até o fim para evitar JSON aparecendo bruto
+                        const openIdx = result.lastIndexOf(`[${t}`);
+                        const closeIdx = result.lastIndexOf(`[/${t}]`);
+                        if (openIdx !== -1 && (closeIdx === -1 || closeIdx < openIdx)) {
+                          result = result.substring(0, openIdx) + `\n\n⌛ Gerando ${t.toLowerCase()}...`;
+                        }
+                      }
+                      return result;
+                    };
+
+                    const autoCloseBlocks = (content: string) => {
+                      // Garante que blocos sem tag de fechamento recebam uma automaticamente
+                      const fix = (txt: string, tag: string) => {
+                        const regex = new RegExp(`\\[${tag}:[^\\]]*\\]`, 'g');
+                        let match;
+                        let output = txt;
+                        while ((match = regex.exec(txt)) !== null) {
+                          const start = match.index;
+                          const hasClose = txt.indexOf(`[/${tag}]`, start) !== -1;
+                          if (!hasClose) {
+                            // Tentar achar o término do JSON mais próximo
+                            const jsonStart = txt.indexOf('{', start);
+                            if (jsonStart !== -1) {
+                              // Heurística: pega a última chave '}' depois do início
+                              const nextOpenTag = txt.indexOf('[', jsonStart + 1);
+                              const searchEnd = nextOpenTag === -1 ? txt.length : nextOpenTag;
+                              const segment = txt.slice(jsonStart, searchEnd);
+                              const lastBrace = segment.lastIndexOf('}');
+                              if (lastBrace !== -1) {
+                                const insertPos = jsonStart + lastBrace + 1;
+                                output = output.slice(0, insertPos) + `[/${tag}]` + output.slice(insertPos);
+                              }
+                            }
+                          }
+                        }
+                        return output;
+                      };
+                      let fixed = content;
+                      ['COMPARAÇÃO','CARROSSEL','ETAPAS','TIPOS','INFOGRÁFICO','ESTATÍSTICAS'].forEach(tag => {
+                        fixed = fix(fixed, tag);
+                      });
+                      return fixed;
+                    };
+
+                    const baseContent = message.content.replace(/\[SUGESTÕES\][\s\S]*?\[\/SUGESTÕES\]/g, '');
+                    const safeContent = message.isStreaming ? stripIncompleteBlocks(baseContent) : autoCloseBlocks(baseContent);
+
+                    const parsedContent = !message.isStreaming ? parseSpecialContent(safeContent) : null;
 
                     return <>
                       {parsedContent || (

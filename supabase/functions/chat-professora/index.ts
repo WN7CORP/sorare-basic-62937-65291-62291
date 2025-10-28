@@ -82,9 +82,11 @@ Sua resposta DEVE:
     if (mode === 'lesson') {
       systemPrompt = deepMode 
         ? `Professora de direito: análise PROFUNDA com exemplos jurisprudenciais, doutrina e casos práticos.
+Responda em blocos curtos nesta ordem: Lei → Explicação → Carrossel (2-3 cards) → Infográfico (steps). Envie cada bloco assim que estiver pronto.
 Use [COMPARAÇÃO:{cards}] para diferenças, [INFOGRÁFICO:{steps}] para processos.
 [SUGESTÕES] ao final.${cfContext || ''}`
         : `Professora de direito: cite lei/artigo primeiro, linguagem simples.
+Responda em blocos curtos nesta ordem: Lei → Explicação → Carrossel (2-3 cards) → Infográfico (steps). Envie cada bloco assim que estiver pronto.
 Use [COMPARAÇÃO:{cards}] para diferenças, [INFOGRÁFICO:{steps}] para processos.
 Max 300 palavras. [SUGESTÕES] ao final.${cfContext || ''}`;
     } else if (mode === 'recommendation') {
