@@ -49,12 +49,13 @@ export const AreaLivrosCarousel = ({
       {/* Carousel of books */}
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex gap-3 pl-1">
-          {livros.map((livro) => (
+          {livros.map((livro, index) => (
             <LivroCarouselCard
               key={livro.id}
               titulo={livro.Tema || "Sem título"}
               capaUrl={livro["Capa-livro"]}
               onClick={() => onLivroClick(livro.id)}
+              numero={index + 1}
             />
           ))}
         </div>

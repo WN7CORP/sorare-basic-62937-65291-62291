@@ -4,9 +4,10 @@ interface LivroCarouselCardProps {
   titulo: string;
   capaUrl: string | null;
   onClick: () => void;
+  numero?: number;
 }
 
-export const LivroCarouselCard = ({ titulo, capaUrl, onClick }: LivroCarouselCardProps) => {
+export const LivroCarouselCard = ({ titulo, capaUrl, onClick, numero }: LivroCarouselCardProps) => {
   return (
     <Card
       onClick={onClick}
@@ -14,6 +15,12 @@ export const LivroCarouselCard = ({ titulo, capaUrl, onClick }: LivroCarouselCar
     >
       {/* Aspect ratio container for book cover */}
       <div className="relative aspect-[2/3] w-full">
+        {/* Numeração discreta no topo */}
+        {numero && (
+          <div className="absolute top-2 right-2 z-10 bg-black/40 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center">
+            <span className="text-white/70 text-xs font-condensed font-light">{numero}</span>
+          </div>
+        )}
         {capaUrl ? (
           <img
             src={capaUrl}
