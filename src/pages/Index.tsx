@@ -246,7 +246,7 @@ const Index = () => {
                   return (
                     <div
                       key={noticia.id}
-                      className="flex-[0_0_70%] md:flex-[0_0_50%] lg:flex-[0_0_40%] min-w-0 bg-card rounded-xl overflow-hidden text-left transition-all hover:scale-105 hover:shadow-2xl border border-border hover:border-primary/30 shadow-lg relative"
+                      className="flex-[0_0_70%] md:flex-[0_0_50%] lg:flex-[0_0_28.5%] min-w-0 bg-card rounded-xl overflow-hidden text-left transition-all hover:scale-105 hover:shadow-2xl border border-border hover:border-primary/30 shadow-lg relative"
                     >
                       <button
                         onClick={() => {

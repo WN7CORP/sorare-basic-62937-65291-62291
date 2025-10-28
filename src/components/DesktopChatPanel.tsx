@@ -24,11 +24,119 @@ interface ContextConfig {
   icon: any;
 }
 
-const getContextConfig = (pathname: string): ContextConfig => {
+const getContextConfig = (pathname: string, bookTitle?: string): ContextConfig => {
+  // Biblioteca de Estudos
+  if (pathname.includes('/biblioteca-estudos')) {
+    const base = bookTitle 
+      ? `📚 Olá! Vi que você está lendo "${bookTitle}". Como posso te ajudar?`
+      : "📚 Olá! Vi que você está na Biblioteca de Estudos. Como posso te ajudar?";
+    
+    return {
+      welcome: base,
+      suggestions: [
+        "Resuma este livro para mim",
+        "Quais os conceitos mais importantes?",
+        "Crie um mapa mental deste conteúdo",
+        "Me ajude a fazer anotações"
+      ],
+      icon: BookOpen
+    };
+  }
+
+  // Biblioteca Clássicos
+  if (pathname.includes('/biblioteca-classicos')) {
+    const base = bookTitle 
+      ? `📖 Olá! Vi que você está lendo "${bookTitle}". Pergunte o que quiser!`
+      : "📖 Olá! Vi que você está nos Clássicos Jurídicos. Como posso te ajudar?";
+    
+    return {
+      welcome: base,
+      suggestions: [
+        "Explique o contexto histórico desta obra",
+        "Qual a relevância atual deste clássico?",
+        "Compare com a doutrina moderna",
+        "Resuma os argumentos principais"
+      ],
+      icon: BookOpen
+    };
+  }
+
+  // Biblioteca OAB
+  if (pathname.includes('/biblioteca-oab')) {
+    const base = bookTitle 
+      ? `⚖️ Olá! Vi que você está estudando "${bookTitle}". Como posso te ajudar?`
+      : "⚖️ Olá! Vi que você está estudando para a OAB. Como posso te ajudar?";
+    
+    return {
+      welcome: base,
+      suggestions: [
+        "Como este conteúdo cai na prova?",
+        "Crie questões sobre este tema",
+        "Quais os pontos mais cobrados?",
+        "Me ajude a memorizar isso"
+      ],
+      icon: Scale
+    };
+  }
+
+  // Biblioteca Oratória
+  if (pathname.includes('/biblioteca-oratoria')) {
+    const base = bookTitle 
+      ? `🎤 Olá! Vi que você está lendo "${bookTitle}". Como posso te ajudar?`
+      : "🎤 Olá! Vi que você está estudando Oratória. Como posso te ajudar?";
+    
+    return {
+      welcome: base,
+      suggestions: [
+        "Como aplicar estas técnicas?",
+        "Dê exemplos práticos de uso",
+        "Crie exercícios de oratória",
+        "Como melhorar minha comunicação?"
+      ],
+      icon: Lightbulb
+    };
+  }
+
+  // Biblioteca Liderança
+  if (pathname.includes('/biblioteca-lideranca')) {
+    const base = bookTitle 
+      ? `👥 Olá! Vi que você está lendo "${bookTitle}". Como posso te ajudar?`
+      : "👥 Olá! Vi que você está estudando Liderança. Como posso te ajudar?";
+    
+    return {
+      welcome: base,
+      suggestions: [
+        "Como aplicar isso no escritório?",
+        "Dê exemplos de liderança jurídica",
+        "Como desenvolver estas habilidades?",
+        "Crie um plano de desenvolvimento"
+      ],
+      icon: Lightbulb
+    };
+  }
+
+  // Biblioteca Fora da Toga
+  if (pathname.includes('/biblioteca-fora-da-toga')) {
+    const base = bookTitle 
+      ? `💼 Olá! Vi que você está lendo "${bookTitle}". Como posso te ajudar?`
+      : "💼 Olá! Vi que você está em Fora da Toga. Como posso te ajudar?";
+    
+    return {
+      welcome: base,
+      suggestions: [
+        "Como isso se relaciona com Direito?",
+        "Aplicações práticas na advocacia",
+        "Resuma os conceitos principais",
+        "Como usar isso na carreira?"
+      ],
+      icon: BookOpen
+    };
+  }
+
   // Videoaulas context
   if (pathname.includes('/videoaulas')) {
     return {
-      welcome: "👋 Olá! Vi que você está nas videoaulas. Como posso te ajudar?",
+      welcome: "👩‍🏫 Olá! Vi que você está nas videoaulas. Como posso te ajudar?",
       suggestions: [
         "Explique o tema deste vídeo",
         "Gere um resumo da aula",
@@ -42,7 +150,7 @@ const getContextConfig = (pathname: string): ContextConfig => {
   // Códigos/Leis context
   if (pathname.includes('/constituicao') || pathname.includes('/codigo') || pathname.includes('/estatuto') || pathname.includes('/sumula')) {
     return {
-      welcome: "⚖️ Olá! Vi que você está estudando legislação. Como posso ajudar?",
+      welcome: "👩‍🏫 Olá! Vi que você está estudando legislação. Como posso ajudar?",
       suggestions: [
         "Explique este artigo de forma simples",
         "Qual a aplicação prática desta lei?",
@@ -53,24 +161,10 @@ const getContextConfig = (pathname: string): ContextConfig => {
     };
   }
 
-  // Biblioteca context
-  if (pathname.includes('/biblioteca')) {
-    return {
-      welcome: "📚 Olá! Vi que você está na biblioteca. Quer ajuda com leitura?",
-      suggestions: [
-        "Resuma este livro",
-        "Quais os conceitos principais?",
-        "Como aplicar estas ideias nos estudos?",
-        "Recomende livros relacionados"
-      ],
-      icon: BookOpen
-    };
-  }
-
   // Flashcards context
   if (pathname.includes('/flashcards')) {
     return {
-      welcome: "✨ Olá! Vejo que você está revisando com flashcards. Precisa de ajuda?",
+      welcome: "👩‍🏫 Olá! Vejo que você está revisando com flashcards. Precisa de ajuda?",
       suggestions: [
         "Explique melhor este conceito",
         "Crie mais flashcards sobre este tema",
@@ -83,7 +177,7 @@ const getContextConfig = (pathname: string): ContextConfig => {
 
   // Default context
   return {
-    welcome: "👋 Olá! Sou sua assistente de estudos. Como posso te ajudar hoje?",
+    welcome: "👩‍🏫 Olá! Sou sua professora. Como posso te ajudar hoje?",
     suggestions: [
       "Tire uma dúvida sobre direito",
       "Me ajude a estudar melhor",
@@ -103,7 +197,10 @@ export const DesktopChatPanel = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const location = useLocation();
-  const contextConfig = getContextConfig(location.pathname);
+  
+  // Detectar título do livro se estiver em página de livro
+  const bookTitle = location.state?.livro?.titulo || location.state?.book?.title;
+  const contextConfig = getContextConfig(location.pathname, bookTitle);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -139,7 +236,11 @@ export const DesktopChatPanel = () => {
         body: {
           messages: [...messages, userMessage],
           files: [],
-          mode: mode
+          mode: mode,
+          context: {
+            page: location.pathname,
+            bookTitle: bookTitle
+          }
         }
       });
 
@@ -177,7 +278,11 @@ export const DesktopChatPanel = () => {
       body: {
         messages: [...messages, userMessage],
         files: [],
-        mode: mode
+        mode: mode,
+        context: {
+          page: location.pathname,
+          bookTitle: bookTitle
+        }
       }
     })
     .then(({ data, error }) => {
@@ -238,7 +343,7 @@ export const DesktopChatPanel = () => {
               <GraduationCap className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Assistente de Estudos</h3>
+              <h3 className="text-sm font-semibold text-foreground">Professora</h3>
               <p className="text-xs text-muted-foreground">Pergunte o que quiser</p>
             </div>
           </div>
