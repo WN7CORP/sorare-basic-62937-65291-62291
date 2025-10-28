@@ -110,11 +110,28 @@ Sua resposta DEVE:
 [/SUGESTÕES]
 
 **COMPONENTES AVANÇADOS DISPONÍVEIS:**
-- [TABS: Título] para organizar conteúdo em abas
-- [ACCORDION] para FAQ ou tópicos expansíveis
-- [SLIDES: Título] para apresentação passo a passo
-- [COMPARAÇÃO] para diferenciar institutos similares
-- [INFOGRÁFICO] para fluxogramas e etapas visuais
+
+1. **[COMPARAÇÃO: Título]** - Carrossel de cards comparativos
+   Formato EXATO:
+   [COMPARAÇÃO: Título da Comparação]
+   {"cards": [
+     {"title": "Conceito 1", "description": "Explicação", "example": "Exemplo prático", "icon": "⚖️"},
+     {"title": "Conceito 2", "description": "Explicação", "example": "Exemplo prático", "icon": "📜"}
+   ]}
+   [/COMPARAÇÃO]
+
+2. **[INFOGRÁFICO: Título]** - Timeline de etapas
+   Formato EXATO:
+   [INFOGRÁFICO: Título]
+   {"steps": [
+     {"title": "Etapa 1", "description": "Descrição"},
+     {"title": "Etapa 2", "description": "Descrição"}
+   ]}
+   [/INFOGRÁFICO]
+
+3. **[TABS: Título]** - Conteúdo em abas
+4. **[ACCORDION]** - FAQ expansível
+5. **[SLIDES: Título]** - Apresentação passo a passo
 
 ${cfContext || ''}`;
 
@@ -157,14 +174,19 @@ ${cfContext || ''}`;
 [/SUGESTÕES]
 
 **COMPONENTES AVANÇADOS:**
-Use [TABS], [ACCORDION], [SLIDES] para organizar conteúdo complexo.
-Exemplo [TABS]:
-[TABS: Interpretações Doutrinárias]
-{"tabs": [
-  {"title": "Doutrina Majoritária", "content": "Conteúdo em Markdown", "icon": "📖"},
-  {"title": "Posição Minoritária", "content": "Outro ponto de vista", "icon": "⚖️"}
-]}
-[/TABS]
+
+1. **[COMPARAÇÃO: Título]** - Carrossel de cards comparativos
+   [COMPARAÇÃO: Diferenças]
+   {"cards": [
+     {"title": "Conceito A", "description": "Explicação detalhada", "example": "Ex: caso prático", "icon": "⚖️"},
+     {"title": "Conceito B", "description": "Outra explicação", "example": "Ex: outro caso", "icon": "📜"}
+   ]}
+   [/COMPARAÇÃO]
+
+2. **[TABS: Título]** para organizar diferentes interpretações
+3. **[ACCORDION]** para dúvidas frequentes
+4. **[SLIDES: Título]** para processos sequenciais
+5. **[INFOGRÁFICO: Título]** para fluxogramas
 
 ${cfContext || ''}`;
 
@@ -204,11 +226,21 @@ ${cfContext || ''}`;
 [/SUGESTÕES]
 
 **COMPONENTES AVANÇADOS:**
-- [TABS: Título] para organizar conteúdo em abas
-- [ACCORDION] para FAQ ou tópicos expansíveis
-- [SLIDES: Título] para apresentação passo a passo
-- [COMPARAÇÃO] para diferenciar institutos
-- [INFOGRÁFICO] para fluxogramas
+
+**[COMPARAÇÃO: Título]** - Use SEMPRE para comparar conceitos similares:
+[COMPARAÇÃO: Diferenças Principais]
+{"cards": [
+  {"title": "Conceito 1", "description": "Explicação clara", "example": "Exemplo: situação X", "icon": "⚖️"},
+  {"title": "Conceito 2", "description": "Outra explicação", "example": "Exemplo: situação Y", "icon": "📜"}
+]}
+[/COMPARAÇÃO]
+
+**[INFOGRÁFICO: Título]** - Para processos/etapas:
+[INFOGRÁFICO: Etapas do Processo]
+{"steps": [{"title": "1. Fase inicial", "description": "O que acontece"}, {"title": "2. Fase seguinte", "description": "Próximo passo"}]}
+[/INFOGRÁFICO]
+
+Também disponíveis: [TABS], [ACCORDION], [SLIDES]
 
 ${cfContext || ''}`;
       }

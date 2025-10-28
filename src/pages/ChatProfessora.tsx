@@ -1395,28 +1395,40 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                       )}
                       
                       {finalSuggestions.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-border/50">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Lightbulb className="w-4 h-4 text-primary" />
-                            <span className="text-sm font-medium text-muted-foreground">Sugestões:</span>
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="mt-6 pt-4 border-t border-primary/20"
+                        >
+                          <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl p-4 border border-primary/10">
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="p-1.5 rounded-lg bg-primary/10">
+                                <Lightbulb className="w-4 h-4 text-primary" />
+                              </div>
+                              <span className="text-sm font-semibold text-foreground">💭 Perguntas para aprofundar:</span>
+                            </div>
+                            <div className="grid gap-2">
+                              {finalSuggestions.map((sug, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => {
+                                    setInput(sug);
+                                    setTimeout(() => sendMessage(), 100);
+                                  }}
+                                  className="group text-left w-full px-4 py-3 rounded-lg bg-background hover:bg-primary/5 border border-border hover:border-primary/30 transition-all duration-200 hover:shadow-md"
+                                >
+                                  <div className="flex items-start gap-3">
+                                    <span className="text-primary font-bold mt-0.5 flex-shrink-0">{idx + 1}.</span>
+                                    <p className="text-sm leading-relaxed text-foreground group-hover:text-primary transition-colors">
+                                      {sug}
+                                    </p>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                          <div className="flex flex-wrap gap-2">
-                            {finalSuggestions.map((sug, idx) => (
-                              <Button
-                                key={idx}
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setInput(sug);
-                                  setTimeout(() => sendMessage(), 100);
-                                }}
-                                className="text-xs h-auto py-1.5 px-3"
-                              >
-                                {sug}
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
+                        </motion.div>
                       )}
                       
                       {!message.isStreaming && (
@@ -1515,32 +1527,6 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
           </div>}
 
         <div className="border-t border-border bg-background px-4 py-3 space-y-3">
-          {/* Seletor de nível de resposta */}
-          {(mode === 'study' || mode === 'realcase') && (
-            <div className="flex items-center justify-center gap-2 pb-1">
-              <span className="text-xs text-muted-foreground">Nível de detalhe:</span>
-              {[
-                { value: 'basic' as const, label: 'Básico', icon: '📝', desc: '~400 palavras' },
-                { value: 'complete' as const, label: 'Completo', icon: '📚', desc: '~800 palavras' },
-                { value: 'deep' as const, label: 'Aprofundado', icon: '🔍', desc: '~1500 palavras' }
-              ].map(level => (
-                <Button
-                  key={level.value}
-                  variant={responseLevel === level.value ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setResponseLevel(level.value)}
-                  className="text-xs h-auto py-1.5 px-2 flex flex-col items-center gap-0.5"
-                  title={level.desc}
-                >
-                  <span className="flex items-center gap-1">
-                    <span>{level.icon}</span>
-                    <span>{level.label}</span>
-                  </span>
-                </Button>
-              ))}
-            </div>
-          )}
-          
           {mode !== "recommendation" && (
             <div className="flex gap-2">
               <input ref={imageInputRef} type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0], "image")} className="hidden" />
