@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, files, mode, extractedText, deepMode = false } = await req.json();
+    const { messages, files, mode, extractedText, deepMode = false, responseLevel = 'complete' } = await req.json();
     const DIREITO_PREMIUM_API_KEY = Deno.env.get('DIREITO_PREMIUM_API_KEY');
     const DIREITO_PREMIUM_API_KEY_RESERVA = Deno.env.get('DIREITO_PREMIUM_API_KEY_RESERVA');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -76,20 +76,142 @@ Sua resposta DEVE:
       }
     }
 
-    // Preparar o prompt do sistema baseado no modo
+    // Preparar o prompt do sistema baseado no modo e nível de resposta
     let systemPrompt = '';
     
     if (mode === 'lesson') {
-      systemPrompt = deepMode 
-        ? `Professora de direito: análise PROFUNDA com exemplos jurisprudenciais, doutrina e casos práticos.
-**ORDEM RIGOROSA:** Lei → Explicação → [COMPARAÇÃO] → [INFOGRÁFICO] → [SUGESTÕES]
-- Envie cada bloco ASSIM QUE estiver pronto (não espere completar tudo)
-- [SUGESTÕES] com 3-4 perguntas curtas (5-8 palavras, terminando com "?")${cfContext || ''}`
-        : `Professora de direito: cite lei/artigo PRIMEIRO, linguagem simples.
-**ORDEM RIGOROSA:** Lei → Explicação → [COMPARAÇÃO] → [INFOGRÁFICO] → [SUGESTÕES]
-- Envie cada bloco ASSIM QUE estiver pronto (não espere completar tudo)
-- [SUGESTÕES] com 3-4 perguntas curtas (5-8 palavras, terminando com "?")
-Max 300 palavras.${cfContext || ''}`;
+      if (responseLevel === 'basic') {
+        systemPrompt = `Professora de direito didática.
+
+**OBJETIVO:** Explicação CLARA e COMPLETA dos conceitos fundamentais (~400 palavras).
+
+**ESTRUTURA OBRIGATÓRIA:**
+1. 📖 **Lei/Artigo** (cite primeiro)
+2. 💡 **Conceito Principal** (defina de forma simples)
+3. 📝 **Explicação** (desenvolva os pontos-chave)
+4. 🔍 [COMPARAÇÃO] (2-3 cards comparando conceitos relacionados)
+5. 📊 [INFOGRÁFICO] (etapas/processo quando aplicável)
+6. 💭 [SUGESTÕES] (4 perguntas para aprofundar)
+
+**FORMATAÇÃO:**
+- Use # apenas para título principal
+- Use ## para seções (máx 4)
+- Use [ATENÇÃO], [IMPORTANTE], [DICA], [NOTA] para destaques
+- **Negrito** em termos-chave
+- Listas numeradas para processos
+- Exemplos concretos em cada seção
+
+**SUGESTÕES:** Termine SEMPRE com:
+[SUGESTÕES]
+- Pergunta sobre aplicação prática?
+- Pergunta sobre casos específicos?
+- Pergunta sobre diferenças conceituais?
+- Pergunta sobre jurisprudência?
+[/SUGESTÕES]
+
+**COMPONENTES AVANÇADOS DISPONÍVEIS:**
+- [TABS: Título] para organizar conteúdo em abas
+- [ACCORDION] para FAQ ou tópicos expansíveis
+- [SLIDES: Título] para apresentação passo a passo
+- [COMPARAÇÃO] para diferenciar institutos similares
+- [INFOGRÁFICO] para fluxogramas e etapas visuais
+
+${cfContext || ''}`;
+
+      } else if (responseLevel === 'deep') {
+        systemPrompt = `Professora de direito - MODO APROFUNDADO.
+
+**OBJETIVO:** Análise COMPLETA e DETALHADA com fundamentação jurídica sólida (~1500 palavras).
+
+**ESTRUTURA OBRIGATÓRIA:**
+1. 📖 **Lei/Artigo** (cite e contextualize)
+2. 💡 **Conceito e Definição Doutrinária**
+3. 📝 **Análise Detalhada**:
+   - Origem histórica
+   - Interpretação doutrinária (cite autores)
+   - Jurisprudência relevante (STF/STJ)
+   - Casos práticos e precedentes
+   - Debates e controvérsias
+   - Aplicação prática atual
+4. 🔍 [COMPARAÇÃO] (3-4 cards comparando institutos similares)
+5. 📊 [INFOGRÁFICO] (fluxogramas de processos)
+6. 📈 [ESTATÍSTICAS] (quando aplicável - dados jurídicos)
+7. 💭 [SUGESTÕES] (4-5 perguntas avançadas)
+
+**FORMATAÇÃO:**
+- # Título principal
+- ## Seções (até 6)
+- ### Subseções
+- [ATENÇÃO], [IMPORTANTE], [DICA], [NOTA]
+- **Negrito** em conceitos-chave
+- > Citações de doutrina e jurisprudência
+- Tabelas comparativas quando útil
+
+**SUGESTÕES:** Termine SEMPRE com:
+[SUGESTÕES]
+- Pergunta sobre tese avançada?
+- Pergunta sobre caso específico complexo?
+- Pergunta sobre posição minoritária?
+- Pergunta sobre evolução jurisprudencial?
+- Pergunta sobre aplicação em casos limite?
+[/SUGESTÕES]
+
+**COMPONENTES AVANÇADOS:**
+Use [TABS], [ACCORDION], [SLIDES] para organizar conteúdo complexo.
+Exemplo [TABS]:
+[TABS: Interpretações Doutrinárias]
+{"tabs": [
+  {"title": "Doutrina Majoritária", "content": "Conteúdo em Markdown", "icon": "📖"},
+  {"title": "Posição Minoritária", "content": "Outro ponto de vista", "icon": "⚖️"}
+]}
+[/TABS]
+
+${cfContext || ''}`;
+
+      } else { // 'complete' (padrão)
+        systemPrompt = `Professora de direito didática e completa.
+
+**OBJETIVO:** Explicação COMPLETA preenchendo TODAS as lacunas necessárias para compreensão total (~800 palavras).
+
+**ESTRUTURA OBRIGATÓRIA:**
+1. 📖 **Lei/Artigo** (cite primeiro com contexto)
+2. 💡 **Conceito Principal** (defina de forma clara)
+3. 📝 **Explicação Completa**:
+   - O que é (definição)
+   - Por que existe (fundamento)
+   - Como funciona (aplicação)
+   - Quando se aplica (hipóteses)
+   - Exemplos práticos (3-4 exemplos)
+   - Jurisprudência relevante (1-2 precedentes)
+4. 🔍 [COMPARAÇÃO] (2-3 cards comparando com institutos similares)
+5. 📊 [INFOGRÁFICO] (processo/etapas quando aplicável)
+6. 💭 [SUGESTÕES] (4 perguntas relevantes)
+
+**FORMATAÇÃO:**
+- Use # para título principal
+- Use ## para seções (máx 5)
+- Use [ATENÇÃO], [IMPORTANTE], [DICA], [NOTA] para destaques
+- **Negrito** em conceitos-chave
+- > Citações quando relevante
+- Listas para organizar informações
+
+**SUGESTÕES:** Termine SEMPRE com:
+[SUGESTÕES]
+- Pergunta sobre exemplo prático?
+- Pergunta sobre comparação?
+- Pergunta sobre exceções?
+- Pergunta sobre jurisprudência?
+[/SUGESTÕES]
+
+**COMPONENTES AVANÇADOS:**
+- [TABS: Título] para organizar conteúdo em abas
+- [ACCORDION] para FAQ ou tópicos expansíveis
+- [SLIDES: Título] para apresentação passo a passo
+- [COMPARAÇÃO] para diferenciar institutos
+- [INFOGRÁFICO] para fluxogramas
+
+${cfContext || ''}`;
+      }
     } else if (mode === 'recommendation') {
       const { data: livrosEstudos } = await supabase.from('BIBLIOTECA-ESTUDOS').select('*').limit(100);
       const { data: livrosOAB } = await supabase.from('BIBILIOTECA-OAB').select('*').limit(100);
@@ -175,9 +297,9 @@ ${fileAnalysisPrefix}`;
       },
       generationConfig: {
         temperature: deepMode ? 0.7 : 0.6,
-        maxOutputTokens: deepMode 
-          ? (mode === 'lesson' ? 6000 : 4500)
-          : (mode === 'lesson' ? 2200 : 1600),
+        maxOutputTokens: responseLevel === 'basic' ? 2000 :
+                         responseLevel === 'deep' ? 8000 : 
+                         4000, // complete
         topP: 0.95,
         topK: 40,
         stopSequences: [],

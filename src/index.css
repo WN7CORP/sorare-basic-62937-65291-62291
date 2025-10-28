@@ -18,7 +18,7 @@ All colors MUST be HSL.
     --popover: 0 0% 18%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 70% 60%;
+    --primary: 0 80% 68%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 22%;
@@ -27,8 +27,12 @@ All colors MUST be HSL.
     --muted: 0 0% 22%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 0 70% 60%;
+    --accent: 0 80% 68%;
     --accent-foreground: 0 0% 100%;
+    
+    --accent-light: 0 85% 75%;
+    --accent-hover: 0 75% 72%;
+    --strong-color: 0 85% 72%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
@@ -91,11 +95,23 @@ All colors MUST be HSL.
   }
   
   .prose strong {
-    @apply text-accent font-bold;
+    @apply font-bold;
+    color: hsl(var(--strong-color)) !important;
   }
   
   strong {
-    @apply text-foreground font-bold;
+    @apply font-bold;
+    color: hsl(var(--strong-color)) !important;
+  }
+  
+  .resumo-content h1,
+  .resumo-content h2,
+  .resumo-content h3 {
+    color: hsl(var(--accent-light)) !important;
+  }
+
+  .resumo-content strong {
+    color: hsl(var(--strong-color)) !important;
   }
   
   /* Article specific styles */

@@ -5,6 +5,9 @@ import { HighlightedBox } from "@/components/chat/HighlightedBox";
 import { ComparisonCarousel } from "@/components/chat/ComparisonCarousel";
 import { InfographicTimeline } from "@/components/chat/InfographicTimeline";
 import { StatisticsCard } from "@/components/chat/StatisticsCard";
+import { MarkdownTabs } from "@/components/chat/MarkdownTabs";
+import { MarkdownAccordion } from "@/components/chat/MarkdownAccordion";
+import { MarkdownSlides } from "@/components/chat/MarkdownSlides";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -63,6 +66,7 @@ const ChatProfessora = () => {
   const [showFlashcardsModal, setShowFlashcardsModal] = useState(false);
   const [showQuestoesModal, setShowQuestoesModal] = useState(false);
   const [currentContent, setCurrentContent] = useState("");
+  const [responseLevel, setResponseLevel] = useState<'basic' | 'complete' | 'deep'>('complete');
   
   // Configurar worker do PDF.js uma vez
   useEffect(() => {
@@ -278,7 +282,7 @@ const ChatProfessora = () => {
       setIsLoading(false);
     }
   };
-  const streamResponse = async (userMessage: string, streamMode: 'chat' | 'lesson' = 'chat', filesOverride?: UploadedFile[], extractedText?: string, deepMode: boolean = false) => {
+  const streamResponse = async (userMessage: string, streamMode: 'chat' | 'lesson' = 'chat', filesOverride?: UploadedFile[], extractedText?: string, deepMode: boolean = false, responseLevelOverride?: 'basic' | 'complete' | 'deep') => {
     if (streamMode === 'chat') {
       setIsLoading(true);
     } else {
@@ -344,7 +348,8 @@ const ChatProfessora = () => {
           files: filesOverride ?? uploadedFiles,
           mode: mode,
           extractedText: extractedText || undefined,
-          deepMode: deepMode
+          deepMode: deepMode,
+          responseLevel: responseLevelOverride || responseLevel
         }),
         signal: abortControllerRef.current.signal
       });
@@ -1022,8 +1027,17 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                       // Detectar [INFOGRÁFICO]
                       const infographicRegex = /\[INFOGRÁFICO:\s*([^\]]+)\]\s*(\{[\s\S]*?\})\s*\[\/INFOGRÁFICO\]/gi;
                       
-                      // Detectar [ESTATÍSTICAS]
+                       // Detectar [ESTATÍSTICAS]
                       const statsRegex = /\[ESTATÍSTICAS\]\s*(\{[\s\S]*?\})\s*\[\/ESTATÍSTICAS\]/gi;
+                      
+                      // Detectar [TABS]
+                      const tabsRegex = /\[TABS:\s*([^\]]+)\]\s*(\{[\s\S]*?\})\s*\[\/TABS\]/gi;
+                      
+                      // Detectar [ACCORDION]
+                      const accordionRegex = /\[ACCORDION\]\s*(\{[\s\S]*?\})\s*\[\/ACCORDION\]/gi;
+                      
+                      // Detectar [SLIDES]
+                      const slidesRegex = /\[SLIDES:\s*([^\]]+)\]\s*(\{[\s\S]*?\})\s*\[\/SLIDES\]/gi;
                       
                       const allMatches: Array<{index: number, length: number, type: string, match: RegExpMatchArray}> = [];
                       
@@ -1046,11 +1060,35 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                         }
                       }
                       
-                      // Coletar estatísticas
+                       // Coletar estatísticas
                       const statMatches = tempContent.matchAll(statsRegex);
                       for (const m of statMatches) {
                         if (m.index !== undefined) {
                           allMatches.push({index: m.index, length: m[0].length, type: 'stats', match: m as RegExpMatchArray});
+                        }
+                      }
+                      
+                      // Coletar tabs
+                      const tabMatches = tempContent.matchAll(tabsRegex);
+                      for (const m of tabMatches) {
+                        if (m.index !== undefined) {
+                          allMatches.push({index: m.index, length: m[0].length, type: 'tabs', match: m as RegExpMatchArray});
+                        }
+                      }
+                      
+                      // Coletar accordion
+                      const accordionMatches = tempContent.matchAll(accordionRegex);
+                      for (const m of accordionMatches) {
+                        if (m.index !== undefined) {
+                          allMatches.push({index: m.index, length: m[0].length, type: 'accordion', match: m as RegExpMatchArray});
+                        }
+                      }
+                      
+                      // Coletar slides
+                      const slideMatches = tempContent.matchAll(slidesRegex);
+                      for (const m of slideMatches) {
+                        if (m.index !== undefined) {
+                          allMatches.push({index: m.index, length: m[0].length, type: 'slides', match: m as RegExpMatchArray});
                         }
                       }
                       
@@ -1092,11 +1130,31 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                             if (data.steps && Array.isArray(data.steps)) {
                               elements.push(<InfographicTimeline key={key++} title={title} steps={data.steps} />);
                             }
-                          } else if (type === 'stats') {
+                           } else if (type === 'stats') {
                             const jsonStr = match[1]?.trim();
                             const data = JSON.parse(jsonStr);
                             if (data.stats && Array.isArray(data.stats)) {
                               elements.push(<StatisticsCard key={key++} stats={data.stats} />);
+                            }
+                          } else if (type === 'tabs') {
+                            const title = match[1]?.trim();
+                            const jsonStr = match[2]?.trim();
+                            const data = JSON.parse(jsonStr);
+                            if (data.tabs && Array.isArray(data.tabs)) {
+                              elements.push(<MarkdownTabs key={key++} tabs={data.tabs} />);
+                            }
+                          } else if (type === 'accordion') {
+                            const jsonStr = match[1]?.trim();
+                            const data = JSON.parse(jsonStr);
+                            if (data.items && Array.isArray(data.items)) {
+                              elements.push(<MarkdownAccordion key={key++} items={data.items} />);
+                            }
+                          } else if (type === 'slides') {
+                            const title = match[1]?.trim();
+                            const jsonStr = match[2]?.trim();
+                            const data = JSON.parse(jsonStr);
+                            if (data.slides && Array.isArray(data.slides)) {
+                              elements.push(<MarkdownSlides key={key++} title={title} slides={data.slides} />);
                             }
                           }
                         } catch (e) {
@@ -1131,9 +1189,9 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                       return elements.length > 0 ? elements : null;
                     };
 
-                    // Helpers: ocultar blocos incompletos durante streaming e fechar tags ausentes após fim
+                     // Helpers: ocultar blocos incompletos durante streaming e fechar tags ausentes após fim
                     const stripIncompleteBlocks = (content: string) => {
-                      const tags = ['COMPARAÇÃO', 'CARROSSEL', 'ETAPAS', 'TIPOS', 'INFOGRÁFICO', 'ESTATÍSTICAS'];
+                      const tags = ['COMPARAÇÃO', 'CARROSSEL', 'ETAPAS', 'TIPOS', 'INFOGRÁFICO', 'ESTATÍSTICAS', 'TABS', 'ACCORDION', 'SLIDES'];
                       let result = content;
                       for (const t of tags) {
                         // Se abriu e não fechou ainda, remove até o fim para evitar JSON aparecendo bruto
@@ -1173,22 +1231,30 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                         }
                         return output;
                       };
-                      let fixed = content;
-                      ['COMPARAÇÃO','CARROSSEL','ETAPAS','TIPOS','INFOGRÁFICO','ESTATÍSTICAS'].forEach(tag => {
+                       let fixed = content;
+                      ['COMPARAÇÃO','CARROSSEL','ETAPAS','TIPOS','INFOGRÁFICO','ESTATÍSTICAS','TABS','ACCORDION','SLIDES'].forEach(tag => {
                         fixed = fix(fixed, tag);
                       });
                       return fixed;
                     };
 
-                    // Extrair sugestões durante streaming
+                     // Extrair sugestões durante streaming
                     const extractSuggestions = (content: string): string[] => {
-                      const match = content.match(/\[SUGESTÕES\]([\s\S]*?)(?:\[\/SUGESTÕES\]|$)/);
+                      const match = content.match(/\[SUGESTÕES\]([\s\S]*?)(?:\[\/SUGESTÕES\]|$)/i);
                       if (!match) return [];
+                      
                       const raw = match[1];
-                      const lines = raw.split('\n')
+                      
+                      // Extrair linhas que terminam com "?"
+                      const lines = raw
+                        .split('\n')
                         .map(l => l.trim())
-                        .filter(l => l && l.includes('?'));
-                      return lines.length >= 2 ? lines : [];
+                        .filter(l => l.length > 0)
+                        .map(l => l.replace(/^[-*•]\s*/, '')) // Remove bullets
+                        .filter(l => l.includes('?'));
+                      
+                      console.log('📝 Sugestões extraídas:', lines);
+                      return lines.slice(0, 5); // Máximo 5 sugestões
                     };
                     
                     const suggestions = extractSuggestions(message.content);
@@ -1449,6 +1515,32 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
           </div>}
 
         <div className="border-t border-border bg-background px-4 py-3 space-y-3">
+          {/* Seletor de nível de resposta */}
+          {(mode === 'study' || mode === 'realcase') && (
+            <div className="flex items-center justify-center gap-2 pb-1">
+              <span className="text-xs text-muted-foreground">Nível de detalhe:</span>
+              {[
+                { value: 'basic' as const, label: 'Básico', icon: '📝', desc: '~400 palavras' },
+                { value: 'complete' as const, label: 'Completo', icon: '📚', desc: '~800 palavras' },
+                { value: 'deep' as const, label: 'Aprofundado', icon: '🔍', desc: '~1500 palavras' }
+              ].map(level => (
+                <Button
+                  key={level.value}
+                  variant={responseLevel === level.value ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setResponseLevel(level.value)}
+                  className="text-xs h-auto py-1.5 px-2 flex flex-col items-center gap-0.5"
+                  title={level.desc}
+                >
+                  <span className="flex items-center gap-1">
+                    <span>{level.icon}</span>
+                    <span>{level.label}</span>
+                  </span>
+                </Button>
+              ))}
+            </div>
+          )}
+          
           {mode !== "recommendation" && (
             <div className="flex gap-2">
               <input ref={imageInputRef} type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0], "image")} className="hidden" />
