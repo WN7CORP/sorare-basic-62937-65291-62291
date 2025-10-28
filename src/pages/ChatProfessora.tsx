@@ -3,6 +3,8 @@ import { Send, X, Brain, ArrowLeft, Image, FileText, BookOpen, Scale, Graduation
 import { VLibrasButton } from "@/components/VLibrasButton";
 import { HighlightedBox } from "@/components/chat/HighlightedBox";
 import { ComparisonCarousel } from "@/components/chat/ComparisonCarousel";
+import { InfographicTimeline } from "@/components/chat/InfographicTimeline";
+import { StatisticsCard } from "@/components/chat/StatisticsCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -965,7 +967,132 @@ const ChatProfessora = () => {
                       // Não é JSON, renderizar normalmente
                     }
                     
+                    
+                    // Função para parsear conteúdo com carrosséis, infográficos e estatísticas
+                    const parseSpecialContent = (content: string) => {
+                      const elements: JSX.Element[] = [];
+                      let remainingContent = content;
+                      let key = 0;
+
+                      // Detectar [COMPARAÇÃO], [CARROSSEL], [ETAPAS], [TIPOS]
+                      const comparisonRegex = /\[(COMPARAÇÃO|CARROSSEL|ETAPAS|TIPOS):\s*([^\]]+)\]\s*(\{[\s\S]*?\})\s*\[\/(COMPARAÇÃO|CARROSSEL|ETAPAS|TIPOS)\]/gi;
+                      
+                      // Detectar [INFOGRÁFICO]
+                      const infographicRegex = /\[INFOGRÁFICO:\s*([^\]]+)\]\s*(\{[\s\S]*?\})\s*\[\/INFOGRÁFICO\]/gi;
+                      
+                      // Detectar [ESTATÍSTICAS]
+                      const statsRegex = /\[ESTATÍSTICAS\]\s*(\{[\s\S]*?\})\s*\[\/ESTATÍSTICAS\]/gi;
+                      
+                      const allMatches: Array<{index: number, length: number, type: string, match: RegExpMatchArray}> = [];
+                      
+                      let match;
+                      const tempContent = content;
+                      
+                      // Coletar todas as correspondências de comparação
+                      const compMatches = tempContent.matchAll(comparisonRegex);
+                      for (const m of compMatches) {
+                        if (m.index !== undefined) {
+                          allMatches.push({index: m.index, length: m[0].length, type: 'comparison', match: m as RegExpMatchArray});
+                        }
+                      }
+                      
+                      // Coletar infográficos
+                      const infoMatches = tempContent.matchAll(infographicRegex);
+                      for (const m of infoMatches) {
+                        if (m.index !== undefined) {
+                          allMatches.push({index: m.index, length: m[0].length, type: 'infographic', match: m as RegExpMatchArray});
+                        }
+                      }
+                      
+                      // Coletar estatísticas
+                      const statMatches = tempContent.matchAll(statsRegex);
+                      for (const m of statMatches) {
+                        if (m.index !== undefined) {
+                          allMatches.push({index: m.index, length: m[0].length, type: 'stats', match: m as RegExpMatchArray});
+                        }
+                      }
+                      
+                      // Ordenar por índice
+                      allMatches.sort((a, b) => a.index - b.index);
+                      
+                      let lastIndex = 0;
+                      
+                      allMatches.forEach(({index: startIdx, length, type, match}) => {
+                        const endIdx = startIdx + length;
+
+                        // Adicionar texto antes do elemento especial
+                        if (startIdx > lastIndex) {
+                          const textBefore = content.substring(lastIndex, startIdx);
+                          if (textBefore.trim()) {
+                            elements.push(
+                              <div key={key++} className="prose prose-sm max-w-none dark:prose-invert prose-p:text-[15px] prose-p:leading-[1.4] prose-p:text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-ul:text-foreground prose-ol:text-foreground prose-li:text-[15px]">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  {textBefore}
+                                </ReactMarkdown>
+                              </div>
+                            );
+                          }
+                        }
+
+                        // Adicionar elemento especial
+                        try {
+                          if (type === 'comparison') {
+                            const title = match[2]?.trim();
+                            const jsonStr = match[3]?.trim();
+                            const data = JSON.parse(jsonStr);
+                            if (data.cards && Array.isArray(data.cards)) {
+                              elements.push(<ComparisonCarousel key={key++} title={title} cards={data.cards} />);
+                            }
+                          } else if (type === 'infographic') {
+                            const title = match[1]?.trim();
+                            const jsonStr = match[2]?.trim();
+                            const data = JSON.parse(jsonStr);
+                            if (data.steps && Array.isArray(data.steps)) {
+                              elements.push(<InfographicTimeline key={key++} title={title} steps={data.steps} />);
+                            }
+                          } else if (type === 'stats') {
+                            const jsonStr = match[1]?.trim();
+                            const data = JSON.parse(jsonStr);
+                            if (data.stats && Array.isArray(data.stats)) {
+                              elements.push(<StatisticsCard key={key++} stats={data.stats} />);
+                            }
+                          }
+                        } catch (e) {
+                          console.error(`Erro ao parsear ${type}:`, e);
+                          // Em caso de erro, incluir o texto original
+                          elements.push(
+                            <div key={key++} className="prose prose-sm max-w-none dark:prose-invert">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {match[0]}
+                              </ReactMarkdown>
+                            </div>
+                          );
+                        }
+
+                        lastIndex = endIdx;
+                      });
+
+                      // Adicionar texto restante
+                      if (lastIndex < content.length) {
+                        const remainingText = content.substring(lastIndex);
+                        if (remainingText.trim()) {
+                          elements.push(
+                            <div key={key++} className="prose prose-sm max-w-none dark:prose-invert prose-p:text-[15px] prose-p:leading-[1.4] prose-p:text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-ul:text-foreground prose-ol:text-foreground prose-li:text-[15px]">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {remainingText}
+                              </ReactMarkdown>
+                            </div>
+                          );
+                        }
+                      }
+
+                      return elements.length > 0 ? elements : null;
+                    };
+
+                    const parsedContent = parseSpecialContent(message.content.replace(/\[SUGESTÕES\][\s\S]*?\[\/SUGESTÕES\]/g, ''));
+
                     return <>
+                      {parsedContent || (
                       <div className="prose prose-sm max-w-none dark:prose-invert prose-p:text-[15px] prose-p:leading-[1.4] prose-p:text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-ul:text-foreground prose-ol:text-foreground prose-li:text-[15px]">
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
@@ -1073,6 +1200,7 @@ const ChatProfessora = () => {
                           {message.content.replace(/\[SUGESTÕES\][\s\S]*?\[\/SUGESTÕES\]/g, '')}
                         </ReactMarkdown>
                       </div>
+                      )}
                       
                       {!message.isStreaming && index === messages.length - 1 && (() => {
                         // Extrair sugestões se existirem

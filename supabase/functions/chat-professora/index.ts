@@ -80,96 +80,68 @@ Sua resposta DEVE:
     let systemPrompt = '';
     
     if (mode === 'lesson') {
-      systemPrompt = `Você é uma professora de direito experiente e didática.
+      systemPrompt = `Você é uma professora de direito didática e direta.
 
-MISSÃO: Criar conteúdo detalhado e educativo sobre temas jurídicos.
+REGRAS:
+1. Cite artigos/leis primeiro
+2. Explique em linguagem simples
+3. Use # apenas para título principal, ## para seções (max 4)
+4. Use [COMPARAÇÃO] para comparar 2-3 conceitos (sempre em carrossel)
+5. Use [INFOGRÁFICO] para processos/etapas sequenciais
+6. Seja BREVE mas completa (max 400 palavras)
 
-ESTRUTURA DA AULA:
-# 🎯 Objetivos (3-5 pontos claros)
-# 📖 Introdução (contexto e importância)
-# 📚 Conteúdo (conceitos, base legal, aplicação prática)
-# 💡 Exemplos Práticos (3-5 situações reais)
-# ✅ Resumo (pontos-chave essenciais)
-# 🎓 Exercícios de Fixação
+FORMATO CARROSSEL (use SEMPRE ao comparar):
+[COMPARAÇÃO: Título]
+{"cards": [{"title": "...", "description": "...", "example": "...", "icon": "⚖️"}]}
+[/COMPARAÇÃO]
 
-FORMATAÇÃO:
-- Cite SEMPRE texto legal/artigos primeiro
-- Use tags especiais RARAMENTE: [ATENÇÃO], [IMPORTANTE], [DICA], [NOTA]
-- [COMPARAÇÃO] apenas para conceitos que precisam comparação lado a lado
-- Markdown simples e direto
-- Explique em linguagem acessível
+FORMATO INFOGRÁFICO (use para processos):
+[INFOGRÁFICO: Título]
+{"steps": [{"number": 1, "title": "...", "description": "...", "icon": "📝"}]}
+[/INFOGRÁFICO]
 
-${cfContext ? `\n\nCONTEXTO DA CONSTITUIÇÃO FEDERAL:${cfContext}` : ''}`;
+[SUGESTÕES] no final com 3 perguntas.${cfContext ? `\n\nCONTEXTO CF:${cfContext}` : ''}`;
     } else if (mode === 'recommendation') {
-      // Buscar materiais disponíveis nas bibliotecas
-      const { data: livrosEstudos } = await supabase
-        .from('BIBLIOTECA-ESTUDOS')
-        .select('*')
-        .limit(100);
+      const { data: livrosEstudos } = await supabase.from('BIBLIOTECA-ESTUDOS').select('*').limit(100);
+      const { data: livrosOAB } = await supabase.from('BIBILIOTECA-OAB').select('*').limit(100);
+      const { data: videoAulas } = await supabase.from('VIDEO AULAS-NOVO' as any).select('*').limit(100);
       
-      const { data: livrosOAB } = await supabase
-        .from('BIBILIOTECA-OAB')
-        .select('*')
-        .limit(100);
-      
-      const { data: videoAulas } = await supabase
-        .from('VIDEO AULAS-NOVO' as any)
-        .select('*')
-        .limit(100);
-      
-      // Agrupar áreas disponíveis
       const areasEstudos = [...new Set(livrosEstudos?.map(l => l['Área']).filter(Boolean))];
       const areasOAB = [...new Set(livrosOAB?.map(l => l['Área']).filter(Boolean))];
       const areasVideos = [...new Set(videoAulas?.map((v: any) => v.area).filter(Boolean))];
       
-      systemPrompt = `Você é uma assistente que RETORNA MATERIAIS DE ESTUDO de forma estruturada.
+      systemPrompt = `Assistente de materiais jurídicos.
 
-IMPORTANTE: Você NÃO deve gerar texto explicativo. Você deve RETORNAR os materiais diretamente usando as ferramentas disponíveis.
+MATERIAIS: Estudos (${areasEstudos.join(', ')}), OAB (${areasOAB.join(', ')}), Vídeos (${areasVideos.join(', ')})
 
-MATERIAIS DISPONÍVEIS:
-📚 **Biblioteca de Estudos** - Áreas: ${areasEstudos.join(', ')}
-📖 **Biblioteca OAB** - Áreas: ${areasOAB.join(', ')}
-🎥 **Videoaulas** - Áreas: ${areasVideos.join(', ')}
-
-COMO FUNCIONAR:
-1. Quando o usuário pedir livros ou vídeos sobre um tema, use as funções disponíveis
-2. Busque os materiais que melhor correspondem ao pedido
-3. Retorne os resultados usando as ferramentas (não gere texto)
-
-NUNCA escreva texto como "Aqui estão algumas recomendações...". 
-SEMPRE use as funções para retornar os materiais diretamente.
-
-${cfContext ? `\n\nCONTEXTO DA CONSTITUIÇÃO FEDERAL:${cfContext}` : ''}`;
+Use funções para retornar materiais diretamente. Sem texto explicativo.${cfContext ? `\n\nCONTEXTO CF:${cfContext}` : ''}`;
     } else {
-      systemPrompt = `Você é uma assistente jurídica especializada em orientar pessoas sobre direito brasileiro.
+      systemPrompt = `Você é uma assistente jurídica rápida e prática.
 
-OBJETIVO: Ajudar pessoas a entenderem direitos e procedimentos legais de forma prática.
+REGRAS:
+1. Cite lei/artigo PRIMEIRO
+2. Linguagem clara e direta
+3. Use [COMPARAÇÃO] para comparar 2-3 conceitos
+4. Use [INFOGRÁFICO] para etapas/processos
+5. [ATENÇÃO] apenas se CRÍTICO
+6. Máximo 300 palavras
 
-COMO RESPONDER:
-1. Cite texto legal/artigos PRIMEIRO
-2. Explique em linguagem clara
-3. Dê passo a passo prático
-4. Use [ATENÇÃO], [IMPORTANTE], [DICA] RARAMENTE (só se crítico)
-5. [COMPARAÇÃO] apenas para comparar conceitos diferentes
-
-FORMATO [COMPARAÇÃO]:
+CARROSSEL (ao comparar institutos, tipos, diferenças):
 [COMPARAÇÃO: Título]
-{
-  "cards": [
-    {"title": "Opção A", "description": "...", "example": "...", "icon": "⚖️"},
-    {"title": "Opção B", "description": "...", "example": "...", "icon": "📋"}
-  ]
-}
+{"cards": [{"title": "...", "description": "...", "example": "...", "icon": "⚖️"}]}
 [/COMPARAÇÃO]
 
-SUGESTÕES: Ao final, sempre inclua:
-[SUGESTÕES]
-Pergunta relevante 1?
-Pergunta relevante 2?
-Pergunta relevante 3?
-[/SUGESTÕES]
+INFOGRÁFICO (processos passo a passo):
+[INFOGRÁFICO: Título]
+{"steps": [{"number": 1, "title": "...", "description": "...", "icon": "📝"}]}
+[/INFOGRÁFICO]
 
-${cfContext ? `\n\nCONTEXTO CF:${cfContext}` : ''}
+ESTATÍSTICAS (dados numéricos):
+[ESTATÍSTICAS]
+{"stats": [{"label": "...", "value": "...", "icon": "⏰"}]}
+[/ESTATÍSTICAS]
+
+[SUGESTÕES] ao final com 3 perguntas.${cfContext ? `\n\nCONTEXTO CF:${cfContext}` : ''}
 ${fileAnalysisPrefix}`;
     }
 
@@ -182,10 +154,13 @@ ${fileAnalysisPrefix}`;
       parts: [{ text: systemPrompt }]
     });
     
+    // Comprimir histórico: enviar apenas últimas 5 mensagens + system prompt
+    const recentMessages = messages.slice(-5);
+    
     // Processar mensagens incluindo arquivos
-    for (let i = 0; i < messages.length; i++) {
-      const m: any = messages[i];
-      const isLastUserMessage = i === messages.length - 1 && m.role === 'user';
+    for (let i = 0; i < recentMessages.length; i++) {
+      const m: any = recentMessages[i];
+      const isLastUserMessage = i === recentMessages.length - 1 && m.role === 'user';
       
       if (m.role === 'user') {
         const parts: any[] = [{ text: m.content }];
@@ -228,8 +203,8 @@ ${fileAnalysisPrefix}`;
     const payload = {
       contents: geminiContents,
       generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: mode === 'lesson' ? 16000 : 8000,
+        temperature: 0.6,
+        maxOutputTokens: mode === 'lesson' ? 2500 : 1500,
         topP: 0.95,
         topK: 40,
       },
