@@ -24,6 +24,7 @@ const BibliotecaEstudos = () => {
   const navigate = useNavigate();
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [mostrarIntro, setMostrarIntro] = useState(true);
 
   const { data: capa } = useQuery({
     queryKey: ["capa-biblioteca-estudos"],
@@ -109,6 +110,18 @@ const BibliotecaEstudos = () => {
     return <div className="flex items-center justify-center min-h-[50vh]">
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>;
+  }
+
+  // Mostrar tela de introdução primeiro
+  if (mostrarIntro && capa) {
+    return (
+      <BibliotecaIntro
+        titulo="Biblioteca de Estudos"
+        sobre={capa.sobre || "Explore uma vasta coleção de livros organizados por área do Direito. Encontre materiais de estudo essenciais para sua formação jurídica, desde conceitos fundamentais até tópicos avançados. Nossa biblioteca digital oferece acesso rápido e fácil aos melhores conteúdos para estudantes, professores e profissionais do Direito."}
+        capaUrl={capa.capa}
+        onAcessar={() => setMostrarIntro(false)}
+      />
+    );
   }
 
   // Se uma área foi selecionada, mostrar os livros dessa área
