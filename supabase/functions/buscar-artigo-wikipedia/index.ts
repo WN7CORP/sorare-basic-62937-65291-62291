@@ -217,8 +217,10 @@ Deno.serve(async (req) => {
       // Buscar da Wikipedia
       console.log('Buscando artigo da Wikipedia:', titulo);
 
+      let finalTitulo = titulo;
+
       // Obter conteúdo COMPLETO do artigo com MAIS imagens
-      const articleUrl = `https://pt.wikipedia.org/w/api.php?` +
+      let articleUrl = `https://pt.wikipedia.org/w/api.php?` +
         `action=query&titles=${encodeURIComponent(titulo)}` +
         `&prop=extracts|pageimages|images|categories` +
         `&format=json&utf8=1` +
@@ -227,24 +229,65 @@ Deno.serve(async (req) => {
         `&imlimit=50&cllimit=50` +
         `&redirects=1`;
 
-      const articleResponse = await fetch(articleUrl);
-      const articleData = await articleResponse.json();
+      let articleResponse = await fetch(articleUrl);
+      let articleData = await articleResponse.json();
 
-      const pages = articleData.query?.pages;
-      const pageId = Object.keys(pages || {})[0];
+      let pages = articleData.query?.pages;
+      let pageId = Object.keys(pages || {})[0];
 
+      // Se não encontrou, tentar buscar pelo título como query
       if (!pageId || pageId === '-1') {
-        return new Response(
-          JSON.stringify({ error: 'Artigo não encontrado' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        console.log('Artigo não encontrado diretamente, tentando buscar...');
+        
+        const searchUrl = `https://pt.wikipedia.org/w/api.php?` +
+          `action=query&list=search&srsearch=${encodeURIComponent(titulo)}` +
+          `&format=json&utf8=1&srlimit=5`;
+
+        const searchResponse = await fetch(searchUrl);
+        const searchData = await searchResponse.json();
+        const results = searchData.query?.search || [];
+
+        if (results.length === 0) {
+          console.log('Nenhum resultado encontrado na busca');
+          return new Response(
+            JSON.stringify({ error: 'Artigo não encontrado' }),
+            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Usar o primeiro resultado da busca
+        finalTitulo = results[0].title;
+        console.log('Usando título encontrado na busca:', finalTitulo);
+
+        // Tentar novamente com o título correto
+        articleUrl = `https://pt.wikipedia.org/w/api.php?` +
+          `action=query&titles=${encodeURIComponent(finalTitulo)}` +
+          `&prop=extracts|pageimages|images|categories` +
+          `&format=json&utf8=1` +
+          `&explaintext=0&exintro=0` +
+          `&piprop=original&pithumbsize=500` +
+          `&imlimit=50&cllimit=50` +
+          `&redirects=1`;
+
+        articleResponse = await fetch(articleUrl);
+        articleData = await articleResponse.json();
+
+        pages = articleData.query?.pages;
+        pageId = Object.keys(pages || {})[0];
+
+        if (!pageId || pageId === '-1') {
+          return new Response(
+            JSON.stringify({ error: 'Artigo não encontrado' }),
+            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
       }
 
       const page = pages[pageId];
 
       // Obter HTML do artigo
       const htmlUrl = `https://pt.wikipedia.org/w/api.php?` +
-        `action=parse&page=${encodeURIComponent(titulo)}` +
+        `action=parse&page=${encodeURIComponent(finalTitulo)}` +
         `&format=json&utf8=1&prop=text`;
 
       const htmlResponse = await fetch(htmlUrl);
@@ -258,7 +301,7 @@ Deno.serve(async (req) => {
       
       // Buscar mais imagens do artigo
       const imagesUrl = `https://pt.wikipedia.org/w/api.php?` +
-        `action=query&titles=${encodeURIComponent(titulo)}` +
+        `action=query&titles=${encodeURIComponent(finalTitulo)}` +
         `&prop=images&format=json&utf8=1&imlimit=10`;
       
       const imagesResponse = await fetch(imagesUrl);
