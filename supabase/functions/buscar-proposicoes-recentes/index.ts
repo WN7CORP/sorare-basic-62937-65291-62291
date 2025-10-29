@@ -18,7 +18,7 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Verificar cache (últimas 24 horas) - Retornar sempre que tiver >= 1 registro
+    // Verificar cache (últimas 24 horas) - Retornar apenas se tiver fotos válidas
     const { data: cacheData, error: cacheError } = await supabase
       .from('cache_proposicoes_recentes')
       .select('*')
@@ -26,11 +26,19 @@ serve(async (req) => {
       .order('data_apresentacao', { ascending: false })
       .limit(15);
 
+    // Verificar se o cache tem fotos válidas (pelo menos 50% com fotos)
     if (!cacheError && cacheData && cacheData.length >= 1) {
-      console.log('✅ Retornando do cache:', cacheData.length, 'proposições');
-      return new Response(JSON.stringify({ proposicoes: cacheData }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      const comFoto = cacheData.filter(p => p.autor_principal_foto).length;
+      const percentualComFoto = (comFoto / cacheData.length) * 100;
+      
+      if (percentualComFoto >= 50) {
+        console.log('✅ Retornando do cache:', cacheData.length, 'proposições (', comFoto, 'com fotos)');
+        return new Response(JSON.stringify({ proposicoes: cacheData }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } else {
+        console.log('⚠️ Cache tem poucas fotos (', percentualComFoto.toFixed(0), '%), forçando atualização...');
+      }
     }
 
     console.log('⚡ Cache vazio, buscando da API...');
