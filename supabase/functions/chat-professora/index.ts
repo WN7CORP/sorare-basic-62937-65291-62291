@@ -493,6 +493,7 @@ ${fileAnalysisPrefix}`;
         async start(controller) {
           try {
             let buffer = "";
+            let partialJson = "";
             
             while (true) {
               const { done, value } = await reader.read();
@@ -512,17 +513,54 @@ ${fileAnalysisPrefix}`;
                 // Ignorar linhas vazias ou comentários SSE
                 if (!line.trim() || line.startsWith(':')) continue;
                 
-                // Processar linhas que começam com "data: "
-                if (line.startsWith('data: ')) {
-                  const jsonStr = line.slice(6).trim();
+                // Remover prefixo "data: " se existir
+                let jsonStr = line.trim();
+                if (jsonStr.startsWith('data:')) {
+                  jsonStr = jsonStr.slice(5).trim();
+                }
+                
+                // Ignorar marcador de fim
+                if (jsonStr === '[DONE]') continue;
+                
+                // Tentar parsear como JSON (pode ser linha completa ou parcial)
+                try {
+                  const parsed = JSON.parse(jsonStr);
                   
-                  // Ignorar marcador de fim
-                  if (jsonStr === '[DONE]') continue;
+                  // Extrair texto do formato Gemini
+                  const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text ||
+                              parsed.text ||
+                              parsed.content?.text ||
+                              parsed.parts?.[0]?.text ||
+                              "";
+                  
+                  if (text) {
+                    if (firstTokenTime === null) {
+                      firstTokenTime = Date.now();
+                      console.log(`🎯 Primeiro token em ${firstTokenTime - apiStartTime}ms`);
+                    }
+                    
+                    chunkCount++;
+                    
+                    // Converter para formato OpenAI SSE
+                    const openAIChunk = {
+                      choices: [{
+                        delta: { content: text },
+                        index: 0,
+                        finish_reason: null
+                      }]
+                    };
+                    
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAIChunk)}\n\n`));
+                  }
+                  
+                  partialJson = ""; // Reset do buffer parcial em caso de sucesso
+                } catch (e) {
+                  // Se falhou, pode ser JSON parcial - acumular e tentar na próxima
+                  partialJson += (partialJson ? "\n" : "") + jsonStr;
                   
                   try {
-                    const parsed = JSON.parse(jsonStr);
-                    
-                    // Extrair texto do formato Gemini
+                    // Tentar parsear o buffer acumulado
+                    const parsed = JSON.parse(partialJson);
                     const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text ||
                                 parsed.text ||
                                 parsed.content?.text ||
@@ -537,7 +575,6 @@ ${fileAnalysisPrefix}`;
                       
                       chunkCount++;
                       
-                      // Converter para formato OpenAI SSE
                       const openAIChunk = {
                         choices: [{
                           delta: { content: text },
@@ -548,8 +585,14 @@ ${fileAnalysisPrefix}`;
                       
                       controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAIChunk)}\n\n`));
                     }
-                  } catch (e) {
-                    console.warn("⚠️ Erro ao parsear linha SSE:", line.slice(0, 100));
+                    
+                    partialJson = ""; // Reset após sucesso
+                  } catch (e2) {
+                    // Ainda incompleto, continuar acumulando
+                    if (partialJson.length > 10000) {
+                      console.warn("⚠️ Buffer parcial muito grande, resetando:", partialJson.slice(0, 100));
+                      partialJson = "";
+                    }
                   }
                 }
               }

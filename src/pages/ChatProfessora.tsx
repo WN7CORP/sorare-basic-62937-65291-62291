@@ -501,9 +501,64 @@ const ChatProfessora = () => {
         // Parar watchdog
         clearInterval(watchdogInterval);
         
-        // Verificar se recebeu algum conteúdo
+        // Verificar se recebeu algum conteúdo - se não, tentar fallback não-streaming
         if (!accumulatedText) {
-          console.error('❌ Frontend: Stream terminou mas nenhum conteúdo foi recebido!');
+          console.error('❌ Frontend: Stream vazio, tentando fallback não-streaming...');
+          
+          try {
+            const fallbackResp = await fetch(`https://izspjvegxdfgkgibpyst.supabase.co/functions/v1/chat-professora`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6c3BqdmVneGRmZ2tnaWJweXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxNDA2MTQsImV4cCI6MjA2MDcxNjYxNH0.LwTMbDH-S0mBoiIxfrSH2BpUMA7r4upOWWAb5a_If0Y',
+                'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6c3BqdmVneGRmZ2tnaWJweXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxNDA2MTQsImV4cCI6MjA2MDcxNjYxNH0.LwTMbDH-S0mBoiIxfrSH2BpUMA7r4upOWWAb5a_If0Y'}`
+              },
+              body: JSON.stringify({
+                messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
+                files: filesOverride ?? uploadedFiles,
+                mode: mode,
+                extractedText: extractedText || undefined,
+                deepMode: deepMode,
+                responseLevel: responseLevelOverride || responseLevel
+              })
+            });
+
+            if (fallbackResp.ok) {
+              const result = await fallbackResp.json();
+              const text = result?.data || result?.content || result?.generatedText || '';
+              
+              if (text) {
+                console.log(`✅ Frontend: Fallback bem-sucedido (${text.length} caracteres)`);
+                const metrics = calculateMetrics(text);
+                
+                setMessages(prev => {
+                  const next = [...prev];
+                  next[next.length - 1] = { 
+                    role: 'assistant', 
+                    content: text, 
+                    isStreaming: false,
+                    metrics 
+                  };
+                  return next;
+                });
+                
+                generateSuggestedQuestions(text);
+                setUploadedFiles([]);
+                setThinkingStartTime(null);
+                
+                sonnerToast.info('Resposta recebida sem streaming', {
+                  description: 'A resposta foi obtida com sucesso.'
+                });
+                
+                return; // Sucesso, sair da função
+              }
+            }
+          } catch (fallbackError) {
+            console.error('❌ Frontend: Fallback também falhou:', fallbackError);
+          }
+          
+          // Se chegou aqui, nem stream nem fallback funcionaram
           throw new Error('A Professora não está respondendo. Tente novamente.');
         }
         
