@@ -12,9 +12,9 @@ import { useNavigate } from "react-router-dom";
 
 const CamaraVotacoes = () => {
   const hoje = new Date().toISOString().split('T')[0];
-  const trintaDiasAtras = new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0];
+  const quinzeDiasAtras = new Date(Date.now() - 15*24*60*60*1000).toISOString().split('T')[0];
   
-  const [dataInicio, setDataInicio] = useState(trintaDiasAtras);
+  const [dataInicio, setDataInicio] = useState(quinzeDiasAtras);
   const [dataFim, setDataFim] = useState(hoje);
   const [loading, setLoading] = useState(false);
   const [votacoes, setVotacoes] = useState<any[]>([]);
@@ -54,7 +54,7 @@ const CamaraVotacoes = () => {
     } catch (error: any) {
       toast({
         title: "Erro na busca",
-        description: error.message,
+        description: error.message || "Tente reduzir o período (máximo 15 dias recomendado)",
         variant: "destructive",
       });
     } finally {
@@ -72,6 +72,9 @@ const CamaraVotacoes = () => {
       <Card className="bg-card border-border mb-6">
         <CardHeader>
           <CardTitle>Buscar Votações</CardTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            Recomendado: períodos de até 15 dias para melhor desempenho
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
