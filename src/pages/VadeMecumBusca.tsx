@@ -4,13 +4,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { criarCondicoesBusca } from "@/lib/numeroExtenso";
 
 const VadeMecumBusca = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const query = searchParams.get("q") || "";
+  const query = (searchParams.get("q") || "").trim();
   const [activeTab, setActiveTab] = useState("constituicao");
 
   const condicoesBusca = useMemo(() => criarCondicoesBusca(query), [query]);
@@ -308,6 +308,27 @@ const VadeMecumBusca = () => {
     (codigosResults?.length || 0) +
     (estatutosResults?.length || 0) +
     (sumulasResults?.length || 0);
+
+  // Mudar automaticamente para a aba com resultados
+  useEffect(() => {
+    if (!loadingConstituicao && !loadingCodigos && !loadingEstatutos && !loadingSumulas) {
+      const counts = {
+        constituicao: constituicaoResults?.length || 0,
+        codigos: codigosResults?.length || 0,
+        estatutos: estatutosResults?.length || 0,
+        sumulas: sumulasResults?.length || 0
+      };
+
+      // Se a aba atual não tem resultados, mudar para a primeira com resultados
+      if (counts[activeTab as keyof typeof counts] === 0) {
+        const firstWithResults = Object.entries(counts).find(([_, count]) => count > 0);
+        if (firstWithResults) {
+          setActiveTab(firstWithResults[0]);
+        }
+      }
+    }
+  }, [constituicaoResults, codigosResults, estatutosResults, sumulasResults, loadingConstituicao, loadingCodigos, loadingEstatutos, loadingSumulas, activeTab]);
+
 
   // Mapear rota de código
   const getCodigoRoute = (sigla: string) => {
