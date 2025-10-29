@@ -307,7 +307,7 @@ const ChatProfessora = () => {
     
     // Watchdog de inatividade adaptativo
     const requestStartTime = Date.now();
-    const firstTokenTimeoutMs = 12000; // 12s para primeiro token
+    const firstTokenTimeoutMs = 20000; // 20s para primeiro token (aumentado para 2.0 Flash)
     const inactivityTimeoutMs = 10000; // 10s entre chunks
     let lastChunkTime = Date.now();
     let firstTokenReceived = false;

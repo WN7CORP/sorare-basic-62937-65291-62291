@@ -409,8 +409,6 @@ REGRAS IMPORTANTES:
 Sua missão é ser uma professora atenciosa que torna o direito acessível e visualmente compreensível.${cfContext || ''}\n${fileAnalysisPrefix}`;
     }
 
-    const encoder = new TextEncoder();
-    const systemPromptData = encoder.encode(systemPrompt);
 
     // Validar que a API key existe
     if (!DIREITO_PREMIUM_API_KEY) {
@@ -450,45 +448,148 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
       });
     }
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    // Detectar se cliente quer SSE
+    const acceptHeader = request.headers.get('Accept') || '';
+    const wantsSSE = acceptHeader.includes('text/event-stream');
     
-    const apiRequest = new Request(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        contents: geminiContents,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 8192,
-        }
-      }),
-    });
+    // Usar 2.0 Flash com fallback para 2.0 Flash Exp
+    let modelName = 'gemini-2.0-flash';
+    const apiMethod = wantsSSE ? 'streamGenerateContent' : 'generateContent';
+    
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:${apiMethod}?key=${apiKey}`;
+    
+    const requestBody = {
+      contents: geminiContents,
+      generationConfig: {
+        maxOutputTokens: 1024,
+        temperature: 0.6,
+      }
+    };
 
-    console.log('🔄 Fazendo requisição para Gemini API...');
+    console.log(`🔄 Fazendo requisição para Gemini API (${modelName}, ${apiMethod})...`);
+    const apiStartTime = Date.now();
     
-    const response = await fetch(apiRequest);
+    let response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    });
     
-    console.log('📡 Resposta recebida - Status:', response.status);
+    // Fallback para gemini-2.0-flash-exp se modelo não disponível
+    if (!response.ok && (response.status === 400 || response.status === 404)) {
+      console.warn(`⚠️ ${modelName} não disponível, tentando gemini-2.0-flash-exp...`);
+      modelName = 'gemini-2.0-flash-exp';
+      const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:${apiMethod}?key=${apiKey}`;
+      response = await fetch(fallbackUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+    }
+    
+    console.log(`📡 Resposta recebida - Status: ${response.status}, Modelo: ${modelName}`);
     
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Erro da API Gemini:', {
         status: response.status,
         statusText: response.statusText,
-        error: errorText
+        error: errorText,
+        model: modelName
       });
       throw new Error(`Erro na requisição para a API Gemini: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-    const json = await response.json();
-    console.log("✅ Resposta da API Gemini recebida com sucesso");
+    // Se não quer streaming, retornar JSON simples
+    if (!wantsSSE) {
+      const json = await response.json();
+      console.log(`✅ Resposta da API Gemini recebida com sucesso (${modelName})`);
+      const content = json.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui gerar uma resposta.";
+      return new Response(JSON.stringify({ data: content }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
-    const content = json.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui gerar uma resposta.";
+    // Streaming: parsear chunks do Gemini e reempacotar como SSE OpenAI-like
+    console.log('🌊 Iniciando streaming SSE...');
+    const encoder = new TextEncoder();
+    let chunksCount = 0;
+    let firstChunkTime: number | null = null;
+    
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const reader = response.body?.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          
+          if (!reader) {
+            controller.close();
+            return;
+          }
+          
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              // Enviar [DONE] ao final
+              controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+              console.log(`✅ Stream finalizado - ${chunksCount} chunks enviados em ${Date.now() - apiStartTime}ms`);
+              controller.close();
+              break;
+            }
+            
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed || trimmed.startsWith('[') || trimmed === ',') continue;
+              
+              try {
+                const parsed = JSON.parse(trimmed);
+                const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (text) {
+                  if (!firstChunkTime) {
+                    firstChunkTime = Date.now();
+                    console.log(`🎉 Primeiro chunk recebido após ${firstChunkTime - apiStartTime}ms`);
+                  }
+                  
+                  chunksCount++;
+                  
+                  // Reempacotar como SSE OpenAI-like
+                  const ssePayload = {
+                    choices: [{
+                      delta: { content: text }
+                    }]
+                  };
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(ssePayload)}\n\n`));
+                  
+                  if (chunksCount % 10 === 0) {
+                    console.log(`📤 ${chunksCount} chunks enviados`);
+                  }
+                }
+              } catch (e) {
+                // Ignorar erros de parse de linhas incompletas
+              }
+            }
+          }
+        } catch (error) {
+          console.error('❌ Erro no streaming:', error);
+          controller.error(error);
+        }
+      }
+    });
 
-    return new Response(JSON.stringify({ data: content }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(stream, {
+      headers: { 
+        ...corsHeaders, 
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive"
+      },
       status: 200,
     });
   } catch (error: any) {
