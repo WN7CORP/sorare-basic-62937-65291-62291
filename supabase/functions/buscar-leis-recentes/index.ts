@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,41 +37,48 @@ serve(async (req) => {
     // Calcular data de 90 dias atrás
     const dataInicio = new Date();
     dataInicio.setDate(dataInicio.getDate() - 90);
-    const dataInicioStr = dataInicio.toISOString().split('T')[0];
+    const ano = dataInicio.getFullYear();
+    const mes = String(dataInicio.getMonth() + 1).padStart(2, '0');
+    const dia = String(dataInicio.getDate()).padStart(2, '0');
+    const dataInicioStr = `${ano}${mes}${dia}`;
 
-    // Construir query para API LexML
-    const lexmlUrl = `https://www.lexml.gov.br/busca/SRU?operation=searchRetrieve&query=tipoDocumento:lei AND dataPublicacao>=${dataInicioStr}&sortBy=dataPublicacao/sort.descending&maximumRecords=30`;
+    // Construir query para API LexML (versão simplificada sem filtros complexos)
+    const lexmlUrl = `https://www.lexml.gov.br/busca/SRU?version=1.1&operation=searchRetrieve&query=lei&maximumRecords=20`;
 
     console.log('Buscando de LexML:', lexmlUrl);
 
     const lexmlResponse = await fetch(lexmlUrl);
+    
+    console.log('Status da resposta LexML:', lexmlResponse.status);
+    
     if (!lexmlResponse.ok) {
+      const errorText = await lexmlResponse.text();
+      console.error('Erro LexML - Status:', lexmlResponse.status, 'Body:', errorText.substring(0, 500));
       throw new Error(`Erro na API LexML: ${lexmlResponse.status}`);
     }
 
     const xmlText = await lexmlResponse.text();
     
-    // Parse XML usando DOMParser
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-    
-    if (!xmlDoc) {
-      throw new Error('Erro ao fazer parse do XML');
-    }
-    
-    const records = xmlDoc.getElementsByTagName("srw:record");
+    // Parse XML usando regex (mais confiável no Deno)
+    const recordMatches = xmlText.matchAll(/<srw:record[^>]*>([\s\S]*?)<\/srw:record>/g);
+    const records = Array.from(recordMatches);
     console.log(`Encontrados ${records.length} registros`);
 
     const leis = [];
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
     for (let i = 0; i < Math.min(records.length, 20); i++) {
-      const record = records[i];
+      const recordXml = records[i][1]; // Conteúdo do grupo capturado
       
       try {
-        // Extrair URN e metadados
-        const recordData = record.getElementsByTagName("srw:recordData")[0];
-        const urn = recordData.getElementsByTagName("urn")[0]?.textContent || '';
+        // Extrair URN usando regex
+        const urnMatch = recordXml.match(/<urn[^>]*>([^<]+)<\/urn>/);
+        const urn = urnMatch ? urnMatch[1] : '';
+        
+        if (!urn) {
+          console.log(`Registro ${i} sem URN, pulando...`);
+          continue;
+        }
         
         // Parse URN para extrair informações
         // Formato exemplo: urn:lex:br:federal:lei:2025-01-15;15199
@@ -86,10 +92,10 @@ serve(async (req) => {
         // Extrair ano da data
         const ano = dataPublicacao.split('-')[0] || '';
 
-        // Buscar ementa no XML
-        const ementa = recordData.getElementsByTagName("ementa")[0]?.textContent || 
-                       recordData.getElementsByTagName("descricao")[0]?.textContent || 
-                       'Ementa não disponível';
+        // Buscar ementa no XML usando regex
+        const ementaMatch = recordXml.match(/<ementa[^>]*>([^<]+)<\/ementa>/) || 
+                           recordXml.match(/<descricao[^>]*>([^<]+)<\/descricao>/);
+        const ementa = ementaMatch ? ementaMatch[1] : 'Ementa não disponível';
 
         // Gerar título atrativo com IA
         let tituloGerado = ementa.substring(0, 80) + '...';
@@ -185,7 +191,8 @@ Se não tiver certeza, retorne "Outro".`
 
         // Construir links
         const linkTextoIntegral = `https://www.lexml.gov.br/urn/${urn}`;
-        const linkPdf = recordData.getElementsByTagName("url")[0]?.textContent || null;
+        const urlMatch = recordXml.match(/<url[^>]*>([^<]+)<\/url>/);
+        const linkPdf = urlMatch ? urlMatch[1] : null;
 
         // Formatar tipo
         const tipoFormatado = tipoDocumento === 'lei' ? 'Lei Ordinária' : 
