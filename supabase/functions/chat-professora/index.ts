@@ -510,10 +510,6 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-    }
-
-    // Streaming e não-streaming já tratados via Lovable AI Gateway acima.
-
   } catch (error: any) {
     console.error('Erro no chat-professora:', error);
     return new Response(
