@@ -117,13 +117,14 @@ DESTAQUES CONTEXTUAIS:
 
 COMPONENTES VISUAIS DISPONÍVEIS:
 
-1. COMPARAÇÕES (use quando houver conceitos contrastantes):
-[COMPARAÇÃO: Título da Comparação]
-{"cards": [
-  {"title": "Conceito A", "description": "Explicação detalhada", "example": "Exemplo prático específico", "icon": "📜"},
-  {"title": "Conceito B", "description": "Explicação detalhada", "example": "Exemplo prático específico", "icon": "⚖️"}
-]}
-[/COMPARAÇÃO]
+1. COMPARAÇÕES - FORMATO JSON OBRIGATÓRIO (NUNCA USE TABELAS HTML OU MARKDOWN):
+[COMPARAÇÃO: Título da Comparação]{"cards":[{"title":"Conceito A","description":"Explicação detalhada","example":"Exemplo prático específico","icon":"📜"},{"title":"Conceito B","description":"Explicação detalhada","example":"Exemplo prático específico","icon":"⚖️"}]}[/COMPARAÇÃO]
+
+CRÍTICO: 
+- NUNCA use tabelas HTML (<table>) ou markdown (|---|)
+- SEMPRE use APENAS o formato JSON acima em UMA LINHA
+- O JSON deve estar em linha única, sem quebras
+- Cada card representa uma coluna visual em carrossel
 
 2. DIAGRAMAS MERMAID (para fluxos, processos, timelines):
 [MERMAID: Título do Diagrama]

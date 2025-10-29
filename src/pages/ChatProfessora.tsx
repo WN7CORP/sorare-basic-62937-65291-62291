@@ -8,6 +8,7 @@ import { StatisticsCard } from "@/components/chat/StatisticsCard";
 import { LegalStatistics } from "@/components/chat/LegalStatistics";
 import { ProcessFlow } from "@/components/chat/ProcessFlow";
 import { MermaidDiagram } from "@/components/chat/MermaidDiagram";
+import { SuggestionsPanel } from "@/components/chat/SuggestionsPanel";
 import { MarkdownTabs } from "@/components/chat/MarkdownTabs";
 import { MarkdownAccordion } from "@/components/chat/MarkdownAccordion";
 import { MarkdownSlides } from "@/components/chat/MarkdownSlides";
@@ -1313,11 +1314,25 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                       return fallbacks.slice(0, 4);
                     };
                     
-                    const finalSuggestions = !message.isStreaming && suggestions.length === 0 
+                     const finalSuggestions = !message.isStreaming && suggestions.length === 0 
                       ? generateFallbackSuggestions(message.content) 
                       : suggestions;
 
-                    const baseContent = message.content.replace(/\[SUGESTÕES\][\s\S]*?\[\/SUGESTÕES\]/g, '');
+                    // Remover tags de sugestões e blocos incompletos (como [INFOGRÁFICO], [COMPARAÇÃO], etc)
+                    let baseContent = message.content
+                      .replace(/\[SUGESTÕES\][\s\S]*?\[\/SUGESTÕES\]/gi, '')
+                      .replace(/\[INFOGRÁFICO\][\s\S]*?\[\/INFOGRÁFICO\]/gi, '')
+                      .replace(/\[COMPARAÇÃO\]/gi, '')
+                      .replace(/\[\/COMPARAÇÃO\]/gi, '')
+                      .replace(/\[\/INFOGRÁFICO\]/gi, '')
+                      .replace(/\(Aguarde a geração do infográfico\)/gi, '')
+                      .replace(/\[ESTATÍSTICAS\]/gi, '')
+                      .replace(/\[\/ESTATÍSTICAS\]/gi, '')
+                      .replace(/\[MERMAID\]/gi, '')
+                      .replace(/\[\/MERMAID\]/gi, '')
+                      .replace(/\[PROCESSO\]/gi, '')
+                      .replace(/\[\/PROCESSO\]/gi, '');
+                    
                     const safeContent = message.isStreaming ? stripIncompleteBlocks(baseContent) : autoCloseBlocks(baseContent);
 
                     const parsedContent = !message.isStreaming ? parseSpecialContent(safeContent) : null;
@@ -1331,8 +1346,11 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                             p: ({children}) => {
                               const text = String(children);
                               
-                              // Detectar e remover tags de sugestões
-                              if (text.includes('[SUGESTÕES]') || text.includes('[/SUGESTÕES]')) {
+                              // Detectar e remover tags de sugestões e infográficos vazios
+                              if (text.includes('[SUGESTÕES]') || text.includes('[/SUGESTÕES]') || 
+                                  text.includes('[INFOGRÁFICO]') || text.includes('[COMPARAÇÃO]') ||
+                                  text.includes('(Aguarde a geração') || text.includes('[ESTATÍSTICAS]') ||
+                                  text.includes('[MERMAID]') || text.includes('[PROCESSO]')) {
                                 return null;
                               }
                               
@@ -1354,7 +1372,10 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                                 return <HighlightedBox type="note">{content}</HighlightedBox>;
                               }
                               
-                              // Detectar comparações em formato JSON
+                              // Detectar comparações em formato JSON (caso apareçam sem as tags)
+                              if (text.includes('{"cards"')) {
+                                return null; // Ocultar JSON bruto que deve ser parseado
+                              }
                               if (text.includes('[COMPARAÇÃO')) {
                                 try {
                                   const titleMatch = text.match(/\[COMPARAÇÃO:\s*([^\]]+)\]/);
