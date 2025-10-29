@@ -494,6 +494,9 @@ ${fileAnalysisPrefix}`;
         async start(controller) {
           try {
             let buffer = "";
+            let jsonBuffer = "";
+            let braceCount = 0;
+            let inObject = false;
             
             while (true) {
               const { done, value } = await reader.read();
@@ -501,76 +504,68 @@ ${fileAnalysisPrefix}`;
               
               buffer += decoder.decode(value, { stream: true });
               
-              // Processar linha por linha
-              let newlineIndex: number;
-              while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
-                let line = buffer.slice(0, newlineIndex);
-                buffer = buffer.slice(newlineIndex + 1);
+              // Processar caractere por caractere para identificar objetos JSON completos
+              for (let i = 0; i < buffer.length; i++) {
+                const char = buffer[i];
                 
-                if (line.endsWith("\r")) line = line.slice(0, -1);
-                if (line.trim() === "" || line.startsWith(":")) continue;
-                
-                // Remover prefixo "data: " se existir
-                if (line.startsWith("data: ")) {
-                  line = line.slice(6);
-                }
-                
-                if (line === "[DONE]") continue;
-                
-                try {
-                  const parsed = JSON.parse(line);
+                if (char === '{') {
+                  if (!inObject) {
+                    inObject = true;
+                    jsonBuffer = char;
+                    braceCount = 1;
+                  } else {
+                    jsonBuffer += char;
+                    braceCount++;
+                  }
+                } else if (char === '}' && inObject) {
+                  jsonBuffer += char;
+                  braceCount--;
                   
-                  // Extrair texto com múltiplos fallbacks
-                  const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text ||
-                              parsed.text ||
-                              parsed.content?.text ||
-                              parsed.parts?.[0]?.text ||
-                              "";
-                  
-                  if (text) {
-                    if (firstTokenTime === null) {
-                      firstTokenTime = Date.now();
-                      console.log(`🎯 Primeiro token em ${firstTokenTime - apiStartTime}ms`);
+                  if (braceCount === 0) {
+                    // Objeto JSON completo encontrado
+                    try {
+                      const parsed = JSON.parse(jsonBuffer);
+                      
+                      // Extrair texto com múltiplos fallbacks
+                      const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text ||
+                                  parsed.text ||
+                                  parsed.content?.text ||
+                                  parsed.parts?.[0]?.text ||
+                                  "";
+                      
+                      if (text) {
+                        if (firstTokenTime === null) {
+                          firstTokenTime = Date.now();
+                          console.log(`🎯 Primeiro token em ${firstTokenTime - apiStartTime}ms`);
+                        }
+                        
+                        chunkCount++;
+                        
+                        // Converter para formato OpenAI SSE
+                        const openAIChunk = {
+                          choices: [{
+                            delta: { content: text },
+                            index: 0,
+                            finish_reason: null
+                          }]
+                        };
+                        
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAIChunk)}\n\n`));
+                      }
+                    } catch (e) {
+                      console.warn("⚠️ Erro ao parsear objeto JSON:", jsonBuffer.slice(0, 100));
                     }
                     
-                    chunkCount++;
-                    
-                    // Converter para formato OpenAI SSE
-                    const openAIChunk = {
-                      choices: [{
-                        delta: { content: text },
-                        index: 0,
-                        finish_reason: null
-                      }]
-                    };
-                    
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAIChunk)}\n\n`));
+                    inObject = false;
+                    jsonBuffer = "";
                   }
-                } catch (e) {
-                  console.warn("⚠️ Erro ao parsear linha:", line.slice(0, 100));
+                } else if (inObject) {
+                  jsonBuffer += char;
                 }
               }
-            }
-            
-            // Flush buffer final
-            if (buffer.trim()) {
-              try {
-                const parsed = JSON.parse(buffer.trim());
-                const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                if (text) {
-                  chunkCount++;
-                  const openAIChunk = {
-                    choices: [{
-                      delta: { content: text },
-                      index: 0,
-                      finish_reason: null
-                    }]
-                  };
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAIChunk)}\n\n`));
-                }
-              } catch (e) {
-                console.warn("⚠️ Erro ao processar buffer final");
-              }
+              
+              // Limpar buffer processado
+              buffer = "";
             }
             
             // Enviar [DONE]
