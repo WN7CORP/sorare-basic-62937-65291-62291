@@ -23,6 +23,3 @@ verify_jwt = false
 
 [functions.chat-professora]
 verify_jwt = false
-
-[functions.buscar-leis-recentes]
-verify_jwt = false
