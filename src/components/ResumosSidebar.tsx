@@ -21,23 +21,35 @@ export const ResumosSidebar = () => {
 
   useEffect(() => {
     const loadResumos = async () => {
-      if (!area || !tema) return;
+      if (!area || !tema) {
+        console.log("ResumosSidebar: área ou tema não definidos", { area, tema });
+        setIsLoading(false);
+        return;
+      }
       
       setIsLoading(true);
       try {
+        const decodedArea = decodeURIComponent(area);
+        const decodedTema = decodeURIComponent(tema);
+        
+        console.log("ResumosSidebar: Carregando resumos para", { decodedArea, decodedTema });
+        
         const { data, error } = await supabase
           .from("RESUMO")
           .select("id, subtema, \"ordem subtema\"")
-          .eq("area", decodeURIComponent(area))
-          .eq("tema", decodeURIComponent(tema))
+          .eq("area", decodedArea)
+          .eq("tema", decodedTema)
           .not("subtema", "is", null)
           .order("ordem subtema", { ascending: true });
 
         if (error) {
           console.error("Erro ao carregar resumos:", error);
+          setIsLoading(false);
           return;
         }
 
+        console.log("ResumosSidebar: Resumos carregados:", data?.length || 0);
+        
         if (data) {
           setResumos(data as any[]);
         }

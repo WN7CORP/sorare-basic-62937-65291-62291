@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, GraduationCap, Wrench, Sparkles } from "lucide-react";
+import { Home, Wrench, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VLibrasButton } from "@/components/VLibrasButton";
 
@@ -11,7 +11,6 @@ export const DesktopTopNav = () => {
 
   const navItems = [
     { id: "inicio", label: "Início", icon: Home, path: "/" },
-    { id: "professora", label: "Assistente", icon: GraduationCap, path: "/professora" },
     { id: "ferramentas", label: "Ferramentas", icon: Wrench, path: "/ferramentas" },
     { id: "novidades", label: "Novidades", icon: Sparkles, path: "/novidades" },
   ];
