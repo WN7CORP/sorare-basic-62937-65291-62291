@@ -87,8 +87,8 @@ const MeuBrasilJuristaView = () => {
       }
 
       // 2. Se não existe, buscar da Wikipedia
-      console.log('📡 Buscando da Wikipedia...');
-      setLoadingMessage("Buscando na Wikipedia...");
+      console.log('📡 Buscando informações...');
+      setLoadingMessage("Preparando conteúdo...");
 
       const { data: wikiData, error: wikiError } = await supabase.functions.invoke('buscar-artigo-wikipedia', {
         body: {

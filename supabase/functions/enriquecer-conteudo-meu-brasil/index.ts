@@ -37,9 +37,19 @@ ${JSON.stringify(conteudo_original, null, 2)}
 
 Contexto adicional: ${contexto || 'N/A'}
 
+IMPORTANTE: O "resumo_executivo" deve ser bem estruturado usando Markdown com hierarquia clara:
+- Use ### para títulos principais (ex: ### Vida e Carreira)
+- Use #### para subtítulos (ex: #### Formação Acadêmica)
+- Use **negrito** para destacar termos importantes
+- Use listas (- item) para enumerar pontos
+- Organize o resumo em seções lógicas: Introdução, Vida e Carreira, Principais Contribuições, Legado
+
+Exemplo de estrutura do resumo_executivo:
+"### Visão Geral\n\n[Texto introdutório em 2-3 linhas]\n\n### Vida e Carreira\n\n#### Formação\n[Parágrafo sobre formação]\n\n#### Atuação Profissional\n[Parágrafo sobre carreira]\n\n### Principais Contribuições\n\n- **Contribuição 1**: descrição\n- **Contribuição 2**: descrição\n\n### Legado\n\n[Parágrafo sobre o impacto atual]"
+
 Retorne APENAS um JSON válido (sem markdown, sem \`\`\`json) com esta estrutura:
 {
-  "resumo_executivo": "3-4 parágrafos principais sobre a vida e obra do jurista",
+  "resumo_executivo": "Resumo BEM ESTRUTURADO com Markdown (### títulos, #### subtítulos, **negrito**, listas) em 4-6 parágrafos organizados hierarquicamente",
   "introducao_didatica": "Explicação clara e acessível sobre quem foi este jurista e sua importância",
   "relevancia_juridica": "Por que este jurista é importante para o direito brasileiro (2-3 parágrafos)",
   "principais_contribuicoes": ["Contribuição 1", "Contribuição 2", "Contribuição 3"],
