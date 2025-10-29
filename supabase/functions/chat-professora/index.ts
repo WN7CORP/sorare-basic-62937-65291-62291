@@ -445,7 +445,7 @@ ${fileAnalysisPrefix}`;
     const acceptHeader = request.headers.get('Accept') || '';
     const wantsSSE = acceptHeader.includes('text/event-stream');
     
-    const modelName = 'gemini-2.0-flash';
+    const modelName = 'gemini-2.0-flash-exp';
     const endpoint = wantsSSE ? 'streamGenerateContent' : 'generateContent';
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:${endpoint}`;
     
