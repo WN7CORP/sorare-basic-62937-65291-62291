@@ -18,10 +18,8 @@ serve(async (request) => {
     const DIREITO_PREMIUM_API_KEY_RESERVA = Deno.env.get('DIREITO_PREMIUM_API_KEY_RESERVA');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-    if (!DIREITO_PREMIUM_API_KEY) {
-      throw new Error('DIREITO_PREMIUM_API_KEY não configurada');
-    }
 
     const supabaseClient = createClient(
       SUPABASE_URL!,
@@ -410,209 +408,112 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
     }
 
 
-    // Validar que a API key existe
-    if (!DIREITO_PREMIUM_API_KEY) {
-      console.error('❌ DIREITO_PREMIUM_API_KEY não configurada!');
+    // Validar LOVABLE_API_KEY
+    if (!LOVABLE_API_KEY) {
+      console.error('❌ LOVABLE_API_KEY não configurada!');
       return new Response(
-        JSON.stringify({ error: 'API key não configurada. Por favor, configure DIREITO_PREMIUM_API_KEY nos secrets.' }),
+        JSON.stringify({ error: 'AI gateway indisponível. Habilite Lovable AI (LOVABLE_API_KEY) nos secrets.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
-    // Usar chave reserva apenas se existir, caso contrário usar a principal
-    const apiKey = (DIREITO_PREMIUM_API_KEY_RESERVA && Math.random() < 0.5) 
-      ? DIREITO_PREMIUM_API_KEY_RESERVA 
-      : DIREITO_PREMIUM_API_KEY;
-    
-    console.log('✅ API Key configurada:', apiKey ? `${apiKey.substring(0, 10)}...` : 'UNDEFINED');
+    console.log('✅ Usando Lovable AI Gateway com LOVABLE_API_KEY');
 
-    // Preparar mensagens no formato do Gemini
-    const geminiContents: any[] = [];
-    
-    // Adicionar system prompt como primeira mensagem do usuário
-    geminiContents.push({
-      role: "user",
-      parts: [{ text: systemPrompt }]
-    });
-    
-    geminiContents.push({
-      role: "model",
-      parts: [{ text: "Entendido. Estou pronta para ajudar com suas dúvidas jurídicas seguindo essas diretrizes." }]
-    });
-    
-    // Adicionar as mensagens da conversa
-    for (const msg of messages) {
-      geminiContents.push({
-        role: msg.role === "assistant" ? "model" : "user",
-        parts: [{ text: msg.content }]
-      });
-    }
+    // Preparar mensagens no formato OpenAI (Lovable AI)
+    const openAIMessages = [
+      { role: "system", content: systemPrompt },
+      ...messages.map((m: any) => ({ role: m.role, content: m.content }))
+    ];
 
     // Detectar se cliente quer SSE
     const acceptHeader = request.headers.get('Accept') || '';
     const wantsSSE = acceptHeader.includes('text/event-stream');
     
-    // Usar 2.5 Flash
-    const modelName = 'gemini-2.5-flash';
-    const apiMethod = wantsSSE ? 'streamGenerateContent' : 'generateContent';
-    
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:${apiMethod}`;
-    
-    const requestBody = {
-      contents: geminiContents,
-      generationConfig: {
-        maxOutputTokens: 1024,
-        temperature: 0.6,
-      }
-    };
-
-    console.log(`🔄 Fazendo requisição para Gemini API (${modelName}, ${apiMethod})...`);
+    const modelName = 'google/gemini-2.5-flash';
+    const gatewayUrl = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+    console.log(`🔄 Chamando Lovable AI Gateway (${modelName})...`);
     const apiStartTime = Date.now();
     
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey
-      },
-      body: JSON.stringify(requestBody),
-    });
-    
-    console.log(`📡 Resposta recebida - Status: ${response.status}, Modelo: ${modelName}`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Erro da API Gemini:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorText,
-        model: modelName
+    if (wantsSSE) {
+      const response = await fetch(gatewayUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: modelName,
+          messages: openAIMessages,
+          stream: true,
+        }),
       });
-      throw new Error(`Erro na requisição para a API Gemini: ${response.status} ${response.statusText} - ${errorText}`);
-    }
 
-    // Se não quer streaming, retornar JSON simples
-    if (!wantsSSE) {
-      const json = await response.json();
-      console.log(`✅ Resposta da API Gemini recebida com sucesso (${modelName})`);
-      const content = json.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui gerar uma resposta.";
-      return new Response(JSON.stringify({ data: content }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (!response.ok) {
+        const t = await response.text();
+        console.error("❌ Gateway erro:", response.status, t);
+        const status = response.status === 429 || response.status === 402 ? response.status : 500;
+        const msg = response.status === 429
+          ? "Rate limits exceeded, please try again later."
+          : response.status === 402
+          ? "Payment required, please add funds to your Lovable AI workspace."
+          : "AI gateway error";
+        return new Response(JSON.stringify({ error: msg }), {
+          status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log("🌊 Encaminhando stream do gateway...");
+      return new Response(response.body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+        },
         status: 200,
       });
     }
 
-    // Streaming: parsear chunks do Gemini e reempacotar como SSE OpenAI-like
-    console.log('🌊 Iniciando streaming SSE...');
-    const encoder = new TextEncoder();
-    let chunksCount = 0;
-    let firstChunkTime: number | null = null;
-    
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          const reader = response.body?.getReader();
-          const decoder = new TextDecoder();
-          let buffer = '';
-          
-          if (!reader) {
-            controller.close();
-            return;
-          }
-          
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-              // Enviar [DONE] ao final
-              controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-              console.log(`✅ Stream finalizado - ${chunksCount} chunks enviados em ${Date.now() - apiStartTime}ms`);
-              controller.close();
-              break;
-            }
-            
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-            
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (!trimmed || trimmed.startsWith('[') || trimmed === ',') continue;
-              
-              try {
-                const parsed = JSON.parse(trimmed);
-                
-                // Log detalhado para debug (apenas primeiros 3 chunks)
-                if (chunksCount < 3) {
-                  console.log('🔎 RAW LINE:', trimmed.substring(0, 200));
-                  console.log('🔎 PARSED:', JSON.stringify(parsed).substring(0, 300));
-                }
-                
-                // Tentar múltiplos formatos de resposta da Gemini
-                let text = null;
-                
-                // Formato padrão: candidates[0].content.parts[0].text
-                if (parsed.candidates?.[0]?.content?.parts?.[0]?.text) {
-                  text = parsed.candidates[0].content.parts[0].text;
-                }
-                // Formato direto: text
-                else if (parsed.text) {
-                  text = parsed.text;
-                }
-                // Formato aninhado: content.text
-                else if (parsed.content?.text) {
-                  text = parsed.content.text;
-                }
-                // Formato parts direta: parts[0].text
-                else if (parsed.parts?.[0]?.text) {
-                  text = parsed.parts[0].text;
-                }
-                
-                if (text) {
-                  if (!firstChunkTime) {
-                    firstChunkTime = Date.now();
-                    console.log(`🎉 Primeiro chunk recebido após ${firstChunkTime - apiStartTime}ms`);
-                  }
-                  
-                  chunksCount++;
-                  
-                  // Reempacotar como SSE OpenAI-like
-                  const ssePayload = {
-                    choices: [{
-                      delta: { content: text }
-                    }]
-                  };
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(ssePayload)}\n\n`));
-                  
-                  if (chunksCount % 10 === 0) {
-                    console.log(`📤 ${chunksCount} chunks enviados`);
-                  }
-                } else if (chunksCount < 3) {
-                  console.warn('⚠️ Chunk sem texto identificável');
-                }
-              } catch (e) {
-                // Ignorar erros de parse de linhas incompletas
-                if (chunksCount < 3) {
-                  console.warn('⚠️ Erro ao parsear linha:', e);
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error('❌ Erro no streaming:', error);
-          controller.error(error);
-        }
-      }
+    // Non streaming
+    const response = await fetch(gatewayUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: modelName,
+        messages: openAIMessages,
+        stream: false,
+      }),
     });
 
-    return new Response(stream, {
-      headers: { 
-        ...corsHeaders, 
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive"
-      },
+    if (!response.ok) {
+      const t = await response.text();
+      console.error("❌ Gateway erro:", response.status, t);
+      const status = response.status === 429 || response.status === 402 ? response.status : 500;
+      const msg = response.status === 429
+        ? "Rate limits exceeded, please try again later."
+        : response.status === 402
+        ? "Payment required, please add funds to your Lovable AI workspace."
+        : "AI gateway error";
+      return new Response(JSON.stringify({ error: msg }), {
+        status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const json = await response.json();
+    const content = json.choices?.[0]?.message?.content || "Desculpe, não consegui gerar uma resposta.";
+    return new Response(JSON.stringify({ data: content }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
+    }
+
+    // Streaming e não-streaming já tratados via Lovable AI Gateway acima.
+
   } catch (error: any) {
     console.error('Erro no chat-professora:', error);
     return new Response(
