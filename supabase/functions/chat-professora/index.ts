@@ -456,7 +456,7 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
     const modelName = 'gemini-2.5-flash';
     const apiMethod = wantsSSE ? 'streamGenerateContent' : 'generateContent';
     
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:${apiMethod}?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:${apiMethod}`;
     
     const requestBody = {
       contents: geminiContents,
@@ -471,7 +471,10 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
     
     const response = await fetch(apiUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey
+      },
       body: JSON.stringify(requestBody),
     });
     
