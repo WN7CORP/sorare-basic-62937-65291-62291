@@ -413,59 +413,68 @@ const ChatProfessora = () => {
           const lines = buffer.split('\n');
           buffer = lines.pop() || '';
           
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed) continue;
-            let payloadStr = trimmed;
-            if (trimmed.startsWith('data:')) {
-              payloadStr = trimmed.slice(5).trim();
-              if (payloadStr === '[DONE]') {
-                console.log('✅ Frontend: Recebeu [DONE]');
-                continue;
-              }
-            }
-            try {
-              const parsed = JSON.parse(payloadStr);
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) {
-                // Log do primeiro token e resetar watchdog
-                if (!firstTokenReceived) {
-                  const latency = Date.now() - requestStartTime;
-                  console.log(`🎉 Frontend: Primeiro token recebido após ${latency}ms`);
-                  firstTokenReceived = true;
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed) continue;
+              // Ignore SSE comments/keepalive like ": ping"
+              if (trimmed.startsWith(':')) continue;
+              
+              let payloadStr = trimmed;
+              if (trimmed.startsWith('data:')) {
+                payloadStr = trimmed.slice(5).trim();
+                if (payloadStr === '[DONE]') {
+                  console.log('✅ Frontend: Recebeu [DONE]');
+                  continue;
                 }
-                lastChunkTime = Date.now(); // Resetar watchdog
-                
-                accumulatedText += content;
-                
-                // Atualizar UI IMEDIATAMENTE a cada token (sem throttle)
-                requestAnimationFrame(() => {
-                  setMessages(prev => {
-                    const newMessages = [...prev];
-                    newMessages[newMessages.length - 1] = {
-                      role: 'assistant',
-                      content: accumulatedText,
-                      isStreaming: true
-                    };
-                    return newMessages;
+              }
+              
+              try {
+                const parsed = JSON.parse(payloadStr);
+                const content = parsed?.choices?.[0]?.delta?.content
+                  ?? parsed?.content
+                  ?? parsed?.data?.content
+                  ?? parsed?.message?.content
+                  ?? parsed?.candidates?.[0]?.content?.parts?.[0]?.text
+                  ?? '';
+                if (content) {
+                  // Log do primeiro token e resetar watchdog
+                  if (!firstTokenReceived) {
+                    const latency = Date.now() - requestStartTime;
+                    console.log(`🎉 Frontend: Primeiro token recebido após ${latency}ms`);
+                    firstTokenReceived = true;
+                  }
+                  lastChunkTime = Date.now(); // Resetar watchdog
+                  
+                  accumulatedText += content;
+                  
+                  // Atualizar UI IMEDIATAMENTE a cada token (sem throttle)
+                  requestAnimationFrame(() => {
+                    setMessages(prev => {
+                      const newMessages = [...prev];
+                      newMessages[newMessages.length - 1] = {
+                        role: 'assistant',
+                        content: accumulatedText,
+                        isStreaming: true
+                      };
+                      return newMessages;
+                    });
                   });
+                }
+              } catch {
+                // Fallback: append raw text when not JSON (non-SSE providers)
+                console.warn('⚠️ Frontend: Não foi possível parsear como JSON, usando texto raw');
+                accumulatedText += payloadStr;
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  newMessages[newMessages.length - 1] = {
+                    role: 'assistant',
+                    content: accumulatedText,
+                    isStreaming: true
+                  };
+                  return newMessages;
                 });
               }
-            } catch {
-              // Fallback: append raw text when not JSON (non-SSE providers)
-              console.warn('⚠️ Frontend: Não foi possível parsear como JSON, usando texto raw');
-              accumulatedText += payloadStr;
-              setMessages(prev => {
-                const newMessages = [...prev];
-                newMessages[newMessages.length - 1] = {
-                  role: 'assistant',
-                  content: accumulatedText,
-                  isStreaming: true
-                };
-                return newMessages;
-              });
             }
-          }
         }
         
         // Parar watchdog
