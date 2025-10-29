@@ -67,17 +67,27 @@ export const JuristaArtigoCompleto = ({
         </div>
       )}
       
-      {/* Botões de ação - Discretos */}
-      <div className="flex justify-end gap-2">
+      {/* Botões de ação - Centralizados e coloridos */}
+      <div className="flex justify-center gap-3">
         {onExportarPDF && (
-          <Button variant="outline" size="sm" onClick={onExportarPDF}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onExportarPDF}
+            className="border-red-500/30 text-red-600 hover:bg-red-500/10 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+          >
             <FileDown className="w-4 h-4 mr-2" />
             Baixar PDF
           </Button>
         )}
         
         {onCompartilhar && (
-          <Button variant="outline" size="sm" onClick={onCompartilhar}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onCompartilhar}
+            className="border-green-500/30 text-green-600 hover:bg-green-500/10 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+          >
             <Share2 className="w-4 h-4 mr-2" />
             Compartilhar
           </Button>
