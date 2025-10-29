@@ -196,9 +196,9 @@ ${historia.conteudo_melhorado.legado || ''}
 
       const { data, error } = await supabase.functions.invoke("exportar-pdf-educacional", {
         body: {
-          content: conteudoCompleto,
-          title: historia.periodo,
-          filename: `${historia.periodo.replace(/\s+/g, '_')}.pdf`
+          conteudo: conteudoCompleto,
+          titulo: historia.periodo,
+          tipo: 'artigo-historia'
         }
       });
 

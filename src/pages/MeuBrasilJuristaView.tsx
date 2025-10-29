@@ -265,9 +265,9 @@ ${jurista.conteudo_melhorado.legado || ''}
 
       const { data, error } = await supabase.functions.invoke("exportar-pdf-educacional", {
         body: {
-          content: conteudoCompleto,
-          title: jurista.nome,
-          filename: `${jurista.nome.replace(/\s+/g, '_')}.pdf`
+          conteudo: conteudoCompleto,
+          titulo: jurista.nome,
+          tipo: 'artigo-jurista'
         }
       });
 
