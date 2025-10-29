@@ -171,7 +171,7 @@ const MeuBrasilCasos = () => {
         {filteredCasos.map((caso) => (
           <button
             key={caso.nome}
-            onClick={() => navigate(`/meu-brasil/artigo/${encodeURIComponent(caso.nome)}`)}
+            onClick={() => navigate(`/meu-brasil/caso/${encodeURIComponent(caso.nome)}`)}
             className="bg-card border border-border rounded-lg overflow-hidden text-left hover:border-primary hover:shadow-lg transition-all group"
           >
             {/* Capa/Imagem do caso */}

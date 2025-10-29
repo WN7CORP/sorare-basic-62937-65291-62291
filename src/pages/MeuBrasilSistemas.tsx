@@ -116,7 +116,7 @@ const MeuBrasilSistemas = () => {
         {filteredSistemas.map((item) => (
           <button
             key={item.pais}
-            onClick={() => navigate(`/meu-brasil/artigo/${encodeURIComponent(`Direito de ${item.pais}`)}`)}
+            onClick={() => navigate(`/meu-brasil/sistema/${encodeURIComponent(`Direito de ${item.pais}`)}`)}
             className="bg-card border border-border rounded-lg p-4 text-left hover:border-primary hover:shadow-md transition-all group"
           >
             <div className="flex items-start gap-3 mb-3">

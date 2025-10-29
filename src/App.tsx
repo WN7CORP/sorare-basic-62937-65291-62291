@@ -303,6 +303,8 @@ const App = () => {
               <Route path="/meu-brasil/casos" element={<MeuBrasilCasos />} />
               <Route path="/meu-brasil/busca" element={<MeuBrasilBusca />} />
               <Route path="/meu-brasil/artigo/:titulo" element={<MeuBrasilArtigo />} />
+              <Route path="/meu-brasil/sistema/:titulo" element={<MeuBrasilArtigo />} />
+              <Route path="/meu-brasil/caso/:titulo" element={<MeuBrasilArtigo />} />
               <Route path="/popular-meu-brasil" element={<PopularMeuBrasil />} />
               <Route path="/simulacao-juridica" element={<SimulacaoJuridica />} />
               <Route path="/simulacao-juridica/modo" element={<SimulacaoEscolhaModo />} />
