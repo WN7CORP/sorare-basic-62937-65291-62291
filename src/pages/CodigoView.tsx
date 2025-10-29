@@ -21,6 +21,7 @@ import { VadeMecumTabs } from "@/components/VadeMecumTabs";
 import { VadeMecumPlaylist } from "@/components/VadeMecumPlaylist";
 import { VadeMecumRanking } from "@/components/VadeMecumRanking";
 import { useArticleTracking } from "@/hooks/useArticleTracking";
+import { ArtigoActionsMenu } from "@/components/ArtigoActionsMenu";
 interface Article {
   id: number;
   "Número do Artigo": string | null;
@@ -562,76 +563,34 @@ const CodigoView = () => {
                   }}
                 />
 
-                {/* Action Buttons */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
-                  {article["Narração"] && <InlineAudioButton audioUrl={article["Narração"]!} articleNumber={article["Número do Artigo"]!} />}
-                  {article["Comentario"] && (
-                    <AudioCommentButton 
-                      isPlaying={stickyPlayerOpen && currentAudio.isComment && currentAudio.title.includes(article["Número do Artigo"]!)}
-                      onClick={() => handlePlayComment(article["Comentario"]!, `Comentário - Art. ${article["Número do Artigo"]}`)}
-                    />
-                  )}
-                  {article["Aula"] && <button onClick={() => handleOpenAula(article)} className="flex items-center justify-center gap-2 bg-secondary/50 hover:bg-secondary border border-border/50 hover:border-border text-foreground px-4 py-2.5 rounded-lg transition-all text-sm font-medium hover:scale-105 animate-fade-in">
-                      <GraduationCap className="w-4 h-4" />
-                      Aula
-                    </button>}
-                  <button 
-                    onClick={() => {
-                      setModalData({
-                        artigo: article["Artigo"]!,
-                        numeroArtigo: article["Número do Artigo"]!,
-                        tipo: "explicacao",
-                        nivel: "tecnico"
-                      });
-                      setModalOpen(true);
+                {/* Action Menu */}
+                <div className="mb-4 animate-fade-in">
+                  <ArtigoActionsMenu
+                    article={article}
+                    onPlayNarration={(audioUrl) => {
+                      // Usar o InlineAudioButton internamente para manter a funcionalidade
+                      const audio = new Audio(audioUrl);
+                      audio.play();
                     }}
-                    className="flex items-center justify-center gap-2 bg-secondary/60 hover:bg-secondary border border-border/50 hover:border-border text-foreground px-4 py-2.5 rounded-lg transition-all text-sm font-medium hover:scale-105 animate-fade-in"
-                  >
-                    <Lightbulb className="w-4 h-4" />
-                    Explicar
-                  </button>
-                  <button onClick={() => handleOpenExplicacao(article["Artigo"]!, article["Número do Artigo"]!, "exemplo")} className="flex items-center justify-center gap-2 bg-secondary/50 hover:bg-secondary border border-border/50 hover:border-border text-foreground px-4 py-2.5 rounded-lg transition-all text-sm font-medium hover:scale-105 animate-fade-in">
-                    <BookOpen className="w-4 h-4" />
-                    Exemplo
-                  </button>
-                  <button 
-                    onClick={() => handleGenerateFlashcards(article["Artigo"]!, article["Número do Artigo"]!)} 
-                    disabled={loadingFlashcards}
-                    className="flex items-center justify-center gap-2 bg-secondary/50 hover:bg-secondary border border-border/50 hover:border-border text-foreground px-4 py-2.5 rounded-lg transition-all text-sm font-medium hover:scale-105 animate-fade-in disabled:opacity-50"
-                  >
-                    <Bookmark className="w-4 h-4" />
-                    {loadingFlashcards ? "Gerando..." : "Flashcards"}
-                  </button>
-                  <button 
-                    onClick={() => {
+                    onPlayComment={handlePlayComment}
+                    onOpenAula={() => handleOpenAula(article)}
+                    onOpenExplicacao={(tipo) => handleOpenExplicacao(article["Artigo"]!, article["Número do Artigo"]!, tipo)}
+                    onGenerateFlashcards={() => handleGenerateFlashcards(article["Artigo"]!, article["Número do Artigo"]!)}
+                    onOpenTermos={() => {
                       setTermosData({ artigo: article["Artigo"]!, numeroArtigo: article["Número do Artigo"]! });
                       setTermosModalOpen(true);
                     }}
-                    className="flex items-center justify-center gap-2 bg-secondary/50 hover:bg-secondary border border-border/50 hover:border-border text-foreground px-4 py-2.5 rounded-lg transition-all text-sm font-medium hover:scale-105 animate-fade-in"
-                  >
-                    <BookMarked className="w-4 h-4" />
-                    Termos
-                  </button>
-                  <button 
-                    onClick={() => {
+                    onOpenQuestoes={() => {
                       setQuestoesData({ artigo: article["Artigo"]!, numeroArtigo: article["Número do Artigo"]! });
                       setQuestoesModalOpen(true);
                     }}
-                    className="flex items-center justify-center gap-2 bg-secondary/50 hover:bg-secondary border border-border/50 hover:border-border text-foreground px-4 py-2.5 rounded-lg transition-all text-sm font-medium hover:scale-105 animate-fade-in"
-                  >
-                    <FileQuestion className="w-4 h-4" />
-                    Questões
-                  </button>
-                  <button
-                    onClick={() => {
+                    onPerguntar={() => {
                       setPerguntaData({ artigo: article["Artigo"]!, numeroArtigo: article["Número do Artigo"]! });
                       setPerguntaModalOpen(true);
                     }}
-                    className="flex items-center justify-center gap-2 bg-secondary/50 hover:bg-secondary border border-border/50 hover:border-border text-foreground px-4 py-2.5 rounded-lg transition-all text-sm font-medium hover:scale-105 animate-fade-in"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    Perguntar
-                  </button>
+                    loadingFlashcards={loadingFlashcards}
+                    isCommentPlaying={stickyPlayerOpen && currentAudio.isComment && currentAudio.title.includes(article["Número do Artigo"]!)}
+                  />
                 </div>
               </div>
         })}
