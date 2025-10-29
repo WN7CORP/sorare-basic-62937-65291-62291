@@ -127,12 +127,22 @@ CRÍTICO:
 - Cada card representa uma coluna visual em carrossel
 
 2. DIAGRAMAS MERMAID (para fluxos, processos, timelines):
-[MERMAID: Título do Diagrama]
+IMPORTANTE: SEMPRE use [MERMAID: Título], NUNCA use [INFOGRÁFICO]
+
+[MERMAID: Título Descritivo do Fluxo]
 graph TD
     A[Início] --> B{Decisão}
     B -->|Sim| C[Ação 1]
     B -->|Não| D[Ação 2]
+    C --> E[Fim]
+    D --> E
 [/MERMAID]
+
+Exemplos de uso:
+- Fluxogramas de processos: graph TD
+- Linhas do tempo: gantt
+- Sequências: sequenceDiagram
+- Diagramas de classe: classDiagram
 
 3. FLUXO DE PROCESSO (para etapas processuais):
 [PROCESSO: Título do Processo]
@@ -142,8 +152,8 @@ graph TD
 ]}
 [/PROCESSO]
 
-PERGUNTAS DE APROFUNDAMENTO:
-SEMPRE inclua 3-4 perguntas elaboradas para o aluno aprofundar seus estudos.
+💭 PERGUNTAS DE APROFUNDAMENTO:
+Ao final de cada explicação, inclua 3-4 perguntas elaboradas diretamente no texto (não use tags especiais).
 
 CRITÉRIOS para cada pergunta:
 - Começar com emoji temático (🔍, ⚖️, 💼, 📚)
@@ -152,13 +162,13 @@ CRITÉRIOS para cada pergunta:
 - Ter entre 15-25 palavras
 - Terminar com "?"
 
-Formato:
-[SUGESTÕES]
-🔍 Como [conceito] se aplica em [situação específica concreta]?
-⚖️ Quais precedentes do STF tratam de [tema específico relacionado]?
-💼 Em casos de [situação], como [princípio] protege [parte]?
-📚 Quais autores divergem sobre [questão doutrinária específica]?
-[/SUGESTÕES]
+Exemplo de formato integrado ao texto:
+### 💭 Questões para Aprofundamento
+
+1. 🔍 Como [conceito] se aplica em [situação específica concreta]?
+2. ⚖️ Quais precedentes do STF tratam de [tema específico relacionado]?
+3. 💼 Em casos de [situação], como [princípio] protege [parte]?
+4. 📚 Quais autores divergem sobre [questão doutrinária específica]?
 
 ${cfContext || ''}`;
 
@@ -206,6 +216,8 @@ COMPONENTES VISUAIS:
 [/COMPARAÇÃO]
 
 2. DIAGRAMAS MERMAID (fluxos complexos):
+IMPORTANTE: SEMPRE use [MERMAID: Título], NUNCA use [INFOGRÁFICO]
+
 [MERMAID: Fluxo Processual Completo]
 graph TD
     A[Petição Inicial] --> B{Juiz analisa}
@@ -230,17 +242,17 @@ graph TD
 ]}
 [/PROCESSO]
 
-PERGUNTAS DE APROFUNDAMENTO AVANÇADAS:
-SEMPRE inclua 4-5 perguntas elaboradas e específicas.
+💭 PERGUNTAS DE APROFUNDAMENTO AVANÇADAS:
+Ao final, inclua 4-5 perguntas elaboradas diretamente no texto (não use tags especiais).
 
-Formato:
-[SUGESTÕES]
-🔍 Como [conceito avançado] se aplica em [situação específica complexa envolvendo X e Y]?
-⚖️ Quais precedentes vinculantes do STF em [tema] tratam do conflito entre [princípio A] e [princípio B]?
-💼 Em casos de [situação limite específica], como a jurisprudência tem interpretado [instituto jurídico]?
-📚 Quais são os principais pontos de divergência entre [autor 1] e [autor 2] sobre [tema específico]?
-⚡ Como a reforma de [ano] alterou a aplicação de [instituto] em [contexto específico]?
-[/SUGESTÕES]
+Exemplo de formato integrado:
+### 💭 Questões Avançadas para Aprofundamento
+
+1. 🔍 Como [conceito avançado] se aplica em [situação específica complexa envolvendo X e Y]?
+2. ⚖️ Quais precedentes vinculantes do STF em [tema] tratam do conflito entre [princípio A] e [princípio B]?
+3. 💼 Em casos de [situação limite específica], como a jurisprudência tem interpretado [instituto jurídico]?
+4. 📚 Quais são os principais pontos de divergência entre [autor 1] e [autor 2] sobre [tema específico]?
+5. ⚡ Como a reforma de [ano] alterou a aplicação de [instituto] em [contexto específico]?
 
 ${cfContext || ''}`;
 
@@ -291,6 +303,8 @@ COMPONENTES VISUAIS:
 [/COMPARAÇÃO]
 
 2. DIAGRAMAS MERMAID (processos e fluxos):
+IMPORTANTE: SEMPRE use [MERMAID: Título], NUNCA use [INFOGRÁFICO]
+
 [MERMAID: Fluxo de Controle]
 graph LR
     A[Início] --> B{Verificação}
@@ -314,16 +328,16 @@ graph LR
 ]}
 [/PROCESSO]
 
-PERGUNTAS DE APROFUNDAMENTO:
-SEMPRE inclua 4 perguntas elaboradas e específicas.
+💭 PERGUNTAS DE APROFUNDAMENTO:
+Ao final, inclua 4 perguntas elaboradas diretamente no texto (não use tags especiais).
 
-Formato:
-[SUGESTÕES]
-🔍 Como [conceito] se aplica especificamente em [situação prática X envolvendo Y]?
-⚖️ Quais precedentes do STF/STJ tratam de [questão específica] em [contexto]?
-💼 Em casos de [situação concreta], como [instituto jurídico] protege/afeta [parte interessada]?
-📚 Quais são os principais pontos de divergência doutrinária sobre [aspecto específico do conceito]?
-[/SUGESTÕES]
+Exemplo de formato integrado:
+### 💭 Questões para Aprofundamento
+
+1. 🔍 Como [conceito] se aplica especificamente em [situação prática X envolvendo Y]?
+2. ⚖️ Quais precedentes do STF/STJ tratam de [questão específica] em [contexto]?
+3. 💼 Em casos de [situação concreta], como [instituto jurídico] protege/afeta [parte interessada]?
+4. 📚 Quais são os principais pontos de divergência doutrinária sobre [aspecto específico do conceito]?
 
 ${cfContext || ''}`;
       }
@@ -344,14 +358,11 @@ Use funções para retornar materiais diretamente. Sem texto explicativo.${cfCon
     } else {
       systemPrompt = deepMode
         ? `Assistente jurídica: análise DETALHADA com fundamentação completa, jurisprudência e exemplos práticos.
-**ORDEM:** Explicação → [COMPARAÇÃO] → [INFOGRÁFICO] → [SUGESTÕES]
-- Envie cada bloco ASSIM QUE estiver pronto
-- [SUGESTÕES] com 3-4 perguntas curtas terminando com "?"${cfContext || ''}
+Use [COMPARAÇÃO] para comparar conceitos e [MERMAID: Título] para diagramas (NUNCA use [INFOGRÁFICO]).
+Inclua perguntas de aprofundamento ao final como parte do texto.${cfContext || ''}
 ${fileAnalysisPrefix}`
         : `Assistente jurídica: cite lei/artigo PRIMEIRO.
-**ORDEM:** Explicação → [COMPARAÇÃO] → [INFOGRÁFICO] → [SUGESTÕES]
-- Envie cada bloco ASSIM QUE estiver pronto
-- [SUGESTÕES] com 3-4 perguntas curtas terminando com "?"
+Use [COMPARAÇÃO] para comparar conceitos e [MERMAID: Título] para diagramas (NUNCA use [INFOGRÁFICO]).
 Max 250 palavras.${cfContext || ''}
 ${fileAnalysisPrefix}`;
     }

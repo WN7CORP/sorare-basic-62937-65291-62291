@@ -8,7 +8,6 @@ import { StatisticsCard } from "@/components/chat/StatisticsCard";
 import { LegalStatistics } from "@/components/chat/LegalStatistics";
 import { ProcessFlow } from "@/components/chat/ProcessFlow";
 import { MermaidDiagram } from "@/components/chat/MermaidDiagram";
-import { SuggestionsPanel } from "@/components/chat/SuggestionsPanel";
 import { MarkdownTabs } from "@/components/chat/MarkdownTabs";
 import { MarkdownAccordion } from "@/components/chat/MarkdownAccordion";
 import { MarkdownSlides } from "@/components/chat/MarkdownSlides";
@@ -1231,7 +1230,7 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
 
                      // Helpers: ocultar blocos incompletos durante streaming e fechar tags ausentes após fim
                     const stripIncompleteBlocks = (content: string) => {
-                      const tags = ['COMPARAÇÃO', 'CARROSSEL', 'ETAPAS', 'TIPOS', 'INFOGRÁFICO', 'ESTATÍSTICAS', 'MERMAID', 'PROCESSO', 'TABS', 'ACCORDION', 'SLIDES'];
+                      const tags = ['COMPARAÇÃO', 'CARROSSEL', 'ETAPAS', 'TIPOS', 'INFOGRÁFICO', 'SUGESTÕES', 'ESTATÍSTICAS', 'MERMAID', 'PROCESSO', 'TABS', 'ACCORDION', 'SLIDES'];
                       let result = content;
                       for (const t of tags) {
                         // Se abriu e não fechou ainda, remove até o fim para evitar JSON aparecendo bruto
@@ -1278,54 +1277,18 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                       return fixed;
                     };
 
-                     // Extrair sugestões durante streaming
-                    const extractSuggestions = (content: string): string[] => {
-                      const match = content.match(/\[SUGESTÕES\]([\s\S]*?)(?:\[\/SUGESTÕES\]|$)/i);
-                      if (!match) return [];
-                      
-                      const raw = match[1];
-                      
-                      // Extrair linhas que terminam com "?"
-                      const lines = raw
-                        .split('\n')
-                        .map(l => l.trim())
-                        .filter(l => l.length > 0)
-                        .map(l => l.replace(/^[-*•]\s*/, '')) // Remove bullets
-                        .filter(l => l.includes('?'));
-                      
-                      console.log('📝 Sugestões extraídas:', lines);
-                      return lines.slice(0, 5); // Máximo 5 sugestões
-                    };
-                    
-                    const suggestions = extractSuggestions(message.content);
-                    
-                    // Fallback: se não houver sugestões após finalizado, gerar localmente
-                    const generateFallbackSuggestions = (content: string): string[] => {
-                      const headings = (content.match(/^#{1,3}\s+(.+)$/gm) || [])
-                        .map(h => h.replace(/^#{1,3}\s+/, '').trim())
-                        .slice(0, 2);
-                      
-                      const fallbacks = [
-                        headings[0] ? `Mostrar exemplo prático de ${headings[0]}?` : "Ver jurisprudência sobre o tema?",
-                        headings[1] ? `Comparar ${headings[0]} vs ${headings[1]}?` : "Explicar com infográfico?",
-                        "Gerar questões de fixação?",
-                        "Ver resumo em tópicos?"
-                      ];
-                      return fallbacks.slice(0, 4);
-                    };
-                    
-                     const finalSuggestions = !message.isStreaming && suggestions.length === 0 
-                      ? generateFallbackSuggestions(message.content) 
-                      : suggestions;
 
-                    // Remover tags de sugestões e blocos incompletos (como [INFOGRÁFICO], [COMPARAÇÃO], etc)
+                    // Remover tags soltas de blocos especiais
                     let baseContent = message.content
                       .replace(/\[SUGESTÕES\][\s\S]*?\[\/SUGESTÕES\]/gi, '')
+                      .replace(/\[SUGESTÕES\]/gi, '')
+                      .replace(/\[\/SUGESTÕES\]/gi, '')
                       .replace(/\[INFOGRÁFICO\][\s\S]*?\[\/INFOGRÁFICO\]/gi, '')
-                      .replace(/\[COMPARAÇÃO\]/gi, '')
-                      .replace(/\[\/COMPARAÇÃO\]/gi, '')
+                      .replace(/\[INFOGRÁFICO\]/gi, '')
                       .replace(/\[\/INFOGRÁFICO\]/gi, '')
                       .replace(/\(Aguarde a geração do infográfico\)/gi, '')
+                      .replace(/\[COMPARAÇÃO\]/gi, '')
+                      .replace(/\[\/COMPARAÇÃO\]/gi, '')
                       .replace(/\[ESTATÍSTICAS\]/gi, '')
                       .replace(/\[\/ESTATÍSTICAS\]/gi, '')
                       .replace(/\[MERMAID\]/gi, '')
@@ -1454,42 +1417,6 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                       </div>
                       )}
                       
-                      {finalSuggestions.length > 0 && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="mt-6 pt-4 border-t border-primary/20"
-                        >
-                          <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl p-4 border border-primary/10">
-                            <div className="flex items-center gap-2 mb-3">
-                              <div className="p-1.5 rounded-lg bg-primary/10">
-                                <Lightbulb className="w-4 h-4 text-primary" />
-                              </div>
-                              <span className="text-sm font-semibold text-foreground">💭 Perguntas para aprofundar:</span>
-                            </div>
-                            <div className="grid gap-2">
-                              {finalSuggestions.map((sug, idx) => (
-                                <button
-                                  key={idx}
-                                  onClick={() => {
-                                    setInput(sug);
-                                    setTimeout(() => sendMessage(), 100);
-                                  }}
-                                  className="group text-left w-full px-4 py-3 rounded-lg bg-background hover:bg-primary/5 border border-border hover:border-primary/30 transition-all duration-200 hover:shadow-md"
-                                >
-                                  <div className="flex items-start gap-3">
-                                    <span className="text-primary font-bold mt-0.5 flex-shrink-0">{idx + 1}.</span>
-                                    <p className="text-sm leading-relaxed text-foreground group-hover:text-primary transition-colors">
-                                      {sug}
-                                    </p>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
                       
                       {!message.isStreaming && (
                         <MessageActionsChat
