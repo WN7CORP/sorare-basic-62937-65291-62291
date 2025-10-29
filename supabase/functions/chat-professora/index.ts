@@ -412,10 +412,21 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
     const encoder = new TextEncoder();
     const systemPromptData = encoder.encode(systemPrompt);
 
+    // Validar que a API key existe
+    if (!DIREITO_PREMIUM_API_KEY) {
+      console.error('❌ DIREITO_PREMIUM_API_KEY não configurada!');
+      return new Response(
+        JSON.stringify({ error: 'API key não configurada. Por favor, configure DIREITO_PREMIUM_API_KEY nos secrets.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
     // Usar chave reserva apenas se existir, caso contrário usar a principal
     const apiKey = (DIREITO_PREMIUM_API_KEY_RESERVA && Math.random() < 0.5) 
       ? DIREITO_PREMIUM_API_KEY_RESERVA 
       : DIREITO_PREMIUM_API_KEY;
+    
+    console.log('✅ API Key configurada:', apiKey ? `${apiKey.substring(0, 10)}...` : 'UNDEFINED');
 
     // Preparar mensagens no formato do Gemini
     const geminiContents: any[] = [];
@@ -455,14 +466,24 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
       }),
     });
 
+    console.log('🔄 Fazendo requisição para Gemini API...');
+    
     const response = await fetch(apiRequest);
+    
+    console.log('📡 Resposta recebida - Status:', response.status);
+    
     if (!response.ok) {
-      console.error('Erro da API Gemini:', response.status, response.statusText, await response.text());
-      throw new Error(`Erro na requisição para a API Gemini: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('❌ Erro da API Gemini:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
+      throw new Error(`Erro na requisição para a API Gemini: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const json = await response.json();
-    console.log("Resposta da API Gemini:", json);
+    console.log("✅ Resposta da API Gemini recebida com sucesso");
 
     const content = json.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui gerar uma resposta.";
 
