@@ -11,10 +11,26 @@ import BibliotecasCarousel from "@/components/BibliotecasCarousel";
 import ProposicoesRecentesCarousel from "@/components/ProposicoesRecentesCarousel";
 import { useFeaturedNews } from "@/hooks/useFeaturedNews";
 import { Button } from "@/components/ui/button";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
+import { NoticiaCardSkeleton } from "@/components/ui/skeletons/NoticiaCardSkeleton";
+import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 
 const Index = () => {
   const navigate = useNavigate();
   const [atualizandoNoticias, setAtualizandoNoticias] = useState(false);
+  
+  useScrollRestoration();
+  
+  const { featuredNews, loading: loadingNews, reload: reloadNews } = useFeaturedNews();
+  
+  const { isPulling, pullDistance, progress } = usePullToRefresh({
+    onRefresh: async () => {
+      await reloadNews();
+    },
+    enabled: true
+  });
+  
   const [emblaRef] = useEmblaCarousel({
     align: 'start',
     containScroll: 'trimSnaps',
@@ -25,7 +41,6 @@ const Index = () => {
     containScroll: 'trimSnaps',
     dragFree: true
   });
-  const { featuredNews, loading: loadingNews, reload: reloadNews } = useFeaturedNews();
   const {
     data: videoaulasDestaque
   } = useQuery({
@@ -110,6 +125,7 @@ const Index = () => {
   };
 
   return <div className="flex flex-col min-h-screen bg-background pb-20 md:pb-0">
+      <PullToRefreshIndicator isPulling={isPulling} progress={progress} pullDistance={pullDistance} />
       {/* Header */}
       
 
@@ -147,7 +163,7 @@ const Index = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {academicCategories.map(category => {
             const Icon = category.icon;
-            return <button key={category.id} onClick={() => navigate(category.route)} className={`bg-gradient-to-br ${category.gradient} rounded-2xl md:rounded-xl p-5 md:p-4 text-left transition-all hover:scale-105 hover:shadow-2xl min-h-[160px] md:min-h-[140px] flex flex-col relative overflow-hidden shadow-xl`}>
+            return <button key={category.id} onClick={() => navigate(category.route)} className={`bg-gradient-to-br ${category.gradient} rounded-2xl md:rounded-xl p-5 md:p-4 text-left transition-all hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 min-h-[160px] md:min-h-[140px] flex flex-col relative overflow-hidden shadow-xl active:scale-100`}>
                   <div className="absolute inset-0 bg-gradient-to-tl from-black/60 via-black/30 to-transparent pointer-events-none" />
                   <div className="bg-white/20 rounded-xl md:rounded-lg p-2.5 md:p-2 w-fit relative z-10 shadow-lg mb-3 md:mb-2">
                     <Icon className="w-6 h-6 md:w-5 md:h-5 text-white" />
@@ -188,8 +204,12 @@ const Index = () => {
           </div>
           
           {loadingNews ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 md:w-5 md:h-5 animate-spin text-accent" />
+            <div className="overflow-hidden">
+              <div className="flex gap-3 md:gap-4">
+                <NoticiaCardSkeleton />
+                <NoticiaCardSkeleton />
+                <NoticiaCardSkeleton />
+              </div>
             </div>
           ) : featuredNews.length > 0 ? (
             <div className="overflow-hidden" ref={emblaRefVideo}>
@@ -246,7 +266,7 @@ const Index = () => {
                   return (
                     <div
                       key={noticia.id}
-                      className="flex-[0_0_70%] md:flex-[0_0_50%] lg:flex-[0_0_28.5%] min-w-0 bg-card rounded-xl overflow-hidden text-left transition-all hover:scale-105 hover:shadow-2xl border border-border hover:border-primary/30 shadow-lg relative"
+                      className="flex-[0_0_70%] md:flex-[0_0_50%] lg:flex-[0_0_28.5%] min-w-0 bg-card rounded-xl overflow-hidden text-left transition-all hover:scale-105 hover:shadow-2xl hover:shadow-primary/10 border border-border hover:border-primary/30 shadow-lg relative active:scale-100"
                     >
                       <button
                         onClick={() => {

@@ -21,6 +21,7 @@ import { ChevronLeft, ChevronRight, Clock, Flag, Loader2, CheckCircle2, XCircle,
 import { cn } from "@/lib/utils";
 import { CommentModal } from "@/components/CommentModal";
 import InlineAudioButton from "@/components/InlineAudioButton";
+import { useHaptic } from "@/hooks/useHaptic";
 
 interface Questao {
   id: number;
@@ -44,6 +45,7 @@ const SimuladosRealizar = () => {
   const ano = searchParams.get("ano");
   const areas = searchParams.get("areas")?.split(",");
   const quantidade = parseInt(searchParams.get("quantidade") || "20");
+  const haptic = useHaptic();
 
   const [showModoDialog, setShowModoDialog] = useState(true);
   const [modoResposta, setModoResposta] = useState<"imediato" | "final" | null>(null);
@@ -199,6 +201,13 @@ const SimuladosRealizar = () => {
     const respostaUsuario = respostas[currentIndex];
     const acertou = respostaUsuario === questaoAtual.resposta;
     
+    // Haptic feedback
+    if (acertou) {
+      haptic.success();
+    } else {
+      haptic.error();
+    }
+    
     // Tocar som
     const audio = new Audio(acertou ? '/sounds/correct.mp3' : '/sounds/error.mp3');
     audio.volume = 0.5;
@@ -221,6 +230,7 @@ const SimuladosRealizar = () => {
   };
 
   const handleMarcar = () => {
+    haptic.selection();
     const newMarcadas = new Set(marcadas);
     if (marcadas.has(currentIndex)) {
       newMarcadas.delete(currentIndex);
