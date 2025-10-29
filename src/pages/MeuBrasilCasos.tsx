@@ -11,66 +11,117 @@ const MeuBrasilCasos = () => {
   const casos = [
     {
       nome: "Operação Lava Jato",
-      ano: 2014,
-      area: "Corrupção e Lavagem de Dinheiro",
-      importancia: "Maior investigação de corrupção da história do Brasil",
-      foto: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&q=80"
+      ano: "2014-Presente",
+      area: "Corrupção",
+      importancia: "Maior investigação de corrupção do Brasil"
     },
     {
       nome: "Mensalão",
-      ano: 2005,
+      ano: "2005-2012",
       area: "Corrupção Política",
-      importancia: "Primeiro grande julgamento de políticos pelo STF",
-      foto: "https://images.unsplash.com/photo-1541872703-74c34d9d2b31?w=800&q=80"
+      importancia: "Compra de votos no Congresso Nacional"
     },
     {
       nome: "Caso Nardoni",
-      ano: 2008,
+      ano: "2008",
       area: "Criminal",
-      importancia: "Caso de grande repercussão midiática",
-      foto: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=800&q=80"
+      importancia: "Morte de Isabella Nardoni"
     },
     {
-      nome: "Caso Mariana (Samarco)",
-      ano: 2015,
-      area: "Ambiental",
-      importancia: "Maior desastre ambiental do Brasil",
-      foto: "https://images.unsplash.com/photo-1611348586804-61bf6c080437?w=800&q=80"
-    },
-    {
-      nome: "Caso Cesare Battisti",
-      ano: 2011,
-      area: "Direito Internacional",
-      importancia: "Extradição de ativista italiano",
-      foto: "https://images.unsplash.com/photo-1589391886645-d51941baf7fb?w=800&q=80"
-    },
-    {
-      nome: "ADI 4277 - União Homoafetiva",
-      ano: 2011,
+      nome: "Impeachment de Dilma Rousseff",
+      ano: "2016",
       area: "Constitucional",
-      importancia: "Reconhecimento de união estável entre pessoas do mesmo sexo",
-      foto: "https://images.unsplash.com/photo-1519834785169-98be25ec3f84?w=800&q=80"
+      importancia: "Processo de impedimento presidencial"
     },
     {
-      nome: "ADPF 54 - Anencefalia",
-      ano: 2012,
+      nome: "Impeachment de Fernando Collor",
+      ano: "1992",
       area: "Constitucional",
-      importancia: "Descriminalização do aborto de fetos anencéfalos",
-      foto: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80"
+      importancia: "Primeiro impeachment da história"
     },
     {
       nome: "Caso Eliza Samudio",
-      ano: 2010,
+      ano: "2010",
       area: "Criminal",
-      importancia: "Caso de feminicídio com grande repercussão",
-      foto: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=800&q=80"
+      importancia: "Desaparecimento e homicídio"
+    },
+    {
+      nome: "Caso Richthofen",
+      ano: "2002",
+      area: "Criminal",
+      importancia: "Parricídio planejado"
     },
     {
       nome: "Caso Escola Base",
-      ano: 1994,
-      area: "Criminal - Erro Judiciário",
-      importancia: "Marco sobre responsabilidade da imprensa e presunção de inocência",
-      foto: "https://images.unsplash.com/photo-1588072432836-e10032774350?w=800&q=80"
+      ano: "1994",
+      area: "Erro Judiciário",
+      importancia: "Acusação falsa e erro midiático"
+    },
+    {
+      nome: "Chacina da Candelária",
+      ano: "1993",
+      area: "Direitos Humanos",
+      importancia: "Massacre de crianças e adolescentes"
+    },
+    {
+      nome: "Massacre do Carandiru",
+      ano: "1992",
+      area: "Direitos Humanos",
+      importancia: "111 presos mortos pela PM"
+    },
+    {
+      nome: "Caso Dorothy Stang",
+      ano: "2005",
+      area: "Direitos Humanos",
+      importancia: "Assassinato de missionária defensora da Amazônia"
+    },
+    {
+      nome: "Caso Césio 137",
+      ano: "1987",
+      area: "Ambiental/Saúde",
+      importancia: "Acidente radioativo em Goiânia"
+    },
+    {
+      nome: "Tragédia de Mariana",
+      ano: "2015",
+      area: "Ambiental",
+      importancia: "Rompimento de barragem da Samarco"
+    },
+    {
+      nome: "Tragédia de Brumadinho",
+      ano: "2019",
+      area: "Ambiental",
+      importancia: "Rompimento de barragem da Vale"
+    },
+    {
+      nome: "Caso PC Farias",
+      ano: "1992-1996",
+      area: "Corrupção",
+      importancia: "Tesoureiro de Collor"
+    },
+    {
+      nome: "Caso Celso Daniel",
+      ano: "2002",
+      area: "Criminal/Político",
+      importancia: "Morte de prefeito de Santo André"
+    },
+    {
+      nome: "Caso Evandro",
+      ano: "1992",
+      area: "Criminal",
+      importancia: "Crianças de Castelo Branco (PR)"
+    },
+    {
+      nome: "Caso Daniella Perez",
+      ano: "1992",
+      area: "Criminal",
+      importancia: "Homicídio de atriz"
+    },
+    {
+      nome: "Caso Luiz Gama",
+      ano: "Século XIX",
+      area: "Direitos Humanos",
+      importancia: "Advogado que libertou escravos"
     }
   ];
 
@@ -115,45 +166,28 @@ const MeuBrasilCasos = () => {
         </div>
       </div>
 
-      {/* Grid de casos - Estilo cards com capas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Lista de casos */}
+      <div className="space-y-3">
         {filteredCasos.map((caso) => (
           <button
             key={caso.nome}
-            onClick={() => navigate(`/meu-brasil/caso/${encodeURIComponent(caso.nome)}`)}
-            className="group bg-card border border-border rounded-lg overflow-hidden hover:border-primary hover:shadow-xl transition-all duration-300 hover:scale-[1.02] text-left"
+            onClick={() => navigate(`/meu-brasil/artigo/${encodeURIComponent(caso.nome)}`)}
+            className="w-full bg-card border border-border rounded-lg p-4 text-left hover:border-accent transition-colors"
           >
-            {/* Imagem de capa */}
-            <div className="relative h-48 overflow-hidden">
-              <img
-                src={caso.foto}
-                alt={caso.nome}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent" />
-              
-              {/* Ano no canto superior direito */}
-              <div className="absolute top-3 right-3 bg-red-600/90 text-white text-xs font-bold px-2 py-1 rounded">
-                📅 {caso.ano}
-              </div>
+            <div className="flex items-start justify-between mb-2">
+              <h3 className="font-bold text-base flex-1">{caso.nome}</h3>
+              <span className="text-xs bg-red-600/20 text-red-600 px-2 py-1 rounded ml-2">
+                {caso.ano}
+              </span>
             </div>
-            
-            {/* Conteúdo */}
-            <div className="p-4 space-y-2">
-              <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                {caso.nome}
-              </h3>
-              
-              <div className="flex gap-2">
-                <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded">
-                  {caso.area}
-                </span>
-              </div>
-              
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {caso.importancia}
-              </p>
-            </div>
+
+            <p className="text-sm text-muted-foreground mb-2">
+              {caso.importancia}
+            </p>
+
+            <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded">
+              {caso.area}
+            </span>
           </button>
         ))}
       </div>
