@@ -179,7 +179,7 @@ const CodigoView = () => {
       // Busca por número (normalizando dígitos para casar "1.020" com "1020")
       if (isNumericSearch) {
         const numeroDigits = normalizeDigits(numeroArtigo);
-        if (numeroDigits.includes(searchLower)) return true;
+        if (numeroDigits === searchLower) return true;
       } else {
         if (numeroArtigo.includes(searchLower)) return true;
       }
@@ -520,8 +520,8 @@ const CodigoView = () => {
 
         // Se não tem número, renderiza como cabeçalho de seção
         if (!hasNumber) {
-          return <div key={article.id} className="text-center mb-8 space-y-1">
-                  <div className="whitespace-pre-line text-lg bg-gradient-to-r from-rose-400 via-red-400 to-orange-400 bg-clip-text text-transparent font-bold tracking-wide" dangerouslySetInnerHTML={{
+          return <div key={article.id} className="text-center mb-8 space-y-1 font-serif-content">
+                  <div className="whitespace-pre-line" dangerouslySetInnerHTML={{
               __html: formatTextWithUppercase(article["Artigo"] || "")
             }} />
                 </div>;
@@ -531,10 +531,10 @@ const CodigoView = () => {
         const isHighlighted = searchQuery && article["Número do Artigo"]?.toLowerCase().trim() === searchQuery.toLowerCase().trim();
 
         // Se tem número, renderiza como card normal
-        return <div key={article.id} ref={index === 0 && searchQuery ? firstResultRef : null} className={`relative bg-gradient-to-br from-card via-card to-card/90 backdrop-blur-sm rounded-2xl p-6 mb-6 border-2 transition-all duration-300 animate-fade-in hover:shadow-2xl scroll-mt-4 ${
+        return <div key={article.id} ref={index === 0 && searchQuery ? firstResultRef : null} className={`relative bg-card/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border transition-all duration-300 animate-fade-in hover:shadow-lg scroll-mt-4 ${
             isHighlighted 
-              ? 'border-rose-500/60 shadow-xl shadow-rose-500/20 ring-2 ring-rose-400/30' 
-              : 'border-border/40 hover:border-rose-400/50 hover:shadow-rose-400/10'
+              ? 'border-accent shadow-lg shadow-accent/20 ring-2 ring-accent/20' 
+              : 'border-border/50 hover:border-accent/30 hover:shadow-accent/5'
           }`} style={{
             animationDelay: `${index * 0.05}s`,
             animationFillMode: 'backwards'
@@ -546,16 +546,16 @@ const CodigoView = () => {
                 />
                 
                 {/* Article Header */}
-                <h2 className="font-bold text-2xl md:text-3xl mb-4 animate-scale-in bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
+                <h2 className="text-accent font-bold text-xl md:text-2xl mb-3 animate-scale-in">
                   Art. {article["Número do Artigo"]}
                 </h2>
 
                 {/* Article Content */}
                 <div
-                  className="article-content text-foreground mb-6 whitespace-pre-line leading-relaxed"
+                  className="article-content text-foreground/90 mb-6 whitespace-pre-line leading-relaxed font-serif-content"
                   style={{
-                    fontSize: `${fontSize + 1}px`,
-                    lineHeight: "1.8"
+                    fontSize: `${fontSize}px`,
+                    lineHeight: "1.7"
                   }}
                   dangerouslySetInnerHTML={{
                     __html: formatArticleContent(article["Artigo"] || "Conteúdo não disponível")

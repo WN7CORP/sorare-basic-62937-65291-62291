@@ -107,14 +107,18 @@ const SumulaView = () => {
     if (!searchQuery) return sumulas;
     
     const searchLower = searchQuery.toLowerCase().trim();
+    const isNumericSearch = /^\d+$/.test(searchLower);
     
     return sumulas.filter(sumula => {
       const titulo = sumula["Título da Súmula"]?.toLowerCase();
       const texto = sumula["Texto da Súmula"]?.toLowerCase();
       const numero = sumula.id?.toString();
       
-      return numero?.includes(searchLower) ||
-             titulo?.includes(searchLower) ||
+      // Busca exata por número
+      if (isNumericSearch && numero === searchLower) return true;
+      
+      // Busca textual parcial
+      return titulo?.includes(searchLower) ||
              texto?.includes(searchLower);
     });
   }, [sumulas, searchQuery]);
@@ -377,7 +381,7 @@ const SumulaView = () => {
                 }}
               >
                 {/* Sumula Header */}
-                <h2 className="text-article-highlight font-bold text-xl md:text-2xl mb-3 animate-scale-in">
+                <h2 className="text-accent font-bold text-xl md:text-2xl mb-3 animate-scale-in">
                   Súmula {sumula.id}
                 </h2>
 

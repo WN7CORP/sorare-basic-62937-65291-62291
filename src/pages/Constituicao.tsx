@@ -131,7 +131,7 @@ const Constituicao = () => {
 
       if (isNumericSearch) {
         const numeroDigits = normalizeDigits(numeroArtigo);
-        if (numeroDigits.includes(searchLower)) return true;
+        if (numeroDigits === searchLower) return true;
       } else {
         if (numeroArtigo === searchLower || numeroArtigo.includes(searchLower)) return true;
       }

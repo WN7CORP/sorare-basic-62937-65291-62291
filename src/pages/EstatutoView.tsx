@@ -156,7 +156,7 @@ const EstatutoView = () => {
       
       if (isNumericSearch) {
         const numeroDigits = normalizeDigits(numeroArtigo);
-        if (numeroDigits.includes(searchLower)) return true;
+        if (numeroDigits === searchLower) return true;
       } else {
         if (numeroArtigo.includes(searchLower)) return true;
       }
