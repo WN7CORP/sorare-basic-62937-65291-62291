@@ -78,14 +78,21 @@ const MeuBrasilJuristas = () => {
   };
 
   // Se temos dados do banco, usar eles. Senão, usar dados locais como fallback
-  const juristasParaExibir = juristasDb.length > 0 
-    ? {
-        historicos: juristasDb.filter(j => j.categoria === 'historicos'),
-        ministrosSTF: juristasDb.filter(j => j.categoria === 'ministrosSTF'),
-        advogados: juristasDb.filter(j => j.categoria === 'advogados'),
-        professores: juristasDb.filter(j => j.categoria === 'professores')
-      }
-    : juristas;
+  const fromDb = {
+    historicos: juristasDb.filter(j => j.categoria === 'historicos'),
+    ministrosSTF: juristasDb.filter(j => j.categoria === 'ministrosSTF'),
+    advogados: juristasDb.filter(j => j.categoria === 'advogados'),
+    professores: juristasDb.filter(j => j.categoria === 'professores')
+  };
+
+  // Se o banco não tiver as categorias esperadas (ex.: tudo como "jurista"),
+  // fazemos fallback por categoria para os dados locais
+  const juristasParaExibir = {
+    historicos: fromDb.historicos.length ? fromDb.historicos : juristas.historicos,
+    ministrosSTF: fromDb.ministrosSTF.length ? fromDb.ministrosSTF : juristas.ministrosSTF,
+    advogados: fromDb.advogados.length ? fromDb.advogados : juristas.advogados,
+    professores: fromDb.professores.length ? fromDb.professores : juristas.professores,
+  };
 
   const todasCategorias = [
     { label: "Históricos", value: "historicos", lista: juristasParaExibir.historicos },
