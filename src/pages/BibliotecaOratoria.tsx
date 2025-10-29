@@ -25,6 +25,7 @@ interface BibliotecaItem {
 const BibliotecaOratoria = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [mostrarIntro, setMostrarIntro] = useState(true);
 
   const { data: capa } = useQuery({
     queryKey: ["capa-biblioteca-oratoria"],
@@ -58,6 +59,19 @@ const BibliotecaOratoria = () => {
       <div className="flex items-center justify-center min-h-[50vh]">
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
+    );
+  }
+
+  // Mostrar tela de introdução primeiro
+  if (mostrarIntro && capa) {
+    return (
+      <BibliotecaIntro
+        titulo="Biblioteca de Oratória"
+        sobre={capa.sobre || "Aprimore sua comunicação e oratória com obras selecionadas. Técnicas, estratégias e práticas para falar em público com confiança e persuasão."}
+        capaUrl={capa.capa}
+        totalLivros={items?.length}
+        onAcessar={() => setMostrarIntro(false)}
+      />
     );
   }
 

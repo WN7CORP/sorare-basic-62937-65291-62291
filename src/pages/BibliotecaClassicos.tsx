@@ -3,6 +3,7 @@ import { Loader2, Search, BookOpen, ArrowLeft } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { LivroCard } from "@/components/LivroCard";
+import { BibliotecaIntro } from "@/components/BibliotecaIntro";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ interface BibliotecaItem {
 const BibliotecaClassicos = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [mostrarIntro, setMostrarIntro] = useState(true);
   const {
     data: capa
   } = useQuery({
@@ -54,6 +56,19 @@ const BibliotecaClassicos = () => {
       <div className="flex items-center justify-center min-h-[50vh]">
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
+    );
+  }
+
+  // Mostrar tela de introdução primeiro
+  if (mostrarIntro && capa) {
+    return (
+      <BibliotecaIntro
+        titulo="Biblioteca Clássicos"
+        sobre={capa.sobre || "Descubra os grandes clássicos da literatura jurídica e geral. Uma seleção especial de obras atemporais que enriquecem seu conhecimento e cultura."}
+        capaUrl={capa.capa}
+        totalLivros={items?.length}
+        onAcessar={() => setMostrarIntro(false)}
+      />
     );
   }
 

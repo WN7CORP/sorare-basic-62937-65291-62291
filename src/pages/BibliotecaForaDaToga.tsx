@@ -24,6 +24,7 @@ interface BibliotecaItem {
 const BibliotecaForaDaToga = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [mostrarIntro, setMostrarIntro] = useState(true);
 
   const { data: capa } = useQuery({
     queryKey: ["capa-biblioteca-fora-da-toga"],
@@ -57,6 +58,19 @@ const BibliotecaForaDaToga = () => {
       <div className="flex items-center justify-center min-h-[50vh]">
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
+    );
+  }
+
+  // Mostrar tela de introdução primeiro
+  if (mostrarIntro && capa) {
+    return (
+      <BibliotecaIntro
+        titulo="Biblioteca Fora da Toga"
+        sobre={capa.sobre || "Livros para além do Direito. Desenvolvimento pessoal, bem-estar e crescimento para você que busca equilíbrio entre vida profissional e pessoal."}
+        capaUrl={capa.capa}
+        totalLivros={items?.length}
+        onAcessar={() => setMostrarIntro(false)}
+      />
     );
   }
 

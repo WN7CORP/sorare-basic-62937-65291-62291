@@ -25,6 +25,7 @@ interface BibliotecaItem {
 const BibliotecaLideranca = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [mostrarIntro, setMostrarIntro] = useState(true);
 
   const { data: capa } = useQuery({
     queryKey: ["capa-biblioteca-lideranca"],
@@ -58,6 +59,19 @@ const BibliotecaLideranca = () => {
       <div className="flex items-center justify-center min-h-[50vh]">
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
+    );
+  }
+
+  // Mostrar tela de introdução primeiro
+  if (mostrarIntro && capa) {
+    return (
+      <BibliotecaIntro
+        titulo="Biblioteca de Liderança"
+        sobre={capa.sobre || "Desenvolva suas habilidades de liderança com obras essenciais sobre gestão, influência e desenvolvimento de equipes. Conteúdo para líderes que querem fazer a diferença."}
+        capaUrl={capa.capa}
+        totalLivros={items?.length}
+        onAcessar={() => setMostrarIntro(false)}
+      />
     );
   }
 

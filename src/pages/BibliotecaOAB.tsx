@@ -27,6 +27,7 @@ const BibliotecaOAB = () => {
   const navigate = useNavigate();
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [mostrarIntro, setMostrarIntro] = useState(true);
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   const { data: capa } = useQuery({
@@ -128,6 +129,19 @@ const BibliotecaOAB = () => {
     return <div className="flex items-center justify-center min-h-[50vh]">
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>;
+  }
+
+  // Mostrar tela de introdução primeiro
+  if (mostrarIntro && capa) {
+    return (
+      <BibliotecaIntro
+        titulo="Biblioteca da OAB"
+        sobre={capa.sobre || "Explore uma coleção completa de livros relacionados à Ordem dos Advogados do Brasil, incluindo manuais, guias práticos e materiais essenciais para sua carreira na advocacia."}
+        capaUrl={capa.capa}
+        totalLivros={items?.length}
+        onAcessar={() => setMostrarIntro(false)}
+      />
+    );
   }
 
   // Se uma área foi selecionada, mostrar os livros dessa área
