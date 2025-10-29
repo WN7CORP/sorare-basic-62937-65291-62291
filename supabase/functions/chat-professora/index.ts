@@ -452,8 +452,8 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
     const acceptHeader = request.headers.get('Accept') || '';
     const wantsSSE = acceptHeader.includes('text/event-stream');
     
-    // Usar 2.0 Flash com fallback para 2.0 Flash Exp
-    let modelName = 'gemini-2.0-flash';
+    // Usar 2.5 Flash
+    const modelName = 'gemini-2.5-flash';
     const apiMethod = wantsSSE ? 'streamGenerateContent' : 'generateContent';
     
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:${apiMethod}?key=${apiKey}`;
@@ -469,23 +469,11 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
     console.log(`🔄 Fazendo requisição para Gemini API (${modelName}, ${apiMethod})...`);
     const apiStartTime = Date.now();
     
-    let response = await fetch(apiUrl, {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
     });
-    
-    // Fallback para gemini-2.0-flash-exp se modelo não disponível
-    if (!response.ok && (response.status === 400 || response.status === 404)) {
-      console.warn(`⚠️ ${modelName} não disponível, tentando gemini-2.0-flash-exp...`);
-      modelName = 'gemini-2.0-flash-exp';
-      const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:${apiMethod}?key=${apiKey}`;
-      response = await fetch(fallbackUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
-    }
     
     console.log(`📡 Resposta recebida - Status: ${response.status}, Modelo: ${modelName}`);
     
