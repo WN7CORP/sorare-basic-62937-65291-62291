@@ -1,18 +1,34 @@
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Film, Play, Star } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Play, Star, Settings2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import useEmblaCarousel from "embla-carousel-react";
-import { JuriFlixTitulo } from "@/types/database.types";
+import { JuriFlixTituloEnriquecido } from "@/types/juriflix.types";
+import { JuriFlixCard } from "@/components/JuriFlixCard";
+import { JuriFlixFilters } from "@/components/JuriFlixFilters";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const JuriFlix = () => {
   const navigate = useNavigate();
   const [emblaRefFilmes] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps", dragFree: true });
   const [emblaRefSeries] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps", dragFree: true });
   const [emblaRefDocumentarios] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps", dragFree: true });
+  
+  // Filtros
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [decadeRange, setDecadeRange] = useState<[number, number]>([1950, 2020]);
+  const [minRating, setMinRating] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
 
   const { data: titulos, isLoading } = useQuery({
     queryKey: ["juriflix"],
@@ -23,14 +39,59 @@ const JuriFlix = () => {
         .order("nota", { ascending: false });
 
       if (error) throw error;
-      return data as unknown as JuriFlixTitulo[];
+      return data as unknown as JuriFlixTituloEnriquecido[];
     },
   });
 
-  const destaque = titulos?.[0];
-  const filmes = titulos?.filter((t) => t.tipo?.toLowerCase().includes("filme"));
-  const series = titulos?.filter((t) => t.tipo?.toLowerCase().includes("série"));
-  const documentarios = titulos?.filter((t) => t.tipo?.toLowerCase().includes("documentário"));
+  // Filtrar títulos
+  const titulosFiltrados = useMemo(() => {
+    if (!titulos) return [];
+    
+    return titulos.filter((t) => {
+      // Filtro de gênero
+      if (selectedGenres.length > 0) {
+        const tituloGeneros = t.generos as string[] || [];
+        if (!selectedGenres.some(g => tituloGeneros.includes(g))) {
+          return false;
+        }
+      }
+      
+      // Filtro de década
+      if (t.ano) {
+        const ano = parseInt(t.ano.toString());
+        if (ano < decadeRange[0] || ano > decadeRange[1] + 9) {
+          return false;
+        }
+      }
+      
+      // Filtro de rating
+      if (minRating > 0) {
+        const rating = t.popularidade ? t.popularidade / 10 : parseFloat(t.nota?.toString() || "0");
+        if (rating < minRating) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }, [titulos, selectedGenres, decadeRange, minRating]);
+
+  const destaque = titulosFiltrados[0];
+  const filmes = titulosFiltrados.filter((t) => t.tipo?.toLowerCase().includes("filme"));
+  const series = titulosFiltrados.filter((t) => t.tipo?.toLowerCase().includes("série"));
+  const documentarios = titulosFiltrados.filter((t) => t.tipo?.toLowerCase().includes("documentário"));
+
+  const handleGenreToggle = (genre: string) => {
+    setSelectedGenres(prev =>
+      prev.includes(genre) ? prev.filter(g => g !== genre) : [...prev, genre]
+    );
+  };
+
+  const handleClearFilters = () => {
+    setSelectedGenres([]);
+    setDecadeRange([1950, 2020]);
+    setMinRating(0);
+  };
 
   if (isLoading) {
     return (
@@ -40,40 +101,6 @@ const JuriFlix = () => {
     );
   }
 
-  const TituloCard = ({ titulo }: { titulo: JuriFlixTitulo }) => (
-    <div
-      className="flex-[0_0_140px] cursor-pointer group"
-      onClick={() => navigate(`/juriflix/${titulo.id}`)}
-    >
-      <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-secondary mb-2">
-        {titulo.capa ? (
-          <img
-            src={titulo.capa}
-            alt={titulo.nome}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Film className="w-12 h-12 text-muted-foreground" />
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="absolute bottom-2 left-2 right-2">
-            <div className="flex items-center gap-1 text-xs text-white mb-1">
-              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-              <span>{titulo.nota}</span>
-            </div>
-            <p className="text-xs text-white/90 line-clamp-2">{titulo.sinopse}</p>
-          </div>
-        </div>
-        <Badge className="absolute top-2 left-2 text-xs" variant="secondary">
-          {titulo.tipo}
-        </Badge>
-      </div>
-      <h3 className="font-medium text-sm line-clamp-2">{titulo.nome}</h3>
-      <p className="text-xs text-muted-foreground">{titulo.ano}</p>
-    </div>
-  );
 
   return (
     <div className="pb-20">
@@ -110,8 +137,39 @@ const JuriFlix = () => {
         </div>
       )}
 
-      {/* Seções por Categoria */}
+      {/* Filtros e Seções */}
       <div className="max-w-4xl mx-auto px-3 py-6 space-y-8">
+        {/* Botão de Filtros Mobile */}
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Catálogo</h2>
+          <Sheet open={showFilters} onOpenChange={setShowFilters}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Settings2 className="w-4 h-4" />
+                Filtros
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Filtros</SheetTitle>
+                <SheetDescription>
+                  Refine sua busca por filmes e séries jurídicas
+                </SheetDescription>
+              </SheetHeader>
+              <div className="mt-6">
+                <JuriFlixFilters
+                  selectedGenres={selectedGenres}
+                  onGenreToggle={handleGenreToggle}
+                  decadeRange={decadeRange}
+                  onDecadeChange={setDecadeRange}
+                  minRating={minRating}
+                  onRatingChange={setMinRating}
+                  onClearFilters={handleClearFilters}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
         {/* Filmes */}
         {filmes && filmes.length > 0 && (
           <div>
@@ -119,7 +177,11 @@ const JuriFlix = () => {
             <div className="overflow-hidden" ref={emblaRefFilmes}>
               <div className="flex gap-3">
                 {filmes.map((titulo) => (
-                  <TituloCard key={titulo.id} titulo={titulo} />
+                  <JuriFlixCard 
+                    key={titulo.id} 
+                    titulo={titulo}
+                    onClick={() => navigate(`/juriflix/${titulo.id}`)}
+                  />
                 ))}
               </div>
             </div>
@@ -133,7 +195,11 @@ const JuriFlix = () => {
             <div className="overflow-hidden" ref={emblaRefSeries}>
               <div className="flex gap-3">
                 {series.map((titulo) => (
-                  <TituloCard key={titulo.id} titulo={titulo} />
+                  <JuriFlixCard 
+                    key={titulo.id} 
+                    titulo={titulo}
+                    onClick={() => navigate(`/juriflix/${titulo.id}`)}
+                  />
                 ))}
               </div>
             </div>
@@ -147,7 +213,11 @@ const JuriFlix = () => {
             <div className="overflow-hidden" ref={emblaRefDocumentarios}>
               <div className="flex gap-3">
                 {documentarios.map((titulo) => (
-                  <TituloCard key={titulo.id} titulo={titulo} />
+                  <JuriFlixCard 
+                    key={titulo.id} 
+                    titulo={titulo}
+                    onClick={() => navigate(`/juriflix/${titulo.id}`)}
+                  />
                 ))}
               </div>
             </div>

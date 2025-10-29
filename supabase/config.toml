@@ -8,3 +8,12 @@ verify_jwt = false
 
 [functions.popular-meu-brasil]
 verify_jwt = false
+
+[functions.enriquecer-juriflix]
+verify_jwt = false
+
+[functions.buscar-titulos-juridicos-tmdb]
+verify_jwt = false
+
+[functions.sync-disponibilidade-streaming]
+verify_jwt = false

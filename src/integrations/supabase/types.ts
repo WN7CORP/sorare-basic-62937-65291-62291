@@ -2505,45 +2505,102 @@ export type Database = {
       JURIFLIX: {
         Row: {
           ano: number | null
+          backdrop_path: string | null
           beneficios: string | null
+          bilheteria: number | null
           capa: string | null
+          diretor: string | null
+          duracao: number | null
+          elenco: Json | null
+          generos: Json | null
           id: number
+          idioma_original: string | null
           link: string | null
           "link Video": string | null
           nome: string | null
           nota: string | null
+          onde_assistir: Json | null
+          orcamento: number | null
           plataforma: string | null
+          popularidade: number | null
+          poster_path: string | null
+          similares: Json | null
           sinopse: string | null
+          tagline: string | null
           tipo: string | null
+          tipo_tmdb: string | null
+          titulo_original: string | null
+          tmdb_id: number | null
           trailer: string | null
+          ultima_atualizacao: string | null
+          videos: Json | null
+          votos_count: number | null
         }
         Insert: {
           ano?: number | null
+          backdrop_path?: string | null
           beneficios?: string | null
+          bilheteria?: number | null
           capa?: string | null
+          diretor?: string | null
+          duracao?: number | null
+          elenco?: Json | null
+          generos?: Json | null
           id: number
+          idioma_original?: string | null
           link?: string | null
           "link Video"?: string | null
           nome?: string | null
           nota?: string | null
+          onde_assistir?: Json | null
+          orcamento?: number | null
           plataforma?: string | null
+          popularidade?: number | null
+          poster_path?: string | null
+          similares?: Json | null
           sinopse?: string | null
+          tagline?: string | null
           tipo?: string | null
+          tipo_tmdb?: string | null
+          titulo_original?: string | null
+          tmdb_id?: number | null
           trailer?: string | null
+          ultima_atualizacao?: string | null
+          videos?: Json | null
+          votos_count?: number | null
         }
         Update: {
           ano?: number | null
+          backdrop_path?: string | null
           beneficios?: string | null
+          bilheteria?: number | null
           capa?: string | null
+          diretor?: string | null
+          duracao?: number | null
+          elenco?: Json | null
+          generos?: Json | null
           id?: number
+          idioma_original?: string | null
           link?: string | null
           "link Video"?: string | null
           nome?: string | null
           nota?: string | null
+          onde_assistir?: Json | null
+          orcamento?: number | null
           plataforma?: string | null
+          popularidade?: number | null
+          poster_path?: string | null
+          similares?: Json | null
           sinopse?: string | null
+          tagline?: string | null
           tipo?: string | null
+          tipo_tmdb?: string | null
+          titulo_original?: string | null
+          tmdb_id?: number | null
           trailer?: string | null
+          ultima_atualizacao?: string | null
+          videos?: Json | null
+          votos_count?: number | null
         }
         Relationships: []
       }
