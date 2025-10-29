@@ -274,7 +274,7 @@ export const DesktopChatPanel = () => {
 
       const assistantMessage: Message = {
         role: "assistant",
-        content: data.message
+        content: data.data || data.message || "Desculpe, não consegui processar sua solicitação."
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -317,7 +317,7 @@ export const DesktopChatPanel = () => {
 
       const assistantMessage: Message = {
         role: "assistant",
-        content: data.message
+        content: data.data || data.message || "Desculpe, não consegui processar sua solicitação."
       };
 
       setMessages(prev => [...prev, assistantMessage]);
