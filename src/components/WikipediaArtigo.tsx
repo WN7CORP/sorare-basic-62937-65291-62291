@@ -326,7 +326,7 @@ export const WikipediaArtigo = ({ titulo, categoria }: WikipediaArtigoProps) => 
 
       {/* Fonte */}
       <div className="text-xs text-muted-foreground text-center py-4 border-t">
-        Conteúdo adaptado da Wikipedia em português e enriquecido com IA educacional
+        📚 Conteúdo educacional gerado com inteligência artificial
       </div>
     </div>
   );

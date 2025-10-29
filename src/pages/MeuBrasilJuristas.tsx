@@ -147,9 +147,13 @@ const MeuBrasilJuristas = () => {
 
       {/* Tabs por categoria */}
       <Tabs defaultValue="historicos" className="w-full">
-        <TabsList className="w-full grid grid-cols-2 md:grid-cols-4 mb-6">
+        <TabsList className="w-full grid grid-cols-2 md:grid-cols-4 mb-6 h-auto p-1 bg-muted/50">
           {todasCategorias.map(cat => (
-            <TabsTrigger key={cat.value} value={cat.value} className="text-xs">
+            <TabsTrigger 
+              key={cat.value} 
+              value={cat.value} 
+              className="text-xs md:text-sm py-2.5 px-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium"
+            >
               {cat.label}
             </TabsTrigger>
           ))}
@@ -162,31 +166,38 @@ const MeuBrasilJuristas = () => {
                 <button
                   key={jurista.nome}
                   onClick={() => navigate(`/meu-brasil/jurista/${encodeURIComponent(jurista.nome)}`)}
-                  className="w-full bg-card border border-border rounded-lg p-4 text-left hover:border-primary hover:shadow-md transition-all group"
+                  className="w-full bg-gradient-to-r from-card to-card/50 border border-border rounded-xl p-5 text-left hover:border-primary hover:shadow-lg hover:scale-[1.01] transition-all duration-200 group"
                 >
                   <div className="flex items-start gap-4">
-                    <Avatar className="w-16 h-16 flex-shrink-0">
-                      <AvatarImage 
-                        src={'foto_url' in jurista && typeof jurista.foto_url === 'string' ? jurista.foto_url : undefined} 
-                        alt={jurista.nome}
-                      />
-                      <AvatarFallback className="bg-muted">
-                        <Users className="w-8 h-8 text-muted-foreground" />
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                      <Avatar className="w-16 h-16 flex-shrink-0 ring-2 ring-border group-hover:ring-primary transition-all">
+                        <AvatarImage 
+                          src={'foto_url' in jurista && typeof jurista.foto_url === 'string' ? jurista.foto_url : undefined} 
+                          alt={jurista.nome}
+                        />
+                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20">
+                          <Users className="w-8 h-8 text-primary" />
+                        </AvatarFallback>
+                      </Avatar>
+                      {!('foto_url' in jurista && jurista.foto_url) && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full animate-pulse" title="Foto será carregada ao clicar" />
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-base mb-1 group-hover:text-primary transition-colors">
+                      <h3 className="font-bold text-lg mb-1.5 group-hover:text-primary transition-colors">
                         {jurista.nome}
                       </h3>
-                      <p className="text-sm text-muted-foreground mb-1">
+                      <p className="text-sm text-muted-foreground mb-2 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
                         {jurista.area}
                       </p>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-accent">
+                        <span className="text-xs font-medium text-accent px-2.5 py-1 bg-accent/10 rounded-full">
                           {jurista.periodo}
                         </span>
-                        <span className="text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                          Ver artigo →
+                        <span className="text-xs font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                          Ver biografia
+                          <span className="group-hover:translate-x-0.5 transition-transform">→</span>
                         </span>
                       </div>
                     </div>

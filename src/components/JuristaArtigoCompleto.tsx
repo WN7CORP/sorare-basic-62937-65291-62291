@@ -381,7 +381,7 @@ export const JuristaArtigoCompleto = ({
 
       {/* Fonte */}
       <div className="text-xs text-muted-foreground text-center py-4 border-t">
-        ✨ Conteúdo gerado com IA educacional
+        📚 Conteúdo educacional gerado com inteligência artificial
       </div>
     </div>
   );
