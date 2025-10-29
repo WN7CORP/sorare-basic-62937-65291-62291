@@ -73,6 +73,16 @@ const searchShortcuts: Record<string, { type: string; value: string; route?: str
   'constituicao': { type: 'direct', value: 'constituicao', route: '/constituicao' },
 };
 
+// Helper para garantir que results sempre tenha todas as propriedades
+const ensureResultsStructure = (data: any) => ({
+  bibliotecas: data?.bibliotecas || [],
+  livros: data?.livros || [],
+  videoaulas: data?.videoaulas || [],
+  cursos: data?.cursos || [],
+  flashcards: data?.flashcards || [],
+  artigos: data?.artigos || []
+});
+
 const Pesquisar = () => {
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
@@ -146,7 +156,7 @@ const Pesquisar = () => {
         const cacheAge = new Date().getTime() - new Date(cacheData.updated_at).getTime();
         const isOld = cacheAge > 24 * 60 * 60 * 1000; // 24 horas
         
-        setResults(cacheData.resultados);
+        setResults(ensureResultsStructure(cacheData.resultados));
         setCacheInfo({
           fromCache: true,
           updatedAt: cacheData.updated_at,
@@ -216,7 +226,7 @@ const Pesquisar = () => {
       
       // Atualizar cache em memória
       searchCache.set(searchLower, resultData);
-      setResults(resultData);
+      setResults(ensureResultsStructure(resultData));
       setCacheInfo({ fromCache: false });
       setSearchProgress("");
     } catch (error) {
@@ -264,7 +274,7 @@ const Pesquisar = () => {
           })
           .eq('termo_pesquisado', termo);
         
-        setResults(newResults);
+        setResults(ensureResultsStructure(newResults));
         toast.success(`${newTotal - oldTotal > 0 ? 'Novo' : 'Atualizado'} conteúdo encontrado!`);
       }
     } catch (error) {
@@ -452,7 +462,13 @@ const Pesquisar = () => {
     return allResults.slice(0, 10);
   };
 
-  const totalResults = (results.bibliotecas?.length || 0) + (results.livros?.length || 0) + (results.videoaulas?.length || 0) + (results.cursos?.length || 0) + (results.flashcards?.length || 0) + (results.artigos?.length || 0);
+  const totalResults = 
+    (results.bibliotecas?.length || 0) + 
+    (results.livros?.length || 0) + 
+    (results.videoaulas?.length || 0) + 
+    (results.cursos?.length || 0) + 
+    (results.flashcards?.length || 0) + 
+    (results.artigos?.length || 0);
 
   return (
       <div className="px-3 py-4 max-w-4xl mx-auto pb-24">
@@ -558,16 +574,16 @@ const Pesquisar = () => {
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           <TabsList className="w-full grid grid-cols-7 mb-6 h-auto gap-1.5 bg-secondary/50 p-2">
             <TabsTrigger value="todos" className="text-xs">Todos ({totalResults})</TabsTrigger>
-            <TabsTrigger value="artigos" disabled={!results.artigos.length} className="text-xs">⚖️ ({results.artigos.length})</TabsTrigger>
-            <TabsTrigger value="bibliotecas" disabled={!results.bibliotecas.length} className="text-xs">📚 ({results.bibliotecas.length})</TabsTrigger>
-            <TabsTrigger value="videoaulas" disabled={!results.videoaulas.length} className="text-xs">🎥 ({results.videoaulas.length})</TabsTrigger>
-            <TabsTrigger value="livros" disabled={!results.livros.length} className="text-xs">📕 ({results.livros.length})</TabsTrigger>
-            <TabsTrigger value="cursos" disabled={!results.cursos.length} className="text-xs">📖 ({results.cursos.length})</TabsTrigger>
-            <TabsTrigger value="flashcards" disabled={!results.flashcards.length} className="text-xs">⚡ ({results.flashcards.length})</TabsTrigger>
+            <TabsTrigger value="artigos" disabled={!(results.artigos?.length || 0)} className="text-xs">⚖️ ({results.artigos?.length || 0})</TabsTrigger>
+            <TabsTrigger value="bibliotecas" disabled={!(results.bibliotecas?.length || 0)} className="text-xs">📚 ({results.bibliotecas?.length || 0})</TabsTrigger>
+            <TabsTrigger value="videoaulas" disabled={!(results.videoaulas?.length || 0)} className="text-xs">🎥 ({results.videoaulas?.length || 0})</TabsTrigger>
+            <TabsTrigger value="livros" disabled={!(results.livros?.length || 0)} className="text-xs">📕 ({results.livros?.length || 0})</TabsTrigger>
+            <TabsTrigger value="cursos" disabled={!(results.cursos?.length || 0)} className="text-xs">📖 ({results.cursos?.length || 0})</TabsTrigger>
+            <TabsTrigger value="flashcards" disabled={!(results.flashcards?.length || 0)} className="text-xs">⚡ ({results.flashcards?.length || 0})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="todos" className="space-y-6">
-            {results.artigos.length > 0 && (
+            {(results.artigos?.length || 0) > 0 && (
               <div>
                 <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
                   <Scale className="w-5 h-5 text-purple-500" />Artigos ({results.artigos.length})
@@ -592,7 +608,7 @@ const Pesquisar = () => {
                 </div>
               </div>
             )}
-            {results.videoaulas.length > 0 && (
+            {(results.videoaulas?.length || 0) > 0 && (
               <div>
                 <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
                   <PlayCircle className="w-5 h-5 text-red-500" />Videoaulas ({results.videoaulas.length})
@@ -615,7 +631,7 @@ const Pesquisar = () => {
               </div>
             )}
 
-            {results.livros.length > 0 && (
+            {(results.livros?.length || 0) > 0 && (
               <div>
                 <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-orange-500" />Livros ({results.livros.length})
@@ -639,7 +655,7 @@ const Pesquisar = () => {
               </div>
             )}
 
-            {results.bibliotecas.length > 0 && (
+            {(results.bibliotecas?.length || 0) > 0 && (
               <div>
                 <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
                   <BookOpen className="w-5 h-5" />Bibliotecas ({results.bibliotecas.length})
@@ -663,7 +679,7 @@ const Pesquisar = () => {
               </div>
             )}
 
-            {results.cursos.length > 0 && (
+            {(results.cursos?.length || 0) > 0 && (
               <div>
                 <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
                   <GraduationCap className="w-5 h-5" />Cursos ({results.cursos.length})
@@ -681,7 +697,7 @@ const Pesquisar = () => {
               </div>
             )}
 
-            {results.flashcards.length > 0 && (
+            {(results.flashcards?.length || 0) > 0 && (
               <div>
                 <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
                   <Layers className="w-5 h-5 text-purple-500" />Flashcards ({results.flashcards.length})
