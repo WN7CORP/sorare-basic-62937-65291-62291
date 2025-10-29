@@ -33,10 +33,9 @@ const FlashcardsTemas = () => {
     },
     enabled: !!area
   });
-  // Cores de dificuldade para o ícone da balança
+  // Cor vermelha para todos os ícones
   const getDifficultyColor = (index: number) => {
-    const colors = ['text-green-500', 'text-yellow-500', 'text-orange-500', 'text-red-500'];
-    return colors[index % colors.length];
+    return 'text-accent';
   };
   const filteredTemas = temas?.filter(tema => tema.tema.toLowerCase().includes(searchTerm.toLowerCase()));
   if (!area) {
