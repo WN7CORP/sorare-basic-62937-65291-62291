@@ -55,15 +55,34 @@ serve(async (req) => {
 
     console.log(`🔗 URL: ${lexmlUrl}`);
 
-    const response = await fetch(lexmlUrl);
+    // Adicionar timeout de 10 segundos
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    let response;
+    try {
+      response = await fetch(lexmlUrl, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      throw new Error(`Timeout ou erro na conexão com LexML: ${fetchError}`);
+    }
+
     console.log(`📡 Status API LexML: ${response.status}`);
 
     if (!response.ok) {
-      throw new Error(`Erro na API LexML: ${response.status}`);
+      throw new Error(`API LexML retornou status ${response.status}`);
     }
 
     const xmlText = await response.text();
     console.log(`📄 Tamanho XML recebido: ${xmlText.length} bytes`);
+
+    // Validar se é XML válido do LexML
+    if (!xmlText.includes('<srw:searchRetrieveResponse')) {
+      throw new Error('Resposta inválida da API LexML - não é XML SRU válido');
+    }
 
     // Extrair registros usando regex (Dublin Core format)
     const recordMatches = Array.from(xmlText.matchAll(/<srw:record[^>]*>([\s\S]*?)<\/srw:record>/g));
@@ -249,12 +268,37 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('❌ Erro na função buscar-leis-recentes:', error);
+    console.error('❌ Erro crítico na função buscar-leis-recentes:', error);
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    
+    // Tentar retornar cache antigo (mesmo que expirado) como fallback
+    try {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      
+      const { data: cacheAntigo } = await supabaseClient
+        .from('cache_leis_recentes')
+        .select('*')
+        .order('data_publicacao', { ascending: false })
+        .limit(50);
+      
+      if (cacheAntigo && cacheAntigo.length > 0) {
+        console.log(`⚠️ API falhou, retornando ${cacheAntigo.length} leis do cache antigo`);
+        return new Response(JSON.stringify(cacheAntigo), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    } catch (cacheError) {
+      console.error('❌ Falha ao buscar cache antigo:', cacheError);
+    }
+    
+    // Se não houver cache, retornar array vazio
+    console.log('⚠️ Nenhum cache disponível, retornando array vazio');
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify([]),
       { 
-        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
