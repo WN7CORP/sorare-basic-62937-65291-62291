@@ -39,7 +39,8 @@ export const Layout = ({ children }: LayoutProps) => {
     location.pathname === "/plano-estudos" ||
     location.pathname === "/cursos/modulos" ||
     location.pathname === "/cursos/aulas" ||
-    location.pathname === "/aprender/estagios/buscar";
+    location.pathname === "/aprender/estagios/buscar" ||
+    location.pathname.startsWith("/meu-brasil/jurista/");
   
   // Esconder Header em páginas com header próprio
   const hideHeader = location.pathname === "/professora" || location.pathname === "/chat-professora";

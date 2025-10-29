@@ -35,78 +35,55 @@ export const JuristaArtigoCompleto = ({
 }: JuristaArtigoCompletoProps) => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Cabeçalho com foto */}
-      <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6 rounded-2xl border">
-        <div className="flex items-start gap-6">
-          {foto_url && (
-            <div className="flex-shrink-0">
-              <img 
-                src={foto_url} 
-                alt={nome}
-                className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover border-4 border-background shadow-xl"
-                onError={(e) => {
-                  e.currentTarget.src = 'https://via.placeholder.com/200?text=Foto+Indisponível';
-                }}
-              />
-            </div>
-          )}
+      {/* Hero Image - Foto de capa estilo artigo */}
+      {foto_url && (
+        <div className="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-2xl overflow-hidden">
+          <img 
+            src={foto_url} 
+            alt={nome}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.src = 'https://via.placeholder.com/1200x400?text=Foto+Indisponível';
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
           
-          <div className="flex-1 min-w-0">
-            <div className="mb-3">
-              <div className="text-sm text-muted-foreground mb-1">{categoria}</div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">{nome}</h1>
+          {/* Informações sobre a imagem */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+            <div className="text-sm text-white/80 mb-2">{categoria}</div>
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-3">{nome}</h1>
+            <div className="flex flex-wrap items-center gap-3">
               {periodo && (
-                <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                <div className="flex items-center gap-2 text-white/90">
                   <Clock className="w-4 h-4" />
                   <span className="text-sm">{periodo}</span>
                 </div>
               )}
               {area && (
-                <div className="inline-block px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-medium">
+                <div className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium">
                   {area}
                 </div>
               )}
             </div>
-            
-            {/* Botões de ação */}
-            <div className="flex flex-wrap gap-2">
-              {onToggleFavorito && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onToggleFavorito}
-                  className={isFavorito ? "text-red-500 border-red-500" : ""}
-                >
-                  <Heart className={`w-4 h-4 mr-2 ${isFavorito ? "fill-current" : ""}`} />
-                  {isFavorito ? "Favoritado" : "Favoritar"}
-                </Button>
-              )}
-              
-              {onExportarPDF && (
-                <Button variant="outline" size="sm" onClick={onExportarPDF}>
-                  <FileDown className="w-4 h-4 mr-2" />
-                  PDF
-                </Button>
-              )}
-              
-              {onCompartilhar && (
-                <Button variant="outline" size="sm" onClick={onCompartilhar}>
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Compartilhar
-                </Button>
-              )}
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(`https://pt.wikipedia.org/wiki/${encodeURIComponent(nome)}`, '_blank')}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Wikipedia
-              </Button>
-            </div>
           </div>
         </div>
+      )}
+      
+      {/* Botões de ação - Discretos */}
+      <div className="flex justify-end gap-2">
+        {onExportarPDF && (
+          <Button variant="outline" size="sm" onClick={onExportarPDF}>
+            <FileDown className="w-4 h-4 mr-2" />
+            Baixar PDF
+          </Button>
+        )}
+        
+        {onCompartilhar && (
+          <Button variant="outline" size="sm" onClick={onCompartilhar}>
+            <Share2 className="w-4 h-4 mr-2" />
+            Compartilhar
+          </Button>
+        )}
       </div>
 
       {/* Resumo executivo em destaque */}

@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ContentGenerationLoader } from "@/components/ContentGenerationLoader";
 import { JuristaArtigoCompleto } from "@/components/JuristaArtigoCompleto";
+import { FloatingProfessoraButton } from "@/components/FloatingProfessoraButton";
+import { ProfessoraChatModal } from "@/components/ProfessoraChatModal";
 import { formatForWhatsApp } from "@/lib/formatWhatsApp";
 
 interface JuristaData {
@@ -26,6 +28,7 @@ const MeuBrasilJuristaView = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState("Carregando artigo...");
   const [isFavorito, setIsFavorito] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const nomeDecodificado = nome ? decodeURIComponent(nome) : "";
 
@@ -356,6 +359,20 @@ ${jurista.conteudo_melhorado.legado || ''}
         onToggleFavorito={toggleFavorito}
         onCompartilhar={compartilhar}
         onExportarPDF={exportarPDF}
+      />
+
+      {/* Botão flutuante da professora */}
+      <FloatingProfessoraButton onClick={() => setIsChatOpen(true)} />
+
+      {/* Modal do chat contextual */}
+      <ProfessoraChatModal
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        contexto={{
+          tipo: 'jurista',
+          nome: jurista.nome,
+          resumo: jurista.conteudo_melhorado.resumo_executivo
+        }}
       />
     </div>
   );

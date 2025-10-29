@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.sync-disponibilidade-streaming]
 verify_jwt = false
+
+[functions.chat-professora-jurista]
+verify_jwt = false
