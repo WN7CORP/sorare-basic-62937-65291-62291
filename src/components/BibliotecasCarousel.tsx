@@ -112,7 +112,7 @@ const BibliotecasCarousel = () => {
                 )}
                 
                 {/* Gradient overlay de baixo para cima */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 
                 {/* Botão Acessar no topo direito */}
                 <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-full flex items-center gap-2 font-semibold text-sm shadow-lg group-hover:bg-white/30 transition-colors border border-white/30">
