@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { AudioPlayerProvider } from "./contexts/AudioPlayerContext";
 import { AmbientSoundProvider } from "./contexts/AmbientSoundContext";
+import { NarrationProvider } from "./contexts/NarrationContext";
 import GlobalAudioPlayer from "./components/GlobalAudioPlayer";
 import AmbientSoundPlayer from "./components/AmbientSoundPlayer";
 import { AvaliarAppModal } from "./components/AvaliarAppModal";
@@ -181,8 +182,9 @@ const App = () => {
           <ScrollToTop />
           <AudioPlayerProvider>
             <AmbientSoundProvider>
-              <Layout>
-                <Routes>
+              <NarrationProvider>
+                <Layout>
+                  <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/vade-mecum" element={<VadeMecumTodas />} />
               <Route path="/vade-mecum/busca" element={<VadeMecumBusca />} />
@@ -335,6 +337,7 @@ const App = () => {
                 onPostpone={handlePostpone}
               />
             </Layout>
+            </NarrationProvider>
             </AmbientSoundProvider>
           </AudioPlayerProvider>
         </BrowserRouter>

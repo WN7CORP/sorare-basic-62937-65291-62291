@@ -64,7 +64,7 @@ export const ArtigoActionsMenu = ({
       <CollapsibleTrigger asChild>
         <Button 
           variant="outline"
-          className="w-full flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-foreground border-red-500/30 font-medium transition-all"
+          className="w-full flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-foreground border-red-500/30 font-medium transition-all shadow-2xl shadow-red-500/30"
         >
           <Sparkles className="w-4 h-4" />
           Recursos do Artigo
