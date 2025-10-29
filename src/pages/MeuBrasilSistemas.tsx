@@ -111,35 +111,43 @@ const MeuBrasilSistemas = () => {
         />
       </div>
 
-      {/* Grid de países */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* Grid de países - Estilo cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredSistemas.map((item) => (
           <button
             key={item.pais}
-            onClick={() => navigate(`/meu-brasil/artigo/${encodeURIComponent(`Direito de ${item.pais}`)}`)}
-            className="bg-card border border-border rounded-lg p-4 text-left hover:border-accent transition-colors"
+            onClick={() => navigate(`/meu-brasil/sistema/${encodeURIComponent(`Sistema Jurídico - ${item.pais}`)}`)}
+            className="group bg-card border border-border rounded-lg overflow-hidden hover:border-primary hover:shadow-xl transition-all duration-300 hover:scale-[1.02] text-left"
           >
-            <div className="flex items-start gap-3 mb-3">
-              <span className="text-4xl">{item.bandeira}</span>
-              <div className="flex-1">
-                <h3 className="font-bold text-lg mb-1">{item.pais}</h3>
-                <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded">
+            {/* Header com bandeira */}
+            <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-6 text-center">
+              <div className="text-7xl mb-2">{item.bandeira}</div>
+              <h3 className="font-bold text-xl">{item.pais}</h3>
+            </div>
+            
+            {/* Conteúdo */}
+            <div className="p-4 space-y-3">
+              <div className="flex justify-center">
+                <span className="text-sm bg-accent/20 text-accent px-3 py-1 rounded-full font-medium">
                   {item.sistema}
                 </span>
               </div>
-            </div>
 
-            <p className="text-sm text-muted-foreground mb-3">
-              {item.descricao}
-            </p>
+              <p className="text-sm text-muted-foreground text-center">
+                {item.descricao}
+              </p>
 
-            <div className="space-y-1">
-              {item.caracteristicas.map((carac, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs">
-                  <span className="text-accent">•</span>
-                  <span>{carac}</span>
-                </div>
-              ))}
+              <div className="border-t border-border pt-3 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Características:
+                </p>
+                {item.caracteristicas.map((carac, i) => (
+                  <div key={i} className="flex items-start gap-2 text-sm">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{carac}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </button>
         ))}

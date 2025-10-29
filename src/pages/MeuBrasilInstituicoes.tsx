@@ -12,107 +12,82 @@ const MeuBrasilInstituicoes = () => {
     {
       nome: "Supremo Tribunal Federal",
       sigla: "STF",
-      descricao: "Guardião da Constituição",
+      descricao: "Guardião da Constituição e última instância do Poder Judiciário",
       tipo: "Tribunal Superior",
-      cor: "bg-blue-600"
+      cor: "blue",
+      logo: "⚖️"
     },
     {
       nome: "Superior Tribunal de Justiça",
       sigla: "STJ",
       descricao: "Uniformiza interpretação da lei federal",
       tipo: "Tribunal Superior",
-      cor: "bg-blue-600"
-    },
-    {
-      nome: "Tribunal Superior do Trabalho",
-      sigla: "TST",
-      descricao: "Matérias trabalhistas e sindicais",
-      tipo: "Tribunal Superior",
-      cor: "bg-blue-600"
+      cor: "indigo",
+      logo: "🏛️"
     },
     {
       nome: "Tribunal Superior Eleitoral",
       sigla: "TSE",
-      descricao: "Organiza e fiscaliza eleições",
+      descricao: "Regulamenta e fiscaliza eleições",
       tipo: "Tribunal Superior",
-      cor: "bg-blue-600"
+      cor: "green",
+      logo: "🗳️"
+    },
+    {
+      nome: "Tribunal Superior do Trabalho",
+      sigla: "TST",
+      descricao: "Julga questões trabalhistas em última instância",
+      tipo: "Tribunal Superior",
+      cor: "orange",
+      logo: "👷"
     },
     {
       nome: "Superior Tribunal Militar",
       sigla: "STM",
       descricao: "Julga crimes militares",
       tipo: "Tribunal Superior",
-      cor: "bg-blue-600"
-    },
-    {
-      nome: "Conselho Nacional de Justiça",
-      sigla: "CNJ",
-      descricao: "Controle administrativo do Judiciário",
-      tipo: "Órgão de Controle",
-      cor: "bg-purple-600"
-    },
-    {
-      nome: "Ministério Público Federal",
-      sigla: "MPF",
-      descricao: "Defesa da ordem jurídica",
-      tipo: "Ministério Público",
-      cor: "bg-green-600"
-    },
-    {
-      nome: "Defensoria Pública da União",
-      sigla: "DPU",
-      descricao: "Assistência jurídica gratuita",
-      tipo: "Defensoria",
-      cor: "bg-yellow-600"
+      cor: "red",
+      logo: "🎖️"
     },
     {
       nome: "Ordem dos Advogados do Brasil",
       sigla: "OAB",
-      descricao: "Representação da advocacia",
+      descricao: "Regulamenta e fiscaliza o exercício da advocacia",
       tipo: "Órgão de Classe",
-      cor: "bg-red-600"
+      cor: "purple",
+      logo: "👔"
+    },
+    {
+      nome: "Conselho Nacional de Justiça",
+      sigla: "CNJ",
+      descricao: "Controla e aperfeiçoa o Poder Judiciário",
+      tipo: "Órgão de Controle",
+      cor: "cyan",
+      logo: "🔍"
+    },
+    {
+      nome: "Ministério Público Federal",
+      sigla: "MPF",
+      descricao: "Defende a ordem jurídica, democracia e interesses sociais",
+      tipo: "Ministério Público",
+      cor: "yellow",
+      logo: "⚡"
+    },
+    {
+      nome: "Defensoria Pública da União",
+      sigla: "DPU",
+      descricao: "Assistência jurídica gratuita aos necessitados",
+      tipo: "Defensoria",
+      cor: "teal",
+      logo: "🤝"
     },
     {
       nome: "Advocacia-Geral da União",
       sigla: "AGU",
-      descricao: "Representa a União judicialmente",
+      descricao: "Representa judicialmente a União",
       tipo: "Advocacia Pública",
-      cor: "bg-indigo-600"
-    },
-    {
-      nome: "Polícia Federal",
-      sigla: "PF",
-      descricao: "Investigação de crimes federais",
-      tipo: "Polícia",
-      cor: "bg-gray-600"
-    },
-    {
-      nome: "Senado Federal",
-      sigla: "SF",
-      descricao: "Casa Legislativa - representação dos estados",
-      tipo: "Legislativo",
-      cor: "bg-teal-600"
-    },
-    {
-      nome: "Câmara dos Deputados",
-      sigla: "CD",
-      descricao: "Casa Legislativa - representação do povo",
-      tipo: "Legislativo",
-      cor: "bg-teal-600"
-    },
-    {
-      nome: "Tribunal de Contas da União",
-      sigla: "TCU",
-      descricao: "Fiscalização de contas públicas",
-      tipo: "Órgão de Controle",
-      cor: "bg-orange-600"
-    },
-    {
-      nome: "Controladoria-Geral da União",
-      sigla: "CGU",
-      descricao: "Combate à corrupção",
-      tipo: "Órgão de Controle",
-      cor: "bg-orange-600"
+      cor: "amber",
+      logo: "🏢"
     }
   ];
 
@@ -158,27 +133,37 @@ const MeuBrasilInstituicoes = () => {
         </div>
       </div>
 
-      {/* Grid de instituições */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {filteredInstituicoes.map((item) => (
+      {/* Grid de instituições - Estilo cards com logos */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredInstituicoes.map((inst) => (
           <button
-            key={item.sigla}
-            onClick={() => navigate(`/meu-brasil/artigo/${encodeURIComponent(item.nome)}`)}
-            className="bg-card border border-border rounded-lg p-4 text-left hover:border-accent transition-colors"
+            key={inst.sigla}
+            onClick={() => navigate(`/meu-brasil/instituicao/${encodeURIComponent(inst.nome)}`)}
+            className="group bg-card border border-border rounded-lg overflow-hidden hover:border-primary hover:shadow-xl transition-all duration-300 hover:scale-[1.02] text-left"
           >
-            <div className="flex items-start gap-3">
-              <div className={`${item.cor} rounded-lg p-3 text-white font-bold text-lg min-w-[60px] text-center`}>
-                {item.sigla}
+            {/* Header com logo/ícone */}
+            <div className="bg-gradient-to-br from-primary/20 to-accent/10 p-6 text-center relative">
+              <div className="text-6xl mb-3">{inst.logo}</div>
+              <div className="text-3xl font-bold text-primary">
+                {inst.sigla}
               </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-base mb-1">{item.nome}</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  {item.descricao}
-                </p>
-                <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded">
-                  {item.tipo}
+            </div>
+            
+            {/* Conteúdo */}
+            <div className="p-4 space-y-3">
+              <h3 className="font-bold text-base line-clamp-2 group-hover:text-primary transition-colors min-h-[3rem]">
+                {inst.nome}
+              </h3>
+              
+              <div className="flex justify-center">
+                <span className="text-xs bg-accent/20 text-accent px-3 py-1 rounded-full">
+                  {inst.tipo}
                 </span>
               </div>
+              
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                {inst.descricao}
+              </p>
             </div>
           </button>
         ))}

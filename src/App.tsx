@@ -144,10 +144,13 @@ import MeuBrasil from "./pages/MeuBrasil";
 import MeuBrasilHistoria from "./pages/MeuBrasilHistoria";
 import MeuBrasilHistoriaView from "./pages/MeuBrasilHistoriaView";
 import MeuBrasilSistemas from "./pages/MeuBrasilSistemas";
+import MeuBrasilSistemaView from "./pages/MeuBrasilSistemaView";
 import MeuBrasilJuristas from "./pages/MeuBrasilJuristas";
 import MeuBrasilJuristaView from "./pages/MeuBrasilJuristaView";
 import MeuBrasilInstituicoes from "./pages/MeuBrasilInstituicoes";
+import MeuBrasilInstituicaoView from "./pages/MeuBrasilInstituicaoView";
 import MeuBrasilCasos from "./pages/MeuBrasilCasos";
+import MeuBrasilCasoView from "./pages/MeuBrasilCasoView";
 import MeuBrasilArtigo from "./pages/MeuBrasilArtigo";
 import MeuBrasilBusca from "./pages/MeuBrasilBusca";
 import PopularMeuBrasil from "./pages/PopularMeuBrasil";
@@ -297,10 +300,13 @@ const App = () => {
               <Route path="/meu-brasil/historia" element={<MeuBrasilHistoria />} />
               <Route path="/meu-brasil/historia/:periodo" element={<MeuBrasilHistoriaView />} />
               <Route path="/meu-brasil/sistemas" element={<MeuBrasilSistemas />} />
+              <Route path="/meu-brasil/sistema/:nome" element={<MeuBrasilSistemaView />} />
               <Route path="/meu-brasil/juristas" element={<MeuBrasilJuristas />} />
               <Route path="/meu-brasil/jurista/:nome" element={<MeuBrasilJuristaView />} />
               <Route path="/meu-brasil/instituicoes" element={<MeuBrasilInstituicoes />} />
+              <Route path="/meu-brasil/instituicao/:nome" element={<MeuBrasilInstituicaoView />} />
               <Route path="/meu-brasil/casos" element={<MeuBrasilCasos />} />
+              <Route path="/meu-brasil/caso/:nome" element={<MeuBrasilCasoView />} />
               <Route path="/meu-brasil/busca" element={<MeuBrasilBusca />} />
               <Route path="/meu-brasil/artigo/:titulo" element={<MeuBrasilArtigo />} />
               <Route path="/popular-meu-brasil" element={<PopularMeuBrasil />} />
