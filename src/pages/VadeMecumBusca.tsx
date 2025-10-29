@@ -33,7 +33,7 @@ const VadeMecumBusca = () => {
             .from("CF - Constituição Federal" as any)
             .select('id, "Número do Artigo", Artigo')
             .eq("Número do Artigo", variacao)
-            .limit(20)
+            .limit(100)
         );
         
         const results = await Promise.all(promises);
@@ -53,7 +53,7 @@ const VadeMecumBusca = () => {
           .from("CF - Constituição Federal" as any)
           .select('id, "Número do Artigo", Artigo')
           .like("Número do Artigo", `${numeroArtigo}°-%`)
-          .limit(20);
+          .limit(100);
         
         if (suffixData) {
           (suffixData as any[]).forEach((item: any) => {
@@ -63,7 +63,7 @@ const VadeMecumBusca = () => {
           });
         }
         
-        return unique.slice(0, 50);
+        return unique.slice(0, 200);
       }
       
       // Busca por texto no conteúdo
@@ -71,7 +71,7 @@ const VadeMecumBusca = () => {
         .from("CF - Constituição Federal" as any)
         .select('id, "Número do Artigo", Artigo')
         .ilike("Artigo", `%${query}%`)
-        .limit(50);
+        .limit(200);
       
       if (error) {
         console.error("Erro na busca por texto:", error);
@@ -116,7 +116,7 @@ const VadeMecumBusca = () => {
               .from(table as any)
               .select('id, "Número do Artigo", Artigo')
               .eq("Número do Artigo", variacao)
-              .limit(5);
+              .limit(20);
             
             if (error) {
               console.error(`Erro em ${table}:`, error);
@@ -132,7 +132,7 @@ const VadeMecumBusca = () => {
             .from(table as any)
             .select('id, "Número do Artigo", Artigo')
             .like("Número do Artigo", `${numeroArtigo}°-%`)
-            .limit(5);
+            .limit(20);
           
           return (data || []).map((item: any) => ({ ...item, fonte: sigla, tabela: table }));
         });
@@ -158,7 +158,7 @@ const VadeMecumBusca = () => {
           .from(table as any)
           .select('id, "Número do Artigo", Artigo')
           .ilike("Artigo", `%${query}%`)
-          .limit(5);
+          .limit(20);
         
         return (data || []).map((item: any) => ({ ...item, fonte: sigla, tabela: table }));
       });
@@ -203,7 +203,7 @@ const VadeMecumBusca = () => {
               .from(table as any)
               .select('id, "Número do Artigo", Artigo')
               .eq("Número do Artigo", variacao)
-              .limit(5);
+              .limit(20);
             
             if (error) {
               console.error(`Erro em ${table}:`, error);
@@ -219,7 +219,7 @@ const VadeMecumBusca = () => {
             .from(table as any)
             .select('id, "Número do Artigo", Artigo')
             .like("Número do Artigo", `${numeroArtigo}°-%`)
-            .limit(5);
+            .limit(20);
           
           return (data || []).map((item: any) => ({ ...item, fonte: sigla, tabela: table }));
         });
@@ -245,7 +245,7 @@ const VadeMecumBusca = () => {
           .from(table as any)
           .select('id, "Número do Artigo", Artigo')
           .ilike("Artigo", `%${query}%`)
-          .limit(5);
+          .limit(20);
         
         return (data || []).map((item: any) => ({ ...item, fonte: sigla, tabela: table }));
       });

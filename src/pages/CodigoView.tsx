@@ -181,14 +181,9 @@ const CodigoView = () => {
       const numeroArtigo = article["Número do Artigo"]?.toLowerCase().trim();
       const conteudoArtigo = article["Artigo"]?.toLowerCase();
       
-      // Busca exata pelo número do artigo
-      if (numeroArtigo === searchLower) {
+      // Busca por número do artigo (inclui busca parcial)
+      if (numeroArtigo?.includes(searchLower)) {
         return true;
-      }
-      
-      // Busca por número que começa com o termo buscado (ex: buscar "78" não deve pegar "7")
-      if (/^\d+$/.test(searchQuery) && numeroArtigo && /^\d+/.test(numeroArtigo)) {
-        return numeroArtigo === searchLower;
       }
       
       // Busca pelo conteúdo do artigo
