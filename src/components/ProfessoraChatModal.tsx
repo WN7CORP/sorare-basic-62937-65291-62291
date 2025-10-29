@@ -28,6 +28,13 @@ export const ProfessoraChatModal = ({ isOpen, onClose, contexto }: ProfessoraCha
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const perguntasSugeridas = [
+    `Quais foram as principais obras de ${contexto.nome}?`,
+    `Como ${contexto.nome} influenciou o direito brasileiro?`,
+    `Conte-me sobre casos famosos de ${contexto.nome}`,
+    `Qual foi o contexto histórico da época de ${contexto.nome}?`
+  ];
+
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       // Mensagem de boas-vindas contextual
@@ -147,6 +154,26 @@ export const ProfessoraChatModal = ({ isOpen, onClose, contexto }: ProfessoraCha
               <div className="flex justify-start">
                 <div className="bg-muted rounded-2xl px-4 py-3">
                   <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                </div>
+              </div>
+            )}
+            
+            {/* Perguntas sugeridas - apenas se não houver muitas mensagens */}
+            {messages.length <= 1 && !isLoading && (
+              <div className="space-y-2 pt-2">
+                <p className="text-xs text-muted-foreground font-medium px-2">💡 Perguntas sugeridas:</p>
+                <div className="flex flex-col gap-2">
+                  {perguntasSugeridas.map((pergunta, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setInput(pergunta);
+                      }}
+                      className="text-left text-sm p-3 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors border border-primary/20 hover:border-primary/40"
+                    >
+                      {pergunta}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}

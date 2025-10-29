@@ -37,14 +37,12 @@ export const JuristaArtigoCompleto = ({
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Hero Image - Foto de capa estilo artigo */}
       {foto_url && (
-        <div className="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-2xl overflow-hidden">
+        <div className="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-2xl overflow-hidden shadow-lg">
           <img 
             src={foto_url} 
             alt={nome}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = 'https://via.placeholder.com/1200x400?text=Foto+Indisponível';
-            }}
+            className="w-full h-full object-cover object-center"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
           
@@ -89,12 +87,12 @@ export const JuristaArtigoCompleto = ({
       {/* Resumo executivo em destaque */}
       {conteudo_melhorado.resumo_executivo && (
         <Card className="bg-gradient-to-br from-accent/10 to-background border-accent/20">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">📝</span>
-              <h2 className="text-xl font-bold">Resumo</h2>
+          <CardContent className="p-6 md:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="text-3xl">📝</span>
+              <h2 className="text-2xl md:text-3xl font-bold">Resumo</h2>
             </div>
-            <div className="prose prose-sm md:prose-base max-w-none dark:prose-invert">
+            <div className="prose prose-base md:prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-h4:text-lg prose-h4:mt-4 prose-h4:mb-2 prose-p:leading-relaxed prose-p:mb-4 prose-ul:my-4 prose-li:my-2">
               <ReactMarkdown>{conteudo_melhorado.resumo_executivo}</ReactMarkdown>
             </div>
           </CardContent>
@@ -356,32 +354,6 @@ export const JuristaArtigoCompleto = ({
         )}
       </Accordion>
 
-      {/* Galeria de imagens */}
-      {imagens && imagens.length > 1 && (
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <span className="text-xl">🖼️</span>
-              Galeria de Imagens
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {imagens.slice(0, 9).map((img, index) => (
-                <div key={index} className="aspect-square relative overflow-hidden rounded-lg border hover:border-primary transition-all hover:shadow-lg">
-                  <img 
-                    src={img} 
-                    alt={`${nome} - ${index + 1}`}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
-                    onClick={() => window.open(img, '_blank')}
-                    onError={(e) => {
-                      e.currentTarget.parentElement!.style.display = 'none';
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Links relacionados */}
       {links_relacionados.length > 0 && (
