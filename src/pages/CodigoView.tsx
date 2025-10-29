@@ -476,8 +476,8 @@ const CodigoView = () => {
 
         // Se não tem número, renderiza como cabeçalho de seção
         if (!hasNumber) {
-          return <div key={article.id} className="text-center mb-8 space-y-1 font-serif-content">
-                  <div className="whitespace-pre-line" dangerouslySetInnerHTML={{
+          return <div key={article.id} className="text-center mb-8 space-y-1 font-legal">
+                  <div className="whitespace-pre-line text-lg bg-gradient-to-r from-rose-400 via-red-400 to-orange-400 bg-clip-text text-transparent font-bold tracking-wide" dangerouslySetInnerHTML={{
               __html: formatTextWithUppercase(article["Artigo"] || "")
             }} />
                 </div>;
@@ -487,10 +487,10 @@ const CodigoView = () => {
         const isHighlighted = searchQuery && article["Número do Artigo"]?.toLowerCase().trim() === searchQuery.toLowerCase().trim();
 
         // Se tem número, renderiza como card normal
-        return <div key={article.id} ref={index === 0 && searchQuery ? firstResultRef : null} className={`relative bg-card/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border transition-all duration-300 animate-fade-in hover:shadow-lg scroll-mt-4 ${
+        return <div key={article.id} ref={index === 0 && searchQuery ? firstResultRef : null} className={`relative bg-gradient-to-br from-card via-card to-card/90 backdrop-blur-sm rounded-2xl p-6 mb-6 border-2 transition-all duration-300 animate-fade-in hover:shadow-2xl scroll-mt-4 ${
             isHighlighted 
-              ? 'border-accent shadow-lg shadow-accent/20 ring-2 ring-accent/20' 
-              : 'border-border/50 hover:border-accent/30 hover:shadow-accent/5'
+              ? 'border-rose-500/60 shadow-xl shadow-rose-500/20 ring-2 ring-rose-400/30' 
+              : 'border-border/40 hover:border-rose-400/50 hover:shadow-rose-400/10'
           }`} style={{
             animationDelay: `${index * 0.05}s`,
             animationFillMode: 'backwards'
@@ -502,16 +502,16 @@ const CodigoView = () => {
                 />
                 
                 {/* Article Header */}
-                <h2 className="text-accent font-bold text-xl md:text-2xl mb-3 animate-scale-in">
+                <h2 className="font-legal font-bold text-2xl md:text-3xl mb-4 animate-scale-in bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
                   Art. {article["Número do Artigo"]}
                 </h2>
 
                 {/* Article Content */}
                 <div
-                  className="article-content text-foreground/90 mb-6 whitespace-pre-line leading-relaxed font-serif-content"
+                  className="article-content text-foreground mb-6 whitespace-pre-line leading-relaxed font-legal text-[16px]"
                   style={{
                     fontSize: `${fontSize}px`,
-                    lineHeight: "1.7"
+                    lineHeight: "1.8"
                   }}
                   dangerouslySetInnerHTML={{
                     __html: formatArticleContent(article["Artigo"] || "Conteúdo não disponível")
@@ -541,7 +541,7 @@ const CodigoView = () => {
                       });
                       setModalOpen(true);
                     }}
-                    className="flex items-center justify-center gap-2 bg-[hsl(var(--secondary)/0.7)] hover:bg-[hsl(var(--secondary)/0.9)] text-foreground px-4 py-2.5 rounded-lg transition-all text-sm shadow-md hover:shadow-lg hover:scale-105 animate-fade-in"
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500/20 to-purple-600/20 hover:from-purple-500/30 hover:to-purple-600/30 border-2 border-purple-400/30 hover:border-purple-400/50 text-foreground px-4 py-2.5 rounded-lg transition-all text-sm font-medium shadow-md hover:shadow-lg hover:shadow-purple-500/20 hover:scale-105 animate-fade-in"
                   >
                     <Lightbulb className="w-4 h-4" />
                     Explicar

@@ -24,6 +24,7 @@ export default {
 				'serif-content': ['Source Serif 4', 'Georgia', 'serif'],
 				'cinzel': ['Cinzel', 'serif'],
 				'condensed': ['Oswald', 'sans-serif'],
+				'legal': ['Crimson Text', 'Georgia', 'serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
