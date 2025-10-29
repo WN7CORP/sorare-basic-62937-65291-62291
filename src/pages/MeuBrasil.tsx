@@ -87,25 +87,25 @@ const MeuBrasil = () => {
         </div>
       </form>
 
-      {/* Grid de Categorias */}
-      <div className="space-y-3">
+      {/* Grid de Categorias - 2 colunas */}
+      <div className="grid grid-cols-2 gap-3">
         {categorias.map((categoria) => {
           const Icon = categoria.icon;
           return (
             <button
               key={categoria.id}
               onClick={() => navigate(categoria.path)}
-              className={`w-full bg-gradient-to-r ${categoria.gradient} rounded-xl p-5 text-left transition-all hover:scale-[1.02] shadow-lg ${categoria.shadow} border border-white/10`}
+              className="bg-card border border-border rounded-lg p-4 text-left transition-all hover:border-primary hover:shadow-md group"
             >
-              <div className="flex items-start gap-4">
-                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
-                  <Icon className="w-6 h-6 text-white" />
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="bg-muted rounded-lg p-3">
+                  <Icon className="w-6 h-6 text-foreground" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-white mb-1">
+                <div>
+                  <h3 className="text-sm font-bold mb-1 group-hover:text-primary transition-colors">
                     {categoria.titulo}
                   </h3>
-                  <p className="text-sm text-white/80">
+                  <p className="text-xs text-muted-foreground line-clamp-2">
                     {categoria.descricao}
                   </p>
                 </div>

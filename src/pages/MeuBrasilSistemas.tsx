@@ -112,32 +112,32 @@ const MeuBrasilSistemas = () => {
       </div>
 
       {/* Grid de países */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {filteredSistemas.map((item) => (
           <button
             key={item.pais}
             onClick={() => navigate(`/meu-brasil/artigo/${encodeURIComponent(`Direito de ${item.pais}`)}`)}
-            className="bg-card border border-border rounded-lg p-4 text-left hover:border-accent transition-colors"
+            className="bg-card border border-border rounded-lg p-4 text-left hover:border-primary hover:shadow-md transition-all group"
           >
             <div className="flex items-start gap-3 mb-3">
               <span className="text-4xl">{item.bandeira}</span>
               <div className="flex-1">
-                <h3 className="font-bold text-lg mb-1">{item.pais}</h3>
+                <h3 className="font-bold text-base mb-1 group-hover:text-primary transition-colors">{item.pais}</h3>
                 <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded">
                   {item.sistema}
                 </span>
               </div>
             </div>
 
-            <p className="text-sm text-muted-foreground mb-3">
+            <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
               {item.descricao}
             </p>
 
             <div className="space-y-1">
-              {item.caracteristicas.map((carac, i) => (
+              {item.caracteristicas.slice(0, 2).map((carac, i) => (
                 <div key={i} className="flex items-center gap-2 text-xs">
                   <span className="text-accent">•</span>
-                  <span>{carac}</span>
+                  <span className="line-clamp-1">{carac}</span>
                 </div>
               ))}
             </div>

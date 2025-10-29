@@ -166,28 +166,36 @@ const MeuBrasilCasos = () => {
         </div>
       </div>
 
-      {/* Lista de casos */}
-      <div className="space-y-3">
+      {/* Grid de casos - estilo livro */}
+      <div className="grid grid-cols-2 gap-3">
         {filteredCasos.map((caso) => (
           <button
             key={caso.nome}
             onClick={() => navigate(`/meu-brasil/artigo/${encodeURIComponent(caso.nome)}`)}
-            className="w-full bg-card border border-border rounded-lg p-4 text-left hover:border-accent transition-colors"
+            className="bg-card border border-border rounded-lg overflow-hidden text-left hover:border-primary hover:shadow-lg transition-all group"
           >
-            <div className="flex items-start justify-between mb-2">
-              <h3 className="font-bold text-base flex-1">{caso.nome}</h3>
-              <span className="text-xs bg-red-600/20 text-red-600 px-2 py-1 rounded ml-2">
+            {/* Capa/Imagem do caso */}
+            <div className="aspect-[3/4] bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center relative overflow-hidden">
+              <FileText className="w-12 h-12 text-muted-foreground/30" />
+              
+              {/* Badge de ano sobreposto */}
+              <div className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm text-xs px-2 py-1 rounded">
                 {caso.ano}
+              </div>
+            </div>
+            
+            {/* Informações do caso */}
+            <div className="p-3">
+              <h3 className="font-bold text-sm mb-1 line-clamp-2 group-hover:text-primary transition-colors">
+                {caso.nome}
+              </h3>
+              <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                {caso.importancia}
+              </p>
+              <span className="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded">
+                {caso.area}
               </span>
             </div>
-
-            <p className="text-sm text-muted-foreground mb-2">
-              {caso.importancia}
-            </p>
-
-            <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded">
-              {caso.area}
-            </span>
           </button>
         ))}
       </div>

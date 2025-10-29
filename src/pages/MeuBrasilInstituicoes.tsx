@@ -159,23 +159,29 @@ const MeuBrasilInstituicoes = () => {
       </div>
 
       {/* Grid de instituições */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {filteredInstituicoes.map((item) => (
           <button
             key={item.sigla}
             onClick={() => navigate(`/meu-brasil/artigo/${encodeURIComponent(item.nome)}`)}
-            className="bg-card border border-border rounded-lg p-4 text-left hover:border-accent transition-colors"
+            className="bg-card border border-border rounded-lg p-4 text-left hover:border-primary hover:shadow-md transition-all group"
           >
-            <div className="flex items-start gap-3">
-              <div className={`${item.cor} rounded-lg p-3 text-white font-bold text-lg min-w-[60px] text-center`}>
-                {item.sigla}
+            <div className="flex flex-col items-center text-center gap-3">
+              {/* Logo/Foto da instituição */}
+              <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                <Building2 className="w-8 h-8 text-muted-foreground" />
               </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-base mb-1">{item.nome}</h3>
-                <p className="text-sm text-muted-foreground mb-2">
+              
+              {/* Informações */}
+              <div className="w-full">
+                <div className="font-bold text-xs text-primary mb-1">{item.sigla}</div>
+                <h3 className="text-sm font-semibold mb-1 line-clamp-2 group-hover:text-primary transition-colors">
+                  {item.nome}
+                </h3>
+                <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
                   {item.descricao}
                 </p>
-                <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded">
+                <span className="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded">
                   {item.tipo}
                 </span>
               </div>
