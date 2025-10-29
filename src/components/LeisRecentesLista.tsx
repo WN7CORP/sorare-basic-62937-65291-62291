@@ -26,7 +26,8 @@ const LeisRecentesLista = () => {
         throw error;
       }
       
-      return data?.leis || [];
+      // A função agora retorna array direto
+      return Array.isArray(data) ? data : [];
     },
     staleTime: 1000 * 60 * 60, // 1 hora
   });
