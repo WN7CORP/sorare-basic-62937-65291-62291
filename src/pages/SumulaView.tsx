@@ -79,7 +79,7 @@ const SumulaView = () => {
 
   // Fetch sumulas with React Query for caching
   const { data: sumulas = [], isLoading } = useQuery({
-    queryKey: ['sumulas', id],
+    queryKey: ['sumulas-v2', id],
     queryFn: async () => {
       const tableMap: { [key: string]: string } = {
         'vinculantes': 'SUMULAS VINCULANTES',

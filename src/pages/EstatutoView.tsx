@@ -113,7 +113,7 @@ const EstatutoView = () => {
 
   // Fetch articles with React Query
   const { data: articles = [], isLoading } = useQuery({
-    queryKey: ['estatuto-articles', id],
+    queryKey: ['estatuto-articles-v2', id],
     queryFn: async () => {
       const tableMap: { [key: string]: string } = {
         'cidade': 'ESTATUTO - CIDADE',
@@ -144,25 +144,29 @@ const EstatutoView = () => {
     if (!searchQuery) return articles;
     
     const searchLower = searchQuery.toLowerCase().trim();
+    const isNumericSearch = /^\d+$/.test(searchLower);
+    const normalizeDigits = (s: string) => s.replace(/\D/g, "");
     
     const filtered = articles.filter(article => {
-      const numeroArtigo = article["Número do Artigo"]?.toLowerCase().trim();
-      const conteudoArtigo = article["Artigo"]?.toLowerCase();
+      const numeroArtigoRaw = article["Número do Artigo"] || "";
+      const numeroArtigo = numeroArtigoRaw.toLowerCase().trim();
+      const conteudoArtigo = article["Artigo"]?.toLowerCase() || "";
       
-      if (numeroArtigo === searchLower) {
-        return true;
+      if (isNumericSearch) {
+        const numeroDigits = normalizeDigits(numeroArtigo);
+        if (numeroDigits.includes(searchLower)) return true;
+      } else {
+        if (numeroArtigo.includes(searchLower)) return true;
       }
       
-      if (/^\d+$/.test(searchQuery) && numeroArtigo && /^\d+/.test(numeroArtigo)) {
-        return numeroArtigo === searchLower;
-      }
-      
-      return conteudoArtigo?.includes(searchLower);
+      return conteudoArtigo.includes(searchLower);
     });
     
     return filtered.sort((a, b) => {
-      const aExato = a["Número do Artigo"]?.toLowerCase().trim() === searchLower;
-      const bExato = b["Número do Artigo"]?.toLowerCase().trim() === searchLower;
+      const aNum = (a["Número do Artigo"] || "").toLowerCase().trim();
+      const bNum = (b["Número do Artigo"] || "").toLowerCase().trim();
+      const aExato = isNumericSearch ? normalizeDigits(aNum) === searchLower : aNum === searchLower;
+      const bExato = isNumericSearch ? normalizeDigits(bNum) === searchLower : bNum === searchLower;
       
       if (aExato && !bExato) return -1;
       if (!aExato && bExato) return 1;

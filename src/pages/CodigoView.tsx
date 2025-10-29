@@ -127,7 +127,7 @@ const CodigoView = () => {
     data: articles = [],
     isLoading
   } = useQuery({
-    queryKey: ['codigo-articles', id],
+    queryKey: ['codigo-articles-v2', id],
     queryFn: async () => {
       const tableMap: { [key: string]: string } = {
         'cc': 'CC - Código Civil',
@@ -166,24 +166,36 @@ const CodigoView = () => {
     if (!searchQuery) return articles;
     
     const searchLower = searchQuery.toLowerCase().trim();
+    const isNumericSearch = /^\d+$/.test(searchLower);
+    const normalizeDigits = (s: string) => s.replace(/\D/g, "");
     
     const filtered = articles.filter(article => {
-      const numeroArtigo = article["Número do Artigo"]?.toLowerCase().trim();
-      const conteudoArtigo = article["Artigo"]?.toLowerCase();
+      const numeroArtigoRaw = article["Número do Artigo"] || "";
+      const numeroArtigo = numeroArtigoRaw.toLowerCase().trim();
+      const conteudoArtigo = article["Artigo"]?.toLowerCase() || "";
       
-      // Busca por número do artigo (inclui busca parcial)
-      if (numeroArtigo?.includes(searchLower)) {
-        return true;
+      // Busca por número (normalizando dígitos para casar "1.020" com "1020")
+      if (isNumericSearch) {
+        const numeroDigits = normalizeDigits(numeroArtigo);
+        if (numeroDigits.includes(searchLower)) return true;
+      } else {
+        if (numeroArtigo.includes(searchLower)) return true;
       }
       
       // Busca pelo conteúdo do artigo
-      return conteudoArtigo?.includes(searchLower);
+      return conteudoArtigo.includes(searchLower);
     });
     
     // Ordenar para que artigos com número exato apareçam primeiro
     return filtered.sort((a, b) => {
-      const aExato = a["Número do Artigo"]?.toLowerCase().trim() === searchLower;
-      const bExato = b["Número do Artigo"]?.toLowerCase().trim() === searchLower;
+      const aNum = (a["Número do Artigo"] || "").toLowerCase().trim();
+      const bNum = (b["Número do Artigo"] || "").toLowerCase().trim();
+      const aExato = isNumericSearch
+        ? normalizeDigits(aNum) === searchLower
+        : aNum === searchLower;
+      const bExato = isNumericSearch
+        ? normalizeDigits(bNum) === searchLower
+        : bNum === searchLower;
       
       if (aExato && !bExato) return -1;
       if (!aExato && bExato) return 1;
