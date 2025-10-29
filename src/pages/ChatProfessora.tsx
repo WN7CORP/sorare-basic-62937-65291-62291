@@ -27,8 +27,6 @@ import ChatQuestoesModal from "@/components/ChatQuestoesModal";
 import { getDocument, GlobalWorkerOptions, version as pdfjsVersion } from "pdfjs-dist";
 import { motion } from "framer-motion";
 import { SmartLoadingIndicator } from "@/components/chat/SmartLoadingIndicator";
-import { useHaptic } from "@/hooks/useHaptic";
-import { ChatMessageSkeleton } from "@/components/ui/skeletons/ChatMessageSkeleton";
 
 interface Message {
   role: "user" | "assistant";
@@ -53,7 +51,6 @@ const ChatProfessora = () => {
   const {
     toast
   } = useToast();
-  const haptic = useHaptic();
   const [searchParams] = useSearchParams();
   const initialMode = searchParams.get("mode") as ChatMode || "study";
   const [mode, setMode] = useState<ChatMode>(initialMode);
@@ -531,8 +528,6 @@ const ChatProfessora = () => {
   };
   const sendMessage = async () => {
     if (!input.trim() && uploadedFiles.length === 0) return;
-    
-    haptic.light();
     
     // Se estiver no modo recommendation, buscar materiais de forma visual
     if (mode === 'recommendation' && input.trim()) {

@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { FlashcardViewer } from "@/components/FlashcardViewer";
-import { FlashcardSkeleton } from "@/components/ui/skeletons/FlashcardSkeleton";
 const FlashcardsEstudar = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -62,7 +61,10 @@ const FlashcardsEstudar = () => {
           {tema && <p className="text-sm text-white/60">Tema: {tema}</p>}
         </div>
 
-        {isLoading ? <FlashcardSkeleton /> : flashcards && flashcards.length > 0 ? <FlashcardViewer flashcards={flashcards} tema={tema || ""} /> : <div className="text-center py-20">
+        {isLoading ? <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-white mb-4" />
+            <p className="text-white/60">Carregando flashcards...</p>
+          </div> : flashcards && flashcards.length > 0 ? <FlashcardViewer flashcards={flashcards} tema={tema || ""} /> : <div className="text-center py-20">
             <p className="text-white/60">
               Nenhum flashcard encontrado para esta seleção.
             </p>

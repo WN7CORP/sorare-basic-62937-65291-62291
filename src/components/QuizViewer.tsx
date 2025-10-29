@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useHaptic } from "@/hooks/useHaptic";
 interface QuizQuestion {
   question: string;
   options: string[];
@@ -18,22 +17,14 @@ export const QuizViewer = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
-  const haptic = useHaptic();
   if (questions.length === 0) return null;
   const currentQuestion = questions[currentIndex];
   const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
   const handleAnswerSelect = (index: number) => {
-    const correct = index === currentQuestion.correctAnswer;
-    if (correct) {
-      haptic.success();
-    } else {
-      haptic.error();
-    }
     setSelectedAnswer(index);
     setShowExplanation(true);
   };
   const handleNext = () => {
-    haptic.light();
     setSelectedAnswer(null);
     setShowExplanation(false);
     setCurrentIndex(prev => (prev + 1) % questions.length);
@@ -52,7 +43,7 @@ export const QuizViewer = ({
           const isCorrectAnswer = index === currentQuestion.correctAnswer;
           const showCorrect = showExplanation && isCorrectAnswer;
           const showIncorrect = showExplanation && isSelected && !isCorrect;
-          return <button key={index} onClick={() => !showExplanation && handleAnswerSelect(index)} disabled={showExplanation} className={cn("w-full text-left p-4 rounded-lg border-2 transition-all", "hover:border-primary disabled:cursor-not-allowed hover:scale-[1.01]", !showExplanation && "hover:bg-accent/5", showCorrect && "border-green-500 bg-green-50 dark:bg-green-950/20", showIncorrect && "border-red-500 bg-red-50 dark:bg-red-950/20", !showExplanation && isSelected && "border-primary bg-accent/10", !showExplanation && !isSelected && "border-border")}>
+          return <button key={index} onClick={() => !showExplanation && handleAnswerSelect(index)} disabled={showExplanation} className={cn("w-full text-left p-4 rounded-lg border-2 transition-all", "hover:border-primary disabled:cursor-not-allowed", !showExplanation && "hover:bg-accent/5", showCorrect && "border-green-500 bg-green-50 dark:bg-green-950/20", showIncorrect && "border-red-500 bg-red-50 dark:bg-red-950/20", !showExplanation && isSelected && "border-primary bg-accent/10", !showExplanation && !isSelected && "border-border")}>
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1">
                     <span className="font-semibold text-muted-foreground shrink-0">

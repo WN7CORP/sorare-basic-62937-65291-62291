@@ -281,7 +281,7 @@ const VideoaulasAreas = () => {
                           loading="lazy"
                         />
                       )}
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                         <Video className="w-8 h-8 text-white drop-shadow-lg" />
                       </div>
                     </div>
@@ -390,7 +390,7 @@ const VideoaulasAreas = () => {
                           <Video className="w-12 h-12 text-accent" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                         <div className="bg-red-600 rounded-full p-3 shadow-lg">
                           <Video className="w-6 h-6 text-white" />
                         </div>

@@ -101,18 +101,25 @@ const BibliotecasCarousel = () => {
               onClick={() => navigate(biblioteca.path)}
               className="flex-[0_0_80%] md:flex-[0_0_55%] lg:flex-[0_0_25%] min-w-0 bg-card rounded-2xl overflow-hidden text-left transition-all hover:scale-[1.02] hover:shadow-2xl group shadow-xl"
             >
-              <div className="aspect-[16/10] relative bg-gradient-to-br from-primary/30 via-accent/25 to-primary/20">
-                {capaUrl && (
+              <div className="aspect-[16/10] relative bg-gradient-to-br from-accent/20 to-accent/5">
+                {capaUrl ? (
                   <img
                     src={capaUrl}
                     alt={biblioteca.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
                   />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent/20 to-accent/5">
+                    <span className="text-5xl">📚</span>
+                  </div>
                 )}
                 
                 {/* Gradient overlay de baixo para cima */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                 
                 {/* Botão Acessar no topo direito */}
                 <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-full flex items-center gap-2 font-semibold text-sm shadow-lg group-hover:bg-white/30 transition-colors border border-white/30">

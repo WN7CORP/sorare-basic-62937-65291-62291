@@ -184,28 +184,6 @@ All colors MUST be HSL.
   body::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
   }
-
-  /* Blur-up effect for images */
-  img {
-    @apply transition-opacity duration-300;
-  }
-
-  img[loading="lazy"] {
-    @apply opacity-0;
-  }
-
-  img[loading="lazy"].loaded {
-    @apply opacity-100;
-  }
-
-  /* Hover scale animation utility */
-  .hover-lift {
-    @apply transition-all duration-300 hover:scale-[1.02] hover:shadow-lg;
-  }
-
-  .hover-glow {
-    @apply transition-all duration-300 hover:shadow-xl hover:shadow-primary/20;
-  }
 }
 
 /* Animações para Simulação de Audiência */

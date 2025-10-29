@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import ReactCardFlip from "react-card-flip";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, RotateCw } from "lucide-react";
-import { useHaptic } from "@/hooks/useHaptic";
 interface Flashcard {
   front: string;
   back: string;
@@ -18,21 +17,13 @@ export const FlashcardViewer = ({
 }: FlashcardViewerProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const haptic = useHaptic();
   const handleNext = () => {
-    haptic.light();
     setIsFlipped(false);
     setCurrentIndex(prev => (prev + 1) % flashcards.length);
   };
   const handlePrevious = () => {
-    haptic.light();
     setIsFlipped(false);
     setCurrentIndex(prev => (prev - 1 + flashcards.length) % flashcards.length);
-  };
-
-  const handleFlip = () => {
-    haptic.selection();
-    setIsFlipped(!isFlipped);
   };
   if (flashcards.length === 0) return null;
   const currentCard = flashcards[currentIndex];
@@ -42,7 +33,7 @@ export const FlashcardViewer = ({
       </div>
 
       <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
-        <div onClick={() => { haptic.selection(); setIsFlipped(true); }} className="min-h-[300px] bg-card border-2 border-[hsl(270,60%,55%)] rounded-xl p-4 sm:p-8 flex flex-col cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] relative break-words">
+        <div onClick={() => setIsFlipped(true)} className="min-h-[300px] bg-card border-2 border-[hsl(270,60%,55%)] rounded-xl p-4 sm:p-8 flex flex-col cursor-pointer hover:shadow-lg transition-shadow relative break-words">
           {tema && (
             <p className="text-xs text-[hsl(270,60%,55%)]/60 mb-3 absolute top-4 left-4">
               {tema}
@@ -54,7 +45,7 @@ export const FlashcardViewer = ({
           <p className="text-xs text-muted-foreground mt-4 text-center">Clique para ver a resposta</p>
         </div>
 
-        <div onClick={() => { haptic.selection(); setIsFlipped(false); }} className="min-h-[350px] bg-card border-2 border-[hsl(270,60%,55%)] rounded-xl p-4 sm:p-8 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] relative break-words">
+        <div onClick={() => setIsFlipped(false)} className="min-h-[350px] bg-card border-2 border-[hsl(270,60%,55%)] rounded-xl p-4 sm:p-8 cursor-pointer hover:shadow-lg transition-shadow relative break-words">
           {tema && (
             <p className="text-xs text-[hsl(270,60%,55%)]/60 mb-3 absolute top-4 left-4">
               {tema}
@@ -89,7 +80,7 @@ export const FlashcardViewer = ({
           Anterior
         </Button>
 
-        <Button onClick={handleFlip} variant="ghost" size="icon" className="transition-transform hover:rotate-180">
+        <Button onClick={() => setIsFlipped(!isFlipped)} variant="ghost" size="icon">
           <RotateCw className="w-4 h-4" />
         </Button>
 
