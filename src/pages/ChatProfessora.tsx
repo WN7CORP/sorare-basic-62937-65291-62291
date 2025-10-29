@@ -371,6 +371,22 @@ const ChatProfessora = () => {
         }
         throw new Error(`Erro ao processar sua pergunta (${response.status})`);
       }
+      const contentType = response.headers.get('Content-Type') || response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const result = await response.json();
+        const text = result?.data || result?.content || result?.generatedText || '';
+        setMessages(prev => {
+          const next = [...prev];
+          const lastIndex = next.length - 1;
+          if (lastIndex >= 0 && next[lastIndex].role === 'assistant') {
+            next[lastIndex] = { ...next[lastIndex], content: text, isStreaming: false };
+          }
+          return next;
+        });
+        clearInterval(watchdogInterval);
+        setIsLoading(false);
+        return;
+      }
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let accumulatedText = '';
