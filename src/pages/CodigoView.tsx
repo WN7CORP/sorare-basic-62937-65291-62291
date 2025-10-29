@@ -476,7 +476,7 @@ const CodigoView = () => {
 
         // Se não tem número, renderiza como cabeçalho de seção
         if (!hasNumber) {
-          return <div key={article.id} className="text-center mb-8 space-y-1 font-legal">
+          return <div key={article.id} className="text-center mb-8 space-y-1">
                   <div className="whitespace-pre-line text-lg bg-gradient-to-r from-rose-400 via-red-400 to-orange-400 bg-clip-text text-transparent font-bold tracking-wide" dangerouslySetInnerHTML={{
               __html: formatTextWithUppercase(article["Artigo"] || "")
             }} />
@@ -502,15 +502,15 @@ const CodigoView = () => {
                 />
                 
                 {/* Article Header */}
-                <h2 className="font-legal font-bold text-2xl md:text-3xl mb-4 animate-scale-in bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
+                <h2 className="font-bold text-2xl md:text-3xl mb-4 animate-scale-in bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
                   Art. {article["Número do Artigo"]}
                 </h2>
 
                 {/* Article Content */}
                 <div
-                  className="article-content text-foreground mb-6 whitespace-pre-line leading-relaxed font-legal text-[16px]"
+                  className="article-content text-foreground mb-6 whitespace-pre-line leading-relaxed"
                   style={{
-                    fontSize: `${fontSize}px`,
+                    fontSize: `${fontSize + 1}px`,
                     lineHeight: "1.8"
                   }}
                   dangerouslySetInnerHTML={{
@@ -541,7 +541,7 @@ const CodigoView = () => {
                       });
                       setModalOpen(true);
                     }}
-                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500/20 to-purple-600/20 hover:from-purple-500/30 hover:to-purple-600/30 border-2 border-purple-400/30 hover:border-purple-400/50 text-foreground px-4 py-2.5 rounded-lg transition-all text-sm font-medium shadow-md hover:shadow-lg hover:shadow-purple-500/20 hover:scale-105 animate-fade-in"
+                    className="flex items-center justify-center gap-2 bg-secondary/60 hover:bg-secondary border border-border/50 hover:border-border text-foreground px-4 py-2.5 rounded-lg transition-all text-sm font-medium hover:scale-105 animate-fade-in"
                   >
                     <Lightbulb className="w-4 h-4" />
                     Explicar
