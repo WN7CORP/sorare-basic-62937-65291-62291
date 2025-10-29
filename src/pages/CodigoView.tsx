@@ -541,17 +541,17 @@ const CodigoView = () => {
             animationDelay: `${index * 0.05}s`,
             animationFillMode: 'backwards'
           }}>
-                {/* Article Header */}
-                <h2 className="text-accent font-bold text-xl md:text-2xl mb-3 animate-scale-in">
-                  Art. {article["Número do Artigo"]}
-                </h2>
-
                 {/* Narration Button */}
                 <CopyButton 
                   text={article["Artigo"] || ""}
                   articleNumber={article["Número do Artigo"] || ""}
                   narrationUrl={article["Narração"] || undefined}
                 />
+                
+                {/* Article Header */}
+                <h2 className="text-accent font-bold text-xl md:text-2xl mb-3 animate-scale-in">
+                  Art. {article["Número do Artigo"]}
+                </h2>
 
                 {/* Article Content */}
                 <div
@@ -566,7 +566,7 @@ const CodigoView = () => {
                 />
 
                 {/* Action Menu */}
-                <div className="animate-fade-in">
+                <div className="mb-4 animate-fade-in">
                   <ArtigoActionsMenu
                     article={article}
                     onPlayComment={handlePlayComment}

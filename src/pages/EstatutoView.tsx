@@ -490,17 +490,16 @@ const EstatutoView = () => {
                   animationFillMode: 'backwards'
                 }}
               >
-                {/* Article Header */}
-                <h2 className="text-accent font-bold text-xl md:text-2xl mb-3 animate-scale-in">
-                  Art. {article["Número do Artigo"]}
-                </h2>
-
                 {/* Narration Button */}
                 <CopyButton 
                   text={article["Artigo"] || ""}
                   articleNumber={article["Número do Artigo"] || ""}
                   narrationUrl={article["Narração"] || undefined}
                 />
+                
+                <h2 className="text-accent font-bold text-xl md:text-2xl mb-3 animate-scale-in">
+                  Art. {article["Número do Artigo"]}
+                </h2>
 
                 <div 
                   className="article-content text-foreground/90 mb-6 whitespace-pre-line leading-relaxed font-serif-content" 
