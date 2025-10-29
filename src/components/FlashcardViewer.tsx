@@ -35,7 +35,7 @@ export const FlashcardViewer = ({
       <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
         <div onClick={() => setIsFlipped(true)} className="min-h-[300px] bg-card border-2 border-[hsl(270,60%,55%)] rounded-xl p-4 sm:p-8 flex flex-col cursor-pointer hover:shadow-lg transition-shadow relative break-words">
           {tema && (
-            <p className="text-xs text-[hsl(270,60%,55%)]/60 mb-3 absolute top-4 left-4">
+            <p className="text-xs text-[hsl(270,70%,75%)] mb-3 absolute top-4 left-4">
               {tema}
             </p>
           )}
@@ -47,7 +47,7 @@ export const FlashcardViewer = ({
 
         <div onClick={() => setIsFlipped(false)} className="min-h-[350px] bg-card border-2 border-[hsl(270,60%,55%)] rounded-xl p-4 sm:p-8 cursor-pointer hover:shadow-lg transition-shadow relative break-words">
           {tema && (
-            <p className="text-xs text-[hsl(270,60%,55%)]/60 mb-3 absolute top-4 left-4">
+            <p className="text-xs text-[hsl(270,70%,75%)] mb-3 absolute top-4 left-4">
               {tema}
             </p>
           )}
