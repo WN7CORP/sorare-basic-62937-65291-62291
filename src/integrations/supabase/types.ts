@@ -2612,6 +2612,7 @@ export type Database = {
           created_at: string | null
           id: number
           imagens: Json | null
+          links_relacionados: Json | null
           nome: string
           pessoas_envolvidas: Json | null
           timeline: Json | null
@@ -2625,6 +2626,7 @@ export type Database = {
           created_at?: string | null
           id?: number
           imagens?: Json | null
+          links_relacionados?: Json | null
           nome: string
           pessoas_envolvidas?: Json | null
           timeline?: Json | null
@@ -2638,6 +2640,7 @@ export type Database = {
           created_at?: string | null
           id?: number
           imagens?: Json | null
+          links_relacionados?: Json | null
           nome?: string
           pessoas_envolvidas?: Json | null
           timeline?: Json | null
@@ -2781,6 +2784,7 @@ export type Database = {
           created_at: string | null
           id: number
           imagens: Json | null
+          links_relacionados: Json | null
           pais: string
           tipo_sistema: string | null
           updated_at: string | null
@@ -2793,6 +2797,7 @@ export type Database = {
           created_at?: string | null
           id?: number
           imagens?: Json | null
+          links_relacionados?: Json | null
           pais: string
           tipo_sistema?: string | null
           updated_at?: string | null
@@ -2805,6 +2810,7 @@ export type Database = {
           created_at?: string | null
           id?: number
           imagens?: Json | null
+          links_relacionados?: Json | null
           pais?: string
           tipo_sistema?: string | null
           updated_at?: string | null
