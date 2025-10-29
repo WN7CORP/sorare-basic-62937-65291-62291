@@ -157,19 +157,19 @@ const JuriFlixDetalhesEnhanced = () => {
 
               {/* Actions */}
               <div className="flex flex-wrap gap-3">
-                {titulo.link && (
-                  <Button asChild>
-                    <a href={titulo.link} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Assistir na {titulo.plataforma}
-                    </a>
-                  </Button>
-                )}
                 {mainTrailer?.url && (
-                  <Button variant="outline" asChild>
+                  <Button asChild>
                     <a href={mainTrailer.url.replace('/embed/', '/watch?v=')} target="_blank" rel="noopener noreferrer">
                       <Play className="w-4 h-4 mr-2" />
                       Ver Trailer
+                    </a>
+                  </Button>
+                )}
+                {titulo.link && (
+                  <Button variant="outline" asChild>
+                    <a href={titulo.link} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      {titulo.plataforma || "Assistir"}
                     </a>
                   </Button>
                 )}

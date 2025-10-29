@@ -25,7 +25,7 @@ const JuriFlix = () => {
   const [emblaRefDocumentarios] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps", dragFree: true });
   
   // Filtros
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedTipos, setSelectedTipos] = useState<string[]>([]);
   const [decadeRange, setDecadeRange] = useState<[number, number]>([1950, 2020]);
   const [minRating, setMinRating] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
@@ -48,10 +48,9 @@ const JuriFlix = () => {
     if (!titulos) return [];
     
     return titulos.filter((t) => {
-      // Filtro de gênero
-      if (selectedGenres.length > 0) {
-        const tituloGeneros = t.generos as string[] || [];
-        if (!selectedGenres.some(g => tituloGeneros.includes(g))) {
+      // Filtro de tipo
+      if (selectedTipos.length > 0) {
+        if (!selectedTipos.some(tipo => t.tipo?.toLowerCase().includes(tipo.toLowerCase()))) {
           return false;
         }
       }
@@ -74,21 +73,21 @@ const JuriFlix = () => {
       
       return true;
     });
-  }, [titulos, selectedGenres, decadeRange, minRating]);
+  }, [titulos, selectedTipos, decadeRange, minRating]);
 
   const destaque = titulosFiltrados[0];
   const filmes = titulosFiltrados.filter((t) => t.tipo?.toLowerCase().includes("filme"));
   const series = titulosFiltrados.filter((t) => t.tipo?.toLowerCase().includes("série"));
   const documentarios = titulosFiltrados.filter((t) => t.tipo?.toLowerCase().includes("documentário"));
 
-  const handleGenreToggle = (genre: string) => {
-    setSelectedGenres(prev =>
-      prev.includes(genre) ? prev.filter(g => g !== genre) : [...prev, genre]
+  const handleTipoToggle = (tipo: string) => {
+    setSelectedTipos(prev =>
+      prev.includes(tipo) ? prev.filter(t => t !== tipo) : [...prev, tipo]
     );
   };
 
   const handleClearFilters = () => {
-    setSelectedGenres([]);
+    setSelectedTipos([]);
     setDecadeRange([1950, 2020]);
     setMinRating(0);
   };
@@ -158,8 +157,8 @@ const JuriFlix = () => {
               </SheetHeader>
               <div className="mt-6">
                 <JuriFlixFilters
-                  selectedGenres={selectedGenres}
-                  onGenreToggle={handleGenreToggle}
+                  selectedTipos={selectedTipos}
+                  onTipoToggle={handleTipoToggle}
                   decadeRange={decadeRange}
                   onDecadeChange={setDecadeRange}
                   minRating={minRating}
@@ -176,12 +175,13 @@ const JuriFlix = () => {
             <h2 className="text-xl font-bold mb-4">Filmes Jurídicos</h2>
             <div className="overflow-hidden" ref={emblaRefFilmes}>
               <div className="flex gap-3">
-                {filmes.map((titulo) => (
-                  <JuriFlixCard 
-                    key={titulo.id} 
-                    titulo={titulo}
-                    onClick={() => navigate(`/juriflix/${titulo.id}`)}
-                  />
+                {filmes.map((titulo, index) => (
+                  <div key={titulo.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+                    <JuriFlixCard 
+                      titulo={titulo}
+                      onClick={() => navigate(`/juriflix/${titulo.id}`)}
+                    />
+                  </div>
                 ))}
               </div>
             </div>
@@ -194,12 +194,13 @@ const JuriFlix = () => {
             <h2 className="text-xl font-bold mb-4">Séries Jurídicas</h2>
             <div className="overflow-hidden" ref={emblaRefSeries}>
               <div className="flex gap-3">
-                {series.map((titulo) => (
-                  <JuriFlixCard 
-                    key={titulo.id} 
-                    titulo={titulo}
-                    onClick={() => navigate(`/juriflix/${titulo.id}`)}
-                  />
+                {series.map((titulo, index) => (
+                  <div key={titulo.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+                    <JuriFlixCard 
+                      titulo={titulo}
+                      onClick={() => navigate(`/juriflix/${titulo.id}`)}
+                    />
+                  </div>
                 ))}
               </div>
             </div>
@@ -212,12 +213,13 @@ const JuriFlix = () => {
             <h2 className="text-xl font-bold mb-4">Documentários</h2>
             <div className="overflow-hidden" ref={emblaRefDocumentarios}>
               <div className="flex gap-3">
-                {documentarios.map((titulo) => (
-                  <JuriFlixCard 
-                    key={titulo.id} 
-                    titulo={titulo}
-                    onClick={() => navigate(`/juriflix/${titulo.id}`)}
-                  />
+                {documentarios.map((titulo, index) => (
+                  <div key={titulo.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+                    <JuriFlixCard 
+                      titulo={titulo}
+                      onClick={() => navigate(`/juriflix/${titulo.id}`)}
+                    />
+                  </div>
                 ))}
               </div>
             </div>

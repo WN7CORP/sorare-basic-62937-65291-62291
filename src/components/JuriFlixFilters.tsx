@@ -4,8 +4,8 @@ import { Slider } from "@/components/ui/slider";
 import { X } from "lucide-react";
 
 interface JuriFlixFiltersProps {
-  selectedGenres: string[];
-  onGenreToggle: (genre: string) => void;
+  selectedTipos: string[];
+  onTipoToggle: (tipo: string) => void;
   decadeRange: [number, number];
   onDecadeChange: (range: [number, number]) => void;
   minRating: number;
@@ -13,29 +13,20 @@ interface JuriFlixFiltersProps {
   onClearFilters: () => void;
 }
 
-const GENRES = [
-  "Drama",
-  "Crime",
-  "Thriller",
-  "Documentário",
-  "Biografia",
-  "História",
-  "Ação",
-  "Mistério"
-];
+const TIPOS = ["Filme", "Série", "Documentário"];
 
 const DECADES = [1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020];
 
 export const JuriFlixFilters = ({
-  selectedGenres,
-  onGenreToggle,
+  selectedTipos,
+  onTipoToggle,
   decadeRange,
   onDecadeChange,
   minRating,
   onRatingChange,
   onClearFilters
 }: JuriFlixFiltersProps) => {
-  const hasActiveFilters = selectedGenres.length > 0 || 
+  const hasActiveFilters = selectedTipos.length > 0 || 
     decadeRange[0] !== DECADES[0] || 
     decadeRange[1] !== DECADES[DECADES.length - 1] ||
     minRating > 0;
@@ -57,18 +48,18 @@ export const JuriFlixFilters = ({
         )}
       </div>
 
-      {/* Gêneros */}
+      {/* Tipos */}
       <div>
-        <label className="text-sm font-medium mb-3 block">Gêneros</label>
+        <label className="text-sm font-medium mb-3 block">Tipos</label>
         <div className="flex flex-wrap gap-2">
-          {GENRES.map((genre) => (
+          {TIPOS.map((tipo) => (
             <Badge
-              key={genre}
-              variant={selectedGenres.includes(genre) ? "default" : "outline"}
+              key={tipo}
+              variant={selectedTipos.includes(tipo) ? "default" : "outline"}
               className="cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => onGenreToggle(genre)}
+              onClick={() => onTipoToggle(tipo)}
             >
-              {genre}
+              {tipo}
             </Badge>
           ))}
         </div>
