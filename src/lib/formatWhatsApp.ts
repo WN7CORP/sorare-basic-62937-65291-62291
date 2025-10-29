@@ -69,3 +69,74 @@ export function formatForWhatsApp(markdown: string): string {
 
   return text;
 }
+
+/**
+ * Formata informações de um título do JuriFlix para compartilhar no WhatsApp
+ */
+export function formatJuriFlixForWhatsApp(titulo: {
+  nome: string;
+  sinopse?: string;
+  beneficios?: string;
+  plataforma?: string;
+  link?: string;
+  ano?: string | number;
+  tipo?: string;
+  nota?: string | number;
+  onde_assistir?: any;
+}): string {
+  const lines: string[] = [];
+  
+  // Título com emoji
+  lines.push(`🎬 *${titulo.nome}*`);
+  lines.push('━━━━━━━━━━━━━━\n');
+  
+  // Info básica
+  if (titulo.tipo) {
+    lines.push(`📺 *Tipo:* ${titulo.tipo}`);
+  }
+  if (titulo.ano) {
+    lines.push(`📅 *Ano:* ${titulo.ano}`);
+  }
+  if (titulo.nota) {
+    lines.push(`⭐ *Nota:* ${titulo.nota}/10`);
+  }
+  lines.push('');
+  
+  // Sinopse
+  if (titulo.sinopse) {
+    lines.push(`📖 *Sinopse*`);
+    lines.push(titulo.sinopse);
+    lines.push('');
+  }
+  
+  // Benefícios acadêmicos
+  if (titulo.beneficios) {
+    lines.push(`🎓 *Por que assistir?*`);
+    lines.push(titulo.beneficios);
+    lines.push('');
+  }
+  
+  // Onde assistir
+  const ondeAssistir = titulo.onde_assistir;
+  if (ondeAssistir?.flatrate && ondeAssistir.flatrate.length > 0) {
+    lines.push(`📺 *Disponível em:*`);
+    const plataformas = ondeAssistir.flatrate.map((p: any) => p.provider_name).join(', ');
+    lines.push(plataformas);
+    lines.push('');
+  } else if (titulo.plataforma) {
+    lines.push(`📺 *Disponível em:* ${titulo.plataforma}`);
+    lines.push('');
+  }
+  
+  // Link
+  if (titulo.link) {
+    lines.push(`🔗 *Assistir:* ${titulo.link}`);
+    lines.push('');
+  }
+  
+  // Rodapé
+  lines.push('━━━━━━━━━━━━━━');
+  lines.push('_Compartilhado do JuriFlix_ ⚖️');
+  
+  return lines.join('\n');
+}

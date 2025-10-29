@@ -1,19 +1,22 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ExternalLink, Play, Star, Calendar, Clock, TrendingUp, Users, Film } from "lucide-react";
+import { ExternalLink, Play, Star, Calendar, Clock, TrendingUp, Users, Film, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { JuriFlixTituloEnriquecido } from "@/types/juriflix.types";
 import { JuriFlixCard } from "@/components/JuriFlixCard";
+import { formatJuriFlixForWhatsApp } from "@/lib/formatWhatsApp";
+import { toast } from "sonner";
+import { useEffect } from "react";
 
 const JuriFlixDetalhesEnhanced = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { data: titulo, isLoading } = useQuery({
+  const { data: titulo, isLoading, refetch } = useQuery({
     queryKey: ["juriflix-detalhe-enhanced", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -26,6 +29,55 @@ const JuriFlixDetalhesEnhanced = () => {
       return data as unknown as JuriFlixTituloEnriquecido;
     },
   });
+
+  // Sincronizar disponibilidade de streaming
+  const syncStreamingMutation = useMutation({
+    mutationFn: async (tituloData: JuriFlixTituloEnriquecido) => {
+      if (!tituloData.tmdb_id) return null;
+      
+      const { data, error } = await supabase.functions.invoke('sync-disponibilidade-streaming', {
+        body: {
+          juriflix_id: tituloData.id,
+          tmdb_id: tituloData.tmdb_id,
+          tipo_tmdb: tituloData.tipo_tmdb
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      refetch();
+    }
+  });
+
+  // Sincronizar ao carregar a página (se tiver tmdb_id e não tiver onde_assistir)
+  useEffect(() => {
+    if (titulo && titulo.tmdb_id && !titulo.onde_assistir?.flatrate) {
+      syncStreamingMutation.mutate(titulo);
+    }
+  }, [titulo?.id]);
+
+  const handleCompartilharWhatsApp = () => {
+    if (!titulo) return;
+    
+    const mensagem = formatJuriFlixForWhatsApp({
+      nome: titulo.nome,
+      sinopse: titulo.sinopse,
+      beneficios: titulo.beneficios,
+      plataforma: titulo.plataforma,
+      link: titulo.link,
+      ano: titulo.ano,
+      tipo: titulo.tipo,
+      nota: titulo.nota,
+      onde_assistir: titulo.onde_assistir
+    });
+    
+    const url = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
+    window.open(url, '_blank');
+    
+    toast.success('Abrindo WhatsApp para compartilhar!');
+  };
 
   const { data: similares } = useQuery({
     queryKey: ["juriflix-similares", titulo?.similares],
@@ -173,6 +225,14 @@ const JuriFlixDetalhesEnhanced = () => {
                     </a>
                   </Button>
                 )}
+                <Button 
+                  variant="secondary" 
+                  onClick={handleCompartilharWhatsApp}
+                  className="gap-2"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Compartilhar no WhatsApp
+                </Button>
               </div>
             </div>
           </div>

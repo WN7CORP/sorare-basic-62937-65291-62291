@@ -80,7 +80,8 @@ import SimuladosResultado from "./pages/SimuladosResultado";
 import Audioaulas from "./pages/Audioaulas";
 import AudioaulasTema from "./pages/AudioaulasTema";
 import JuriFlix from "./pages/JuriFlix";
-import JuriFlixDetalhes from "./pages/JuriFlixDetalhes";
+import JuriFlixDetalhesEnhanced from "./pages/JuriFlixDetalhesEnhanced";
+import JuriFlixEnriquecer from "./pages/JuriFlixEnriquecer";
 import VideoaulasAreas from "./pages/VideoaulasAreas";
 import VideoaulasOAB from "./pages/VideoaulasOAB";
 import VideoaulasPlaylists from "./pages/VideoaulasPlaylists";
@@ -241,7 +242,8 @@ const App = () => {
               <Route path="/audioaulas" element={<Audioaulas />} />
               <Route path="/audioaulas/:area" element={<AudioaulasTema />} />
               <Route path="/juriflix" element={<JuriFlix />} />
-              <Route path="/juriflix/:id" element={<JuriFlixDetalhes />} />
+              <Route path="/juriflix/:id" element={<JuriFlixDetalhesEnhanced />} />
+              <Route path="/juriflix-enriquecer" element={<JuriFlixEnriquecer />} />
               <Route path="/advogado" element={<Advogado />} />
               <Route path="/advogado/modelos" element={<AdvogadoModelos />} />
               <Route path="/advogado/criar" element={<AdvogadoCriar />} />
