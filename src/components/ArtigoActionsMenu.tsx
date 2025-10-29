@@ -62,7 +62,7 @@ export const ArtigoActionsMenu = ({
       <CollapsibleTrigger asChild>
         <Button 
           variant="outline"
-          className="w-full flex items-center justify-center gap-2 bg-secondary/30 hover:bg-secondary/50 text-foreground border-border/50 font-medium transition-all"
+          className="w-full flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-foreground border-red-500/30 font-medium transition-all"
         >
           <Sparkles className="w-4 h-4" />
           Recursos do Artigo
@@ -71,132 +71,109 @@ export const ArtigoActionsMenu = ({
       </CollapsibleTrigger>
       
       <CollapsibleContent className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-        <div className="pt-3 space-y-2">
-          {/* Áudio Section */}
-          {hasAudio && (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground px-2 mb-2">
-                🎵 Áudio
-              </p>
-              
-              {article["Narração"] && onPlayNarration && (
-                <button
-                  onClick={() => onPlayNarration(article["Narração"]!)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
-                  style={{ animationDelay: '0ms' }}
-                >
-                  <Volume2 className="w-4 h-4" />
-                  <span>Ouvir Narração</span>
-                </button>
-              )}
-
-              {article["Comentario"] && onPlayComment && (
-                <button
-                  onClick={() => onPlayComment(
-                    article["Comentario"]!,
-                    `Comentário - Art. ${article["Número do Artigo"]}`
-                  )}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
-                  style={{ animationDelay: '50ms' }}
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span>{isCommentPlaying ? "Pausar Comentário" : "Ouvir Comentário"}</span>
-                </button>
-              )}
-            </div>
+        <div className="pt-3 grid grid-cols-2 gap-2">
+          {article["Narração"] && onPlayNarration && (
+            <button
+              onClick={() => onPlayNarration(article["Narração"]!)}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              style={{ animationDelay: '0ms' }}
+            >
+              <Volume2 className="w-4 h-4" />
+              <span>Narração</span>
+            </button>
           )}
 
-          {/* Aprendizado Section */}
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground px-2 mb-2 mt-3">
-              🎓 Aprendizado
-            </p>
+          {article["Comentario"] && onPlayComment && (
+            <button
+              onClick={() => onPlayComment(
+                article["Comentario"]!,
+                `Comentário - Art. ${article["Número do Artigo"]}`
+              )}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              style={{ animationDelay: '50ms' }}
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Comentário</span>
+            </button>
+          )}
 
-            {hasAula && onOpenAula && (
-              <button
-                onClick={onOpenAula}
-                className="w-full flex items-center gap-3 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
-                style={{ animationDelay: '100ms' }}
-              >
-                <GraduationCap className="w-4 h-4" />
-                <span>Assistir Aula</span>
-              </button>
-            )}
+          {hasAula && onOpenAula && (
+            <button
+              onClick={onOpenAula}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              style={{ animationDelay: '100ms' }}
+            >
+              <GraduationCap className="w-4 h-4" />
+              <span>Aula</span>
+            </button>
+          )}
 
-            {onOpenExplicacao && (
-              <>
-                <button
-                  onClick={() => onOpenExplicacao("explicacao")}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
-                  style={{ animationDelay: '150ms' }}
-                >
-                  <Lightbulb className="w-4 h-4" />
-                  <span>Explicar Artigo</span>
-                </button>
+          {onOpenExplicacao && (
+            <button
+              onClick={() => onOpenExplicacao("explicacao")}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              style={{ animationDelay: '150ms' }}
+            >
+              <Lightbulb className="w-4 h-4" />
+              <span>Explicar</span>
+            </button>
+          )}
 
-                <button
-                  onClick={() => onOpenExplicacao("exemplo")}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
-                  style={{ animationDelay: '200ms' }}
-                >
-                  <BookOpen className="w-4 h-4" />
-                  <span>Ver Exemplo Prático</span>
-                </button>
-              </>
-            )}
-          </div>
+          {onOpenExplicacao && (
+            <button
+              onClick={() => onOpenExplicacao("exemplo")}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              style={{ animationDelay: '200ms' }}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Exemplo</span>
+            </button>
+          )}
 
-          {/* Recursos de Estudo Section */}
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground px-2 mb-2 mt-3">
-              📚 Recursos de Estudo
-            </p>
+          {onGenerateFlashcards && (
+            <button
+              onClick={onGenerateFlashcards}
+              disabled={loadingFlashcards}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in disabled:opacity-50"
+              style={{ animationDelay: '250ms' }}
+            >
+              <Bookmark className="w-4 h-4" />
+              <span>{loadingFlashcards ? "Gerando..." : "Flashcards"}</span>
+            </button>
+          )}
 
-            {onGenerateFlashcards && (
-              <button
-                onClick={onGenerateFlashcards}
-                disabled={loadingFlashcards}
-                className="w-full flex items-center gap-3 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in disabled:opacity-50"
-                style={{ animationDelay: '250ms' }}
-              >
-                <Bookmark className="w-4 h-4" />
-                <span>{loadingFlashcards ? "Gerando..." : "Gerar Flashcards"}</span>
-              </button>
-            )}
+          {onOpenTermos && (
+            <button
+              onClick={onOpenTermos}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              style={{ animationDelay: '300ms' }}
+            >
+              <BookMarked className="w-4 h-4" />
+              <span>Termos</span>
+            </button>
+          )}
 
-            {onOpenTermos && (
-              <button
-                onClick={onOpenTermos}
-                className="w-full flex items-center gap-3 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
-                style={{ animationDelay: '300ms' }}
-              >
-                <BookMarked className="w-4 h-4" />
-                <span>Ver Termos Jurídicos</span>
-              </button>
-            )}
+          {onOpenQuestoes && (
+            <button
+              onClick={onOpenQuestoes}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              style={{ animationDelay: '350ms' }}
+            >
+              <FileQuestion className="w-4 h-4" />
+              <span>Questões</span>
+            </button>
+          )}
 
-            {onOpenQuestoes && (
-              <button
-                onClick={onOpenQuestoes}
-                className="w-full flex items-center gap-3 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
-                style={{ animationDelay: '350ms' }}
-              >
-                <FileQuestion className="w-4 h-4" />
-                <span>Gerar Questões</span>
-              </button>
-            )}
-
-            {onPerguntar && (
-              <button
-                onClick={onPerguntar}
-                className="w-full flex items-center gap-3 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
-                style={{ animationDelay: '400ms' }}
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>Fazer uma Pergunta</span>
-              </button>
-            )}
-          </div>
+          {onPerguntar && (
+            <button
+              onClick={onPerguntar}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              style={{ animationDelay: '400ms' }}
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Perguntar</span>
+            </button>
+          )}
         </div>
       </CollapsibleContent>
     </Collapsible>
