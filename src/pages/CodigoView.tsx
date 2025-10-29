@@ -45,7 +45,7 @@ const CodigoView = () => {
       setSearchQuery(artigoParam);
     }
   }, [searchParams]);
-  const [displayLimit, setDisplayLimit] = useState(50);
+  const [displayLimit, setDisplayLimit] = useState(100);
   const [stickyPlayerOpen, setStickyPlayerOpen] = useState(false);
   const [currentAudio, setCurrentAudio] = useState({
     url: "",
@@ -240,8 +240,8 @@ const CodigoView = () => {
         const scrollTop = element.scrollTop;
         const scrollHeight = element.scrollHeight;
         const clientHeight = element.clientHeight;
-        if (scrollTop + clientHeight >= scrollHeight - 500 && displayLimit < filteredArticles.length) {
-          setDisplayLimit(prev => Math.min(prev + 30, filteredArticles.length));
+        if (scrollTop + clientHeight >= scrollHeight - 300 && displayLimit < filteredArticles.length) {
+          setDisplayLimit(prev => Math.min(prev + 50, filteredArticles.length));
         }
       };
       element.addEventListener('scroll', handleScroll);
@@ -437,7 +437,7 @@ const CodigoView = () => {
 
       {/* Content */}
       <div ref={contentRef} className="px-4 max-w-4xl mx-auto pb-0 overflow-y-auto" style={{ 
-        height: activeTab === 'artigos' ? 'calc(100vh-126px)' : 'calc(100vh - 60px)' 
+        height: activeTab === 'artigos' ? 'calc(100vh - 126px)' : 'calc(100vh - 60px)' 
       }}>
         
         {/* Playlist Tab */}
