@@ -5,6 +5,9 @@ import { HighlightedBox } from "@/components/chat/HighlightedBox";
 import { ComparisonCarousel } from "@/components/chat/ComparisonCarousel";
 import { InfographicTimeline } from "@/components/chat/InfographicTimeline";
 import { StatisticsCard } from "@/components/chat/StatisticsCard";
+import { LegalStatistics } from "@/components/chat/LegalStatistics";
+import { ProcessFlow } from "@/components/chat/ProcessFlow";
+import { MermaidDiagram } from "@/components/chat/MermaidDiagram";
 import { MarkdownTabs } from "@/components/chat/MarkdownTabs";
 import { MarkdownAccordion } from "@/components/chat/MarkdownAccordion";
 import { MarkdownSlides } from "@/components/chat/MarkdownSlides";
@@ -1027,8 +1030,14 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                       // Detectar [INFOGRÁFICO]
                       const infographicRegex = /\[INFOGRÁFICO:\s*([^\]]+)\]\s*(\{[\s\S]*?\})\s*\[\/INFOGRÁFICO\]/gi;
                       
-                       // Detectar [ESTATÍSTICAS]
-                      const statsRegex = /\[ESTATÍSTICAS\]\s*(\{[\s\S]*?\})\s*\[\/ESTATÍSTICAS\]/gi;
+                       // Detectar [ESTATÍSTICAS] com ou sem título
+                      const statsRegex = /\[ESTATÍSTICAS(?::\s*([^\]]+))?\]\s*(\{[\s\S]*?\})\s*\[\/ESTATÍSTICAS\]/gi;
+                      
+                      // Detectar [MERMAID]
+                      const mermaidRegex = /\[MERMAID:\s*([^\]]+)\]\s*([\s\S]*?)\s*\[\/MERMAID\]/gi;
+                      
+                      // Detectar [PROCESSO]
+                      const processRegex = /\[PROCESSO:\s*([^\]]+)\]\s*(\{[\s\S]*?\})\s*\[\/PROCESSO\]/gi;
                       
                       // Detectar [TABS]
                       const tabsRegex = /\[TABS:\s*([^\]]+)\]\s*(\{[\s\S]*?\})\s*\[\/TABS\]/gi;
@@ -1060,11 +1069,27 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                         }
                       }
                       
-                       // Coletar estatísticas
+                      // Coletar estatísticas
                       const statMatches = tempContent.matchAll(statsRegex);
                       for (const m of statMatches) {
                         if (m.index !== undefined) {
                           allMatches.push({index: m.index, length: m[0].length, type: 'stats', match: m as RegExpMatchArray});
+                        }
+                      }
+                      
+                      // Coletar mermaid
+                      const mermaidMatches = tempContent.matchAll(mermaidRegex);
+                      for (const m of mermaidMatches) {
+                        if (m.index !== undefined) {
+                          allMatches.push({index: m.index, length: m[0].length, type: 'mermaid', match: m as RegExpMatchArray});
+                        }
+                      }
+                      
+                      // Coletar processo
+                      const processMatches = tempContent.matchAll(processRegex);
+                      for (const m of processMatches) {
+                        if (m.index !== undefined) {
+                          allMatches.push({index: m.index, length: m[0].length, type: 'process', match: m as RegExpMatchArray});
                         }
                       }
                       
@@ -1131,10 +1156,24 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                               elements.push(<InfographicTimeline key={key++} title={title} steps={data.steps} />);
                             }
                            } else if (type === 'stats') {
-                            const jsonStr = match[1]?.trim();
+                            const title = match[1]?.trim(); // Título opcional
+                            const jsonStr = match[2]?.trim();
                             const data = JSON.parse(jsonStr);
                             if (data.stats && Array.isArray(data.stats)) {
-                              elements.push(<StatisticsCard key={key++} stats={data.stats} />);
+                              elements.push(<LegalStatistics key={key++} title={title} stats={data.stats} />);
+                            }
+                          } else if (type === 'mermaid') {
+                            const title = match[1]?.trim();
+                            const chart = match[2]?.trim();
+                            if (chart) {
+                              elements.push(<MermaidDiagram key={key++} title={title} chart={chart} />);
+                            }
+                          } else if (type === 'process') {
+                            const title = match[1]?.trim();
+                            const jsonStr = match[2]?.trim();
+                            const data = JSON.parse(jsonStr);
+                            if (data.steps && Array.isArray(data.steps)) {
+                              elements.push(<ProcessFlow key={key++} title={title} steps={data.steps} />);
                             }
                           } else if (type === 'tabs') {
                             const title = match[1]?.trim();
@@ -1191,7 +1230,7 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
 
                      // Helpers: ocultar blocos incompletos durante streaming e fechar tags ausentes após fim
                     const stripIncompleteBlocks = (content: string) => {
-                      const tags = ['COMPARAÇÃO', 'CARROSSEL', 'ETAPAS', 'TIPOS', 'INFOGRÁFICO', 'ESTATÍSTICAS', 'TABS', 'ACCORDION', 'SLIDES'];
+                      const tags = ['COMPARAÇÃO', 'CARROSSEL', 'ETAPAS', 'TIPOS', 'INFOGRÁFICO', 'ESTATÍSTICAS', 'MERMAID', 'PROCESSO', 'TABS', 'ACCORDION', 'SLIDES'];
                       let result = content;
                       for (const t of tags) {
                         // Se abriu e não fechou ainda, remove até o fim para evitar JSON aparecendo bruto
@@ -1232,7 +1271,7 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                         return output;
                       };
                        let fixed = content;
-                      ['COMPARAÇÃO','CARROSSEL','ETAPAS','TIPOS','INFOGRÁFICO','ESTATÍSTICAS','TABS','ACCORDION','SLIDES'].forEach(tag => {
+                      ['COMPARAÇÃO','CARROSSEL','ETAPAS','TIPOS','INFOGRÁFICO','ESTATÍSTICAS','MERMAID','PROCESSO','TABS','ACCORDION','SLIDES'].forEach(tag => {
                         fixed = fix(fixed, tag);
                       });
                       return fixed;
