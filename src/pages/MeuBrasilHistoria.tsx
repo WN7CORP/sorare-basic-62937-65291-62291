@@ -132,7 +132,7 @@ const MeuBrasilHistoria = () => {
 
             {/* Card */}
             <button
-              onClick={() => navigate(`/meu-brasil/artigo/${encodeURIComponent(item.periodo)}`)}
+              onClick={() => navigate(`/meu-brasil/historia/${encodeURIComponent(item.periodo)}`)}
               className="w-full bg-card border border-border rounded-lg p-4 text-left hover:border-accent transition-colors"
             >
               <div className="flex items-start justify-between mb-2">

@@ -381,7 +381,7 @@ export const JuristaArtigoCompleto = ({
 
       {/* Fonte */}
       <div className="text-xs text-muted-foreground text-center py-4 border-t">
-        ✨ Conteúdo adaptado da Wikipedia em português e enriquecido com IA educacional pela Gemini
+        ✨ Conteúdo gerado com IA educacional
       </div>
     </div>
   );

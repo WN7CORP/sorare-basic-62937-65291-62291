@@ -35,21 +35,25 @@ Adapte o seguinte conteúdo sobre o jurista brasileiro "${nome}" para estudantes
 
 ${JSON.stringify(conteudo_original, null, 2)}
 
+### Seção Principal com Hierarquia Clara
+
+No campo "resumo_executivo", você DEVE usar Markdown com a seguinte estrutura obrigatória:
+
+- **### (H3)** para títulos principais: ### Visão Geral, ### Contexto Histórico, ### Marcos Importantes, ### Legado
+- **#### (H4)** para subtítulos dentro das seções  
+- **Negrito (**texto**)** para destacar termos-chave e datas importantes
+- **Listas (- item)** para enumerar eventos, características ou pontos importantes
+- **Parágrafos curtos** (2-4 linhas) para facilitar a leitura
+
+EXEMPLO DE ESTRUTURA (siga exatamente esse padrão):
+
+"### Visão Geral\\n\\nBreve introdução sobre o período histórico em 2-3 linhas, destacando **principais características**.\\n\\n### Contexto Histórico\\n\\n#### Antecedentes\\nDescrição dos eventos que levaram a este período, com **datas importantes** em negrito.\\n\\n#### Principais Mudanças\\n- **Mudança 1**: descrição breve\\n- **Mudança 2**: descrição breve\\n- **Mudança 3**: descrição breve\\n\\n### Marcos Jurídicos Importantes\\n\\n- **Data - Evento**: impacto e relevância\\n- **Data - Evento**: impacto e relevância\\n\\n### Legado\\n\\nParágrafo sobre o impacto atual deste período na história jurídica brasileira."
+
 Contexto adicional: ${contexto || 'N/A'}
-
-IMPORTANTE: O "resumo_executivo" deve ser bem estruturado usando Markdown com hierarquia clara:
-- Use ### para títulos principais (ex: ### Vida e Carreira)
-- Use #### para subtítulos (ex: #### Formação Acadêmica)
-- Use **negrito** para destacar termos importantes
-- Use listas (- item) para enumerar pontos
-- Organize o resumo em seções lógicas: Introdução, Vida e Carreira, Principais Contribuições, Legado
-
-Exemplo de estrutura do resumo_executivo:
-"### Visão Geral\n\n[Texto introdutório em 2-3 linhas]\n\n### Vida e Carreira\n\n#### Formação\n[Parágrafo sobre formação]\n\n#### Atuação Profissional\n[Parágrafo sobre carreira]\n\n### Principais Contribuições\n\n- **Contribuição 1**: descrição\n- **Contribuição 2**: descrição\n\n### Legado\n\n[Parágrafo sobre o impacto atual]"
 
 Retorne APENAS um JSON válido (sem markdown, sem \`\`\`json) com esta estrutura:
 {
-  "resumo_executivo": "Resumo BEM ESTRUTURADO com Markdown (### títulos, #### subtítulos, **negrito**, listas) em 4-6 parágrafos organizados hierarquicamente",
+  "resumo_executivo": "ESTRUTURA MARKDOWN HIERÁRQUICA conforme exemplo acima - obrigatoriamente com ### para títulos, #### para subtítulos, **negrito** para termos importantes, e listas",
   "introducao_didatica": "Explicação clara e acessível sobre quem foi este jurista e sua importância",
   "relevancia_juridica": "Por que este jurista é importante para o direito brasileiro (2-3 parágrafos)",
   "principais_contribuicoes": ["Contribuição 1", "Contribuição 2", "Contribuição 3"],
@@ -131,9 +135,19 @@ ${JSON.stringify(conteudo_original, null, 2)}
 
 Contexto: ${contexto || 'N/A'}
 
+IMPORTANTE: O campo "resumo_executivo" deve ser estruturado usando Markdown com hierarquia clara:
+- Use ### para títulos principais (ex: ### Contexto Histórico, ### Marcos Jurídicos)
+- Use #### para subtítulos (ex: #### Legislação Principal)
+- Use **negrito** para destacar datas, nomes de leis e eventos importantes
+- Use listas (- item) para enumerar eventos, marcos e características
+- Organize em seções lógicas: Visão Geral, Contexto Histórico, Marcos Jurídicos, Legislação, Legado
+
+EXEMPLO DE ESTRUTURA:
+"### Visão Geral\\n\\nBreve introdução de 2-3 linhas sobre o período **${nome}**, destacando suas **principais características** jurídicas.\\n\\n### Contexto Histórico\\n\\n#### Antecedentes Políticos\\nDescrição do contexto político que levou a este período.\\n\\n#### Mudanças Sociais\\n- **Mudança 1**: impacto\\n- **Mudança 2**: impacto\\n\\n### Marcos Jurídicos Importantes\\n\\n- **Ano - Lei/Código**: descrição e impacto\\n- **Ano - Evento**: relevância jurídica\\n\\n### Legislação Principal\\n\\nParágrafo sobre as principais leis e códigos criados neste período.\\n\\n### Legado\\n\\nComo este período influencia o direito brasileiro atual."
+
 Retorne APENAS um JSON válido (sem markdown, sem \`\`\`json) com esta estrutura:
 {
-  "resumo_executivo": "Visão geral do período histórico",
+  "resumo_executivo": "ESTRUTURA MARKDOWN HIERÁRQUICA conforme exemplo - obrigatoriamente com ###, ####, **negrito** e listas",
   "introducao_didatica": "Contexto histórico e político do período",
   "relevancia_juridica": "Principais mudanças jurídicas do período",
   "marcos_principais": ["Marco 1", "Marco 2", "Marco 3"],

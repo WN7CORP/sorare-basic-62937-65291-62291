@@ -142,6 +142,7 @@ import JogoRouter from "./pages/jogos/JogoRouter";
 import OAB from "./pages/OAB";
 import MeuBrasil from "./pages/MeuBrasil";
 import MeuBrasilHistoria from "./pages/MeuBrasilHistoria";
+import MeuBrasilHistoriaView from "./pages/MeuBrasilHistoriaView";
 import MeuBrasilSistemas from "./pages/MeuBrasilSistemas";
 import MeuBrasilJuristas from "./pages/MeuBrasilJuristas";
 import MeuBrasilJuristaView from "./pages/MeuBrasilJuristaView";
@@ -294,6 +295,7 @@ const App = () => {
               <Route path="/assistente-pessoal" element={<AssistentePessoal />} />
               <Route path="/meu-brasil" element={<MeuBrasil />} />
               <Route path="/meu-brasil/historia" element={<MeuBrasilHistoria />} />
+              <Route path="/meu-brasil/historia/:periodo" element={<MeuBrasilHistoriaView />} />
               <Route path="/meu-brasil/sistemas" element={<MeuBrasilSistemas />} />
               <Route path="/meu-brasil/juristas" element={<MeuBrasilJuristas />} />
               <Route path="/meu-brasil/jurista/:nome" element={<MeuBrasilJuristaView />} />

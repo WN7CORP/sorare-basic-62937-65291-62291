@@ -1,13 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Users, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+interface JuristaDb {
+  nome: string;
+  categoria: string;
+  periodo: string;
+  area: string;
+  foto_url?: string;
+}
 
 const MeuBrasilJuristas = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [juristasDb, setJuristasDb] = useState<JuristaDb[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    carregarJuristasDb();
+  }, []);
+
+  const carregarJuristasDb = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('meu_brasil_juristas')
+        .select('nome, categoria, periodo, area, foto_url')
+        .order('nome');
+
+      if (error) throw error;
+      
+      if (data) {
+        setJuristasDb(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar juristas:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const juristas = {
     historicos: [
@@ -42,11 +77,21 @@ const MeuBrasilJuristas = () => {
     ]
   };
 
+  // Se temos dados do banco, usar eles. Senão, usar dados locais como fallback
+  const juristasParaExibir = juristasDb.length > 0 
+    ? {
+        historicos: juristasDb.filter(j => j.categoria === 'historicos'),
+        ministrosSTF: juristasDb.filter(j => j.categoria === 'ministrosSTF'),
+        advogados: juristasDb.filter(j => j.categoria === 'advogados'),
+        professores: juristasDb.filter(j => j.categoria === 'professores')
+      }
+    : juristas;
+
   const todasCategorias = [
-    { label: "Históricos", value: "historicos", lista: juristas.historicos },
-    { label: "Ministros STF", value: "ministrosSTF", lista: juristas.ministrosSTF },
-    { label: "Advogados", value: "advogados", lista: juristas.advogados },
-    { label: "Professores", value: "professores", lista: juristas.professores }
+    { label: "Históricos", value: "historicos", lista: juristasParaExibir.historicos },
+    { label: "Ministros STF", value: "ministrosSTF", lista: juristasParaExibir.ministrosSTF },
+    { label: "Advogados", value: "advogados", lista: juristasParaExibir.advogados },
+    { label: "Professores", value: "professores", lista: juristasParaExibir.professores }
   ];
 
   const filtrarJuristas = (lista: typeof juristas.historicos) => {
@@ -113,20 +158,15 @@ const MeuBrasilJuristas = () => {
                   className="w-full bg-card border border-border rounded-lg p-4 text-left hover:border-primary hover:shadow-md transition-all group"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                      <img 
-                        src={`https://pt.wikipedia.org/wiki/Special:FilePath/${encodeURIComponent(jurista.nome)}.jpg`}
+                    <Avatar className="w-16 h-16 flex-shrink-0">
+                      <AvatarImage 
+                        src={'foto_url' in jurista && typeof jurista.foto_url === 'string' ? jurista.foto_url : undefined} 
                         alt={jurista.nome}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          const parent = e.currentTarget.parentElement;
-                          if (parent) {
-                            parent.innerHTML = `<div class="w-full h-full flex items-center justify-center"><svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>`;
-                          }
-                        }}
                       />
-                    </div>
+                      <AvatarFallback className="bg-muted">
+                        <Users className="w-8 h-8 text-muted-foreground" />
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-base mb-1 group-hover:text-primary transition-colors">
                         {jurista.nome}
