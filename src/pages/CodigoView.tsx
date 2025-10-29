@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Search, MessageSquare, GraduationCap, Lightbulb, BookOpen, Bookmark, Plus, Minus, ArrowUp, BookMarked, FileQuestion } from "lucide-react";
+import { ArrowLeft, Search, MessageSquare, GraduationCap, Lightbulb, BookOpen, Bookmark, Plus, Minus, ArrowUp, BookMarked, FileQuestion, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAllRows";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import InlineAudioButton from "@/components/InlineAudioButton";
 import AudioCommentButton from "@/components/AudioCommentButton";
 import StickyAudioPlayer from "@/components/StickyAudioPlayer";
@@ -37,6 +38,7 @@ const CodigoView = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const firstResultRef = useRef<HTMLDivElement>(null);
   const [fontSize, setFontSize] = useState(15);
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Auto-search based on URL parameter
@@ -372,9 +374,54 @@ const CodigoView = () => {
       {activeTab === 'artigos' && (
         <div className="sticky top-[60px] bg-background border-b border-border z-20">
           <div className="px-4 pt-4 pb-2 max-w-4xl mx-auto">
-            <div className="relative animate-fade-in">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <input type="text" placeholder="Buscar por artigo ou conteúdo..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full bg-input text-foreground pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-ring transition-all" />
+            <div className="space-y-2">
+              <div className="relative animate-fade-in flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input 
+                    type="text" 
+                    placeholder="Buscar por artigo ou conteúdo..." 
+                    value={searchInput}
+                    onChange={e => setSearchInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setSearchQuery(searchInput);
+                      }
+                    }}
+                    className="w-full bg-input text-foreground pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-ring transition-all" 
+                  />
+                </div>
+                
+                <Button
+                  onClick={() => setSearchQuery(searchInput)}
+                  disabled={!searchInput.trim()}
+                  size="lg"
+                  className="px-6 shrink-0"
+                >
+                  <Search className="w-5 h-5 mr-2" />
+                  Buscar
+                </Button>
+                
+                {searchQuery && (
+                  <Button
+                    onClick={() => {
+                      setSearchInput("");
+                      setSearchQuery("");
+                    }}
+                    variant="outline"
+                    size="lg"
+                    className="px-4 shrink-0"
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                )}
+              </div>
+              
+              {searchQuery && (
+                <p className="text-xs text-muted-foreground text-center">
+                  {filteredArticles.length} {filteredArticles.length === 1 ? 'artigo encontrado' : 'artigos encontrados'}
+                </p>
+              )}
             </div>
           </div>
         </div>
