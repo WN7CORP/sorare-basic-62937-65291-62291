@@ -7,7 +7,6 @@ import { InfographicTimeline } from "@/components/chat/InfographicTimeline";
 import { StatisticsCard } from "@/components/chat/StatisticsCard";
 import { LegalStatistics } from "@/components/chat/LegalStatistics";
 import { ProcessFlow } from "@/components/chat/ProcessFlow";
-import { MermaidDiagram } from "@/components/chat/MermaidDiagram";
 import { MarkdownTabs } from "@/components/chat/MarkdownTabs";
 import { MarkdownAccordion } from "@/components/chat/MarkdownAccordion";
 import { MarkdownSlides } from "@/components/chat/MarkdownSlides";
@@ -1162,12 +1161,6 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                             if (data.stats && Array.isArray(data.stats)) {
                               elements.push(<LegalStatistics key={key++} title={title} stats={data.stats} />);
                             }
-                          } else if (type === 'mermaid') {
-                            const title = match[1]?.trim();
-                            const chart = match[2]?.trim();
-                            if (chart) {
-                              elements.push(<MermaidDiagram key={key++} title={title} chart={chart} />);
-                            }
                           } else if (type === 'process') {
                             const title = match[1]?.trim();
                             const jsonStr = match[2]?.trim();
@@ -1230,7 +1223,12 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
 
                      // Helpers: ocultar blocos incompletos durante streaming e fechar tags ausentes após fim
                     const stripIncompleteBlocks = (content: string) => {
-                      const tags = ['COMPARAÇÃO', 'CARROSSEL', 'ETAPAS', 'TIPOS', 'INFOGRÁFICO', 'SUGESTÕES', 'ESTATÍSTICAS', 'MERMAID', 'PROCESSO', 'TABS', 'ACCORDION', 'SLIDES'];
+                      const tags = [
+                        'COMPARAÇÃO', 'CARROSSEL', 'ETAPAS', 'TIPOS', 
+                        'INFOGRÁFICO', 'ESTATÍSTICAS', 'PROCESSO', 
+                        'TABS', 'ACCORDION', 'SLIDES',
+                        'SUGESTÕES', 'ATENÇÃO', 'IMPORTANTE', 'DICA', 'NOTA', 'EXEMPLO'
+                      ];
                       let result = content;
                       for (const t of tags) {
                         // Se abriu e não fechou ainda, remove até o fim para evitar JSON aparecendo bruto
@@ -1333,6 +1331,17 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
                               if (text.includes('[NOTA]')) {
                                 const content = text.replace(/\[NOTA\](.*?)\[\/NOTA\]/gs, '$1');
                                 return <HighlightedBox type="note">{content}</HighlightedBox>;
+                              }
+                              if (text.includes('[EXEMPLO]')) {
+                                const content = text.replace(/\[EXEMPLO\](.*?)\[\/EXEMPLO\]/gs, '$1');
+                                return (
+                                  <HighlightedBox type="note">
+                                    <div className="space-y-2">
+                                      <p className="font-semibold">💡 Exemplo Prático:</p>
+                                      <div>{content}</div>
+                                    </div>
+                                  </HighlightedBox>
+                                );
                               }
                               
                               // Detectar comparações em formato JSON (caso apareçam sem as tags)
@@ -1475,9 +1484,11 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
             {/* Estado: Pensando (antes de começar a receber resposta) */}
             {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
               <div className="flex justify-start mb-4 px-4">
-                <div className="bg-muted rounded-2xl px-4 py-3 flex items-center gap-3">
-                  <Scale className="w-5 h-5 text-primary animate-pulse" />
-                  <span className="text-[15px] font-medium">Pensando...</span>
+                <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-2 border-purple-400/40 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-lg">
+                  <Brain className="w-6 h-6 text-purple-400 animate-pulse" />
+                  <span className="text-[15px] font-medium text-purple-300">
+                    A professora está pensando...
+                  </span>
                 </div>
               </div>
             )}

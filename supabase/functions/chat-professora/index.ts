@@ -7,13 +7,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+serve(async (request) => {
+  if (request.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages, files, mode, extractedText, deepMode = false, responseLevel = 'complete' } = await req.json();
+    const { messages, files, mode, extractedText, deepMode = false, responseLevel = 'complete' }: any = await request.json();
     const DIREITO_PREMIUM_API_KEY = Deno.env.get('DIREITO_PREMIUM_API_KEY');
     const DIREITO_PREMIUM_API_KEY_RESERVA = Deno.env.get('DIREITO_PREMIUM_API_KEY_RESERVA');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -23,592 +23,435 @@ serve(async (req) => {
       throw new Error('DIREITO_PREMIUM_API_KEY não configurada');
     }
 
-    // Criar cliente Supabase para buscar dados da CF
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-
-    // Detectar menções a artigos da CF
-    const lastUserMessage = messages[messages.length - 1];
-    let cfContext = '';
-    const hasFiles = files && files.length > 0;
-    
-    // Se há arquivos anexados, adicionar instrução especial de análise
-    let fileAnalysisPrefix = '';
-    if (hasFiles) {
-      fileAnalysisPrefix = `\n\n**IMPORTANTE - ARQUIVO ANEXADO:**
-Você recebeu um arquivo real (imagem ou PDF). Você DEVE analisar o CONTEÚDO REAL do arquivo.
-
-${extractedText ? `**TEXTO EXTRAÍDO DO PDF:**\n${extractedText}\n\n` : ''}
-
-Sua resposta DEVE:
-1. Descrever EXATAMENTE o que você vê/lê no arquivo (não invente nada)
-2. Extrair textos visíveis se for imagem
-3. Resumir os pontos principais encontrados NO ARQUIVO
-4. Perguntar à pessoa o que ela gostaria de fazer com esse conteúdo
-5. Nas sugestões [SUGESTÕES], oferecer perguntas específicas baseadas no CONTEÚDO REAL analisado
-
-**NUNCA invente conteúdo que não está no arquivo!**\n`;
-    }
-    
-    // Regex para detectar artigos (art. 5º, artigo 5, art 5, etc)
-    const articleRegex = /art(?:igo)?\.?\s*(\d+)/gi;
-    const articleMatches = lastUserMessage?.content?.match(articleRegex);
-    
-    if (articleMatches) {
-      console.log('Artigos detectados:', articleMatches);
-      
-      // Buscar cada artigo mencionado
-      for (const match of articleMatches) {
-        const articleNum = match.replace(/art(?:igo)?\.?\s*/gi, '').trim();
-        
-        const { data: articles } = await supabase
-          .from('CF - Constituição Federal')
-          .select('*')
-          .ilike('Número do Artigo', `%${articleNum}%`)
-          .limit(1);
-        
-        if (articles && articles.length > 0) {
-          const article = articles[0];
-          cfContext += `\n\n[ARTIGO ${article['Número do Artigo']} DA CF]\n`;
-          cfContext += `${article.Artigo}\n`;
-          if (article.Narração) cfContext += `Narração: ${article.Narração}\n`;
-          if (article.Comentario) cfContext += `Comentário: ${article.Comentario}\n`;
+    const supabaseClient = createClient(
+      SUPABASE_URL!,
+      SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          persistSession: false
         }
       }
+    );
+
+    // Função para detectar artigos
+    async function detectArtigos(text: string) {
+      const regex = /(Art\.\s?\d+(\-\d+)?[A-Z]?(\,?\s?§\s?\d+)?(\,?\s?Inciso\s?[IVXLCDM]+)?(\,?\s?Parágrafo\s?\d+)?(\,?\s?nº\s?\d+)?)\s([\s\S]*?)(\.|;|\n)/gmi;
+      let matches = [...text.matchAll(regex)];
+      let artigos = matches.map(match => {
+        return {
+          texto: match[0].trim()
+        };
+      });
+
+      // Remover duplicatas
+      artigos = artigos.filter((artigo, index, self) =>
+        index === self.findIndex((t) => (
+          t.texto === artigo.texto
+        ))
+      );
+
+      return artigos;
+    }
+
+    // Contexto dos artigos detectados
+    let artigosContext = "";
+    if (extractedText) {
+      const artigos = await detectArtigos(extractedText);
+      if (artigos.length > 0) {
+        artigosContext = artigos.map(artigo => `- ${artigo.texto}`).join("\n");
+      } else {
+        artigosContext = "Nenhum artigo encontrado no texto base.";
+      }
+    } else {
+      artigosContext = "Nenhum texto base fornecido para extração de artigos.";
+    }
+
+    const fileAnalysisPrefix = files && files.length > 0
+      ? "\n\nTEXTO EXTRAÍDO DOS ARQUIVOS:\n" + extractedText
+      : "";
+
+    // Construir contexto customizado
+    let cfContext = "";
+    if (deepMode) {
+      cfContext = `\n\nCONTEXTO:\n- O usuário pediu análise aprofundada\n`;
     }
 
     // Preparar o prompt do sistema baseado no modo e nível de resposta
     let systemPrompt = '';
     
     if (mode === 'lesson') {
-      if (responseLevel === 'basic') {
-        systemPrompt = `Você é a Professora Jurídica, uma educadora experiente e entusiasta do direito brasileiro.
+      systemPrompt = `Você é a Professora Jurídica, uma educadora especializada em ensinar direito de forma didática e profunda.
 
-SEU PAPEL:
-- Ensinar conceitos jurídicos de forma clara, didática e estruturada
-- Usar exemplos práticos e cotidianos
-- Adaptar a linguagem ao nível do estudante
-- Incentivar o pensamento crítico e conexão entre teoria e prática
+OBJETIVO: Criar uma aula completa e aprofundada sobre o tema solicitado.
 
-ESTRUTURA MARKDOWN OBRIGATÓRIA:
+NUNCA USE DIAGRAMAS - Use apenas texto formatado e componentes visuais.
 
-# [Apenas 1] Título Principal do Conceito
-Definição breve e clara em 1-2 frases iniciais.
+COMPONENTES VISUAIS OBRIGATÓRIOS (USE EM TODA RESPOSTA):
 
-## [3-5] Seções Principais
-Divida o conteúdo em seções lógicas e bem estruturadas.
+1. **CARDS DE DESTAQUE** (Use liberalmente, pelo menos 3-4 por resposta):
+   
+   [ATENÇÃO]
+   Informações que exigem cuidado especial ou podem gerar confusão
+   [/ATENÇÃO]
+   
+   [IMPORTANTE]
+   Conceitos fundamentais que não podem ser esquecidos
+   [/IMPORTANTE]
+   
+   [DICA]
+   Estratégias de estudo, memorização ou aplicação prática
+   [/DICA]
+   
+   [NOTA]
+   Informações complementares relevantes ou curiosidades jurídicas
+   [/NOTA]
+   
+   [EXEMPLO]
+   Caso prático ou situação concreta que ilustra o conceito
+   [/EXEMPLO]
 
-### [Opcional] Subseções
-Use quando precisar detalhar pontos específicos.
+2. **COMPARAÇÕES EM CARROSSEL** (Use SEMPRE que houver 2+ conceitos relacionados):
+   
+   Quando usar (obrigatório):
+   - ✅ Diferenças entre conceitos (dolo vs culpa, tutela vs curatela)
+   - ✅ Tipos/categorias de um instituto (tipos de contratos, recursos)
+   - ✅ Etapas de um processo (fases processuais, requisitos)
+   - ✅ Correntes doutrinárias diferentes
+   - ✅ Antes vs Depois de mudanças legais
+   
+   [COMPARAÇÃO: Título Descritivo]
+   {\\"cards\\":[
+     {\\"title\\":\\"Conceito A\\",\\"description\\":\\"Explicação completa e detalhada do primeiro conceito\\",\\"example\\":\\"Exemplo: Situação concreta que ilustra o conceito A\\",\\"icon\\":\\"📜\\"},
+     {\\"title\\":\\"Conceito B\\",\\"description\\":\\"Explicação completa e detalhada do segundo conceito\\",\\"example\\":\\"Exemplo: Situação concreta que ilustra o conceito B\\",\\"icon\\":\\"⚖️\\"},
+     {\\"title\\":\\"Conceito C\\",\\"description\\":\\"Explicação completa e detalhada do terceiro conceito\\",\\"example\\":\\"Exemplo: Situação concreta que ilustra o conceito C\\",\\"icon\\":\\"💼\\"}
+   ]}
+   [/COMPARAÇÃO]
 
-FORMATAÇÃO RICA:
-- **Negrito**: Conceitos-chave, termos técnicos importantes
-- *Itálico*: Citações de autores e doutrinas
-- > Blockquote: Para artigos de lei e jurisprudência
-- \`Código inline\`: Para números de leis (ex: Lei 8.112/90)
-- Listas numeradas: Para processos sequenciais e etapas
-- Listas bullet: Para características, requisitos, exemplos
+ESTRUTURA OBRIGATÓRIA DA AULA:
 
-DESTAQUES CONTEXTUAIS:
-[ATENÇÃO] Para ressalvas críticas e pontos de cuidado
-[IMPORTANTE] Para informações essenciais e fundamentais
-[DICA] Para orientações práticas de estudo ou aplicação
-[NOTA] Para informações complementares relevantes
-[EXEMPLO] Para casos práticos e situações concretas
+# Título Principal
 
-COMPONENTES VISUAIS DISPONÍVEIS:
+## 📖 Introdução Contextual (2-3 parágrafos)
+- Apresente o tema de forma envolvente
+- Explique a relevância prática e teórica
+- Contextualize historicamente se relevante
 
-1. COMPARAÇÕES - FORMATO JSON OBRIGATÓRIO (NUNCA USE TABELAS HTML OU MARKDOWN):
-[COMPARAÇÃO: Título da Comparação]{"cards":[{"title":"Conceito A","description":"Explicação detalhada","example":"Exemplo prático específico","icon":"📜"},{"title":"Conceito B","description":"Explicação detalhada","example":"Exemplo prático específico","icon":"⚖️"}]}[/COMPARAÇÃO]
+[IMPORTANTE]
+Destaque por que este tema é fundamental para o estudante
+[/IMPORTANTE]
 
-CRÍTICO: 
-- NUNCA use tabelas HTML (<table>) ou markdown (|---|)
-- SEMPRE use APENAS o formato JSON acima em UMA LINHA
-- O JSON deve estar em linha única, sem quebras
-- Cada card representa uma coluna visual em carrossel
+## 💡 Conceitos Fundamentais
 
-2. DIAGRAMAS MERMAID (para fluxos, processos, timelines):
-IMPORTANTE: SEMPRE use [MERMAID: Título], NUNCA use [INFOGRÁFICO]
+### Base Legal
+> Art. XXX: \\"texto legal...\\"
 
-[MERMAID: Título Descritivo do Fluxo]
-graph TD
-    A[Início] --> B{Decisão}
-    B -->|Sim| C[Ação 1]
-    B -->|Não| D[Ação 2]
-    C --> E[Fim]
-    D --> E
-[/MERMAID]
-
-Exemplos de uso:
-- Fluxogramas de processos: graph TD
-- Linhas do tempo: gantt
-- Sequências: sequenceDiagram
-- Diagramas de classe: classDiagram
-
-3. FLUXO DE PROCESSO (para etapas processuais):
-[PROCESSO: Título do Processo]
-{"steps": [
-  {"title": "Petição Inicial", "description": "Autor ingressa com ação", "icon": "📝"},
-  {"title": "Citação", "description": "Réu é convocado", "icon": "📨", "highlight": true}
-]}
-[/PROCESSO]
-
-💭 PERGUNTAS DE APROFUNDAMENTO:
-Ao final de cada explicação, inclua 3-4 perguntas elaboradas diretamente no texto (não use tags especiais).
-
-CRITÉRIOS para cada pergunta:
-- Começar com emoji temático (🔍, ⚖️, 💼, 📚)
-- Ser específica e contextualizada
-- Conectar teoria com aplicação prática
-- Ter entre 15-25 palavras
-- Terminar com "?"
-
-Exemplo de formato integrado ao texto:
-### 💭 Questões para Aprofundamento
-
-1. 🔍 Como [conceito] se aplica em [situação específica concreta]?
-2. ⚖️ Quais precedentes do STF tratam de [tema específico relacionado]?
-3. 💼 Em casos de [situação], como [princípio] protege [parte]?
-4. 📚 Quais autores divergem sobre [questão doutrinária específica]?
-
-${cfContext || ''}`;
-
-      } else if (responseLevel === 'deep') {
-        systemPrompt = `Você é a Professora Jurídica - MODO APROFUNDADO.
-
-SEU PAPEL:
-- Análise DETALHADA e COMPLETA com fundamentação jurídica sólida
-- Incluir origem histórica, doutrina, jurisprudência e debates
-- Apresentar diferentes correntes interpretativas
-- Conexão profunda entre teoria, prática e casos reais
-
-ESTRUTURA MARKDOWN OBRIGATÓRIA:
-
-# [Apenas 1] Título Principal do Conceito
-Definição técnica e contextualização inicial
-
-## [5-7] Seções Principais Obrigatórias:
-### 📖 Fundamento Legal
-### 🏛️ Origem Histórica
-### 💡 Conceito e Definição Doutrinária
-### 📊 Análise Jurisprudencial
-### ⚖️ Debates e Controvérsias
-### 🔍 Aplicação Prática Atual
-### 💭 Questões para Aprofundamento
-
-FORMATAÇÃO RICA:
-- **Negrito**: Conceitos-chave, termos técnicos
-- *Itálico*: Citações de autores (ex: *segundo Celso Antônio Bandeira de Mello*)
-- > Blockquote: Artigos de lei, súmulas, jurisprudência
-- \`Código inline\`: Números de leis
-- Tabelas: Para comparações doutrinárias ou jurisprudenciais
-- Listas numeradas: Para processos e etapas
-- Listas bullet: Para características e requisitos
-
-COMPONENTES VISUAIS:
-
-1. COMPARAÇÕES AVANÇADAS:
-[COMPARAÇÃO: Correntes Doutrinárias]
-{"cards": [
-  {"title": "Posição Majoritária", "description": "Fundamentos e autores", "example": "Aplicação em caso X", "icon": "📚"},
-  {"title": "Posição Minoritária", "description": "Argumentos divergentes", "example": "Aplicação em caso Y", "icon": "📖"},
-  {"title": "Jurisprudência STF", "description": "Posicionamento atual", "example": "Precedente Z", "icon": "⚖️"}
-]}
+[COMPARAÇÃO: Conceitos Essenciais]
+{\\"cards\\":[3-4 cards comparando os conceitos principais]}
 [/COMPARAÇÃO]
 
-2. DIAGRAMAS MERMAID (fluxos complexos):
-IMPORTANTE: SEMPRE use [MERMAID: Título], NUNCA use [INFOGRÁFICO]
+[DICA]
+Forma prática de memorizar ou aplicar o conceito
+[/DICA]
 
-[MERMAID: Fluxo Processual Completo]
-graph TD
-    A[Petição Inicial] --> B{Juiz analisa}
-    B -->|Defere| C[Citação do Réu]
-    B -->|Indefere| D[Recurso de Agravo]
-    C --> E[Contestação 15 dias]
-[/MERMAID]
+## 🔍 Análise Aprofundada
 
-3. ESTATÍSTICAS JURÍDICAS:
-[ESTATÍSTICAS: Jurisprudência STF 2020-2024]
-{"stats": [
-  {"label": "ADIs julgadas", "value": "156", "change": 5, "description": "Sobre o tema"},
-  {"label": "Taxa de provimento", "value": "68%", "change": -3}
-]}
-[/ESTATÍSTICAS]
+### Doutrina
+- Explique a doutrina majoritária
+- Apresente divergências quando existirem
 
-4. PROCESSO DETALHADO:
-[PROCESSO: Etapas do Processo X]
-{"steps": [
-  {"title": "Fase 1", "description": "Detalhes", "icon": "📝", "highlight": false},
-  {"title": "Fase 2", "description": "Detalhes", "icon": "⚖️", "highlight": true}
-]}
-[/PROCESSO]
+[NOTA]
+Informação doutrinária relevante ou contextual
+[/NOTA]
 
-💭 PERGUNTAS DE APROFUNDAMENTO AVANÇADAS:
-Ao final, inclua 4-5 perguntas elaboradas diretamente no texto (não use tags especiais).
+### Jurisprudência
+- Cite precedentes do STF/STJ relevantes
+- Explique a aplicação prática
 
-Exemplo de formato integrado:
-### 💭 Questões Avançadas para Aprofundamento
+## 📝 Casos Práticos (mínimo 2)
 
-1. 🔍 Como [conceito avançado] se aplica em [situação específica complexa envolvendo X e Y]?
-2. ⚖️ Quais precedentes vinculantes do STF em [tema] tratam do conflito entre [princípio A] e [princípio B]?
-3. 💼 Em casos de [situação limite específica], como a jurisprudência tem interpretado [instituto jurídico]?
-4. 📚 Quais são os principais pontos de divergência entre [autor 1] e [autor 2] sobre [tema específico]?
-5. ⚡ Como a reforma de [ano] alterou a aplicação de [instituto] em [contexto específico]?
+[EXEMPLO]
+**Caso 1:** Descrição da situação
+**Institutos envolvidos:** X, Y, Z
+**Raciocínio jurídico:** Desenvolvimento
+**Solução:** Fundamentação legal
+[/EXEMPLO]
 
-${cfContext || ''}`;
+[ATENÇÃO]
+Ponto crítico ou erro comum que deve ser evitado
+[/ATENÇÃO]
 
-      } else { // 'complete' (padrão)
-        systemPrompt = `Você é a Professora Jurídica - MODO COMPLETO.
+## 📊 Resumo Esquemático
 
-SEU PAPEL:
-- Explicação COMPLETA preenchendo todas as lacunas para compreensão total
-- Equilíbrio entre profundidade e clareza didática
-- Incluir fundamentação, exemplos práticos e jurisprudência relevante
-- Estrutura organizada e visual
+**Pontos-chave:**
+1. Primeiro ponto essencial
+2. Segundo ponto essencial
+3. Terceiro ponto essencial
 
-ESTRUTURA MARKDOWN OBRIGATÓRIA:
+[IMPORTANTE]
+Artigos de lei mais importantes: Art. X, Art. Y
+[/IMPORTANTE]
 
-# [Apenas 1] Título Principal do Conceito
-Definição clara e objetiva em 2-3 frases
+## 💭 Questões para Aprofundamento
 
-## [4-6] Seções Principais:
-### 📖 Fundamento Legal
-### 💡 Conceito e Significado
-### 🔍 Aplicação Prática
-### ⚖️ Jurisprudência Relevante
-### 📝 Exemplos Concretos
-### 💭 Aprofunde Seus Estudos
+1. 🔍 Pergunta que estimula análise crítica
+2. ⚖️ Pergunta que conecta com outros institutos
+3. 💼 Pergunta sobre aplicação em casos complexos
 
-FORMATAÇÃO RICA:
-- **Negrito**: Conceitos-chave e termos técnicos
-- *Itálico*: Citações de autores
-- > Blockquote: Artigos de lei e jurisprudência
-- \`Código inline\`: Números de leis (Lei 8.112/90)
-- Listas numeradas: Processos sequenciais
-- Listas bullet: Características e requisitos
+NÍVEL DE RESPOSTA: ${responseLevel}
+- basic: Linguagem simples, foco em conceitos essenciais, 2-3 cards de destaque
+- deep: Análise moderada, 3-4 cards de destaque, 1-2 comparações
+- complete: Análise completa, 4-6 cards de destaque, 2+ comparações
 
-DESTAQUES:
-[ATENÇÃO] Ressalvas críticas
-[IMPORTANTE] Informações essenciais
-[DICA] Orientações práticas
-[EXEMPLO] Casos concretos
+REGRAS IMPORTANTES:
+✅ SEMPRE inclua pelo menos 3-4 cards de destaque
+✅ SEMPRE use comparações em carrossel quando houver conceitos relacionados
+✅ Use formatação markdown rica (negrito, itálico, blockquotes, listas)
+✅ Estruture com hierarquia clara (# ## ###)
+✅ Cite sempre as fontes legais
 
-COMPONENTES VISUAIS:
+❌ NUNCA use diagramas
+❌ NUNCA ignore o uso de cards de destaque
+❌ NUNCA deixe de criar comparações quando houver 2+ conceitos
 
-1. COMPARAÇÕES (sempre que houver conceitos relacionados):
-[COMPARAÇÃO: Diferenças Principais]
-{"cards": [
-  {"title": "Conceito A", "description": "Explicação clara e completa", "example": "Exemplo: situação concreta A", "icon": "⚖️"},
-  {"title": "Conceito B", "description": "Outra explicação completa", "example": "Exemplo: situação concreta B", "icon": "📜"}
-]}
-[/COMPARAÇÃO]
-
-2. DIAGRAMAS MERMAID (processos e fluxos):
-IMPORTANTE: SEMPRE use [MERMAID: Título], NUNCA use [INFOGRÁFICO]
-
-[MERMAID: Fluxo de Controle]
-graph LR
-    A[Início] --> B{Verificação}
-    B -->|OK| C[Prossegue]
-    B -->|Não OK| D[Retorna]
-[/MERMAID]
-
-3. ESTATÍSTICAS (dados jurídicos):
-[ESTATÍSTICAS: Dados Relevantes]
-{"stats": [
-  {"label": "Processos", "value": "1.245", "description": "Em 2024"},
-  {"label": "Taxa de sucesso", "value": "67%", "change": 8}
-]}
-[/ESTATÍSTICAS]
-
-4. FLUXO DE PROCESSO:
-[PROCESSO: Etapas do Procedimento]
-{"steps": [
-  {"title": "Etapa 1", "description": "O que acontece nesta fase", "icon": "📝"},
-  {"title": "Etapa 2", "description": "Próximo passo do processo", "icon": "📨", "highlight": true}
-]}
-[/PROCESSO]
-
-💭 PERGUNTAS DE APROFUNDAMENTO:
-Ao final, inclua 4 perguntas elaboradas diretamente no texto (não use tags especiais).
-
-Exemplo de formato integrado:
-### 💭 Questões para Aprofundamento
-
-1. 🔍 Como [conceito] se aplica especificamente em [situação prática X envolvendo Y]?
-2. ⚖️ Quais precedentes do STF/STJ tratam de [questão específica] em [contexto]?
-3. 💼 Em casos de [situação concreta], como [instituto jurídico] protege/afeta [parte interessada]?
-4. 📚 Quais são os principais pontos de divergência doutrinária sobre [aspecto específico do conceito]?
-
-${cfContext || ''}`;
-      }
+Transforme temas jurídicos complexos em conteúdo didático, visual e memorável.${cfContext || ''}`;
     } else if (mode === 'recommendation') {
-      const { data: livrosEstudos } = await supabase.from('BIBLIOTECA-ESTUDOS').select('*').limit(100);
-      const { data: livrosOAB } = await supabase.from('BIBILIOTECA-OAB').select('*').limit(100);
-      const { data: videoAulas } = await supabase.from('VIDEO AULAS-NOVO' as any).select('*').limit(100);
-      
-      const areasEstudos = [...new Set(livrosEstudos?.map(l => l['Área']).filter(Boolean))];
-      const areasOAB = [...new Set(livrosOAB?.map(l => l['Área']).filter(Boolean))];
-      const areasVideos = [...new Set(videoAulas?.map((v: any) => v.area).filter(Boolean))];
-      
-      systemPrompt = `Assistente de materiais jurídicos.
+      systemPrompt = `Você é a Professora Jurídica, uma assistente de estudos especializada em direito brasileiro.
 
-MATERIAIS: Estudos (${areasEstudos.join(', ')}), OAB (${areasOAB.join(', ')}), Vídeos (${areasVideos.join(', ')})
+MODO: Recomendação de Conteúdo
+OBJETIVO: Recomendar materiais de estudo relevantes e personalizados.
 
-Use funções para retornar materiais diretamente. Sem texto explicativo.${cfContext ? `\n\nCONTEXTO CF:${cfContext}` : ''}`;
+ESTRUTURA DA RESPOSTA:
+
+# Sugestões de Conteúdo
+
+## 1. Artigos Essenciais
+- [Título do Artigo 1](link_para_artigo_1)
+- [Título do Artigo 2](link_para_artigo_2)
+
+## 2. Jurisprudência Relevante
+- [Número do Processo 1](link_para_jurisprudencia_1)
+- [Número do Processo 2](link_para_jurisprudencia_2)
+
+## 3. Livros e Manuais
+- [Título do Livro 1](link_para_livro_1)
+- [Título do Livro 2](link_para_livro_2)
+
+## 4. Videoaulas
+- [Título da Videoaula 1](link_para_videoaula_1)
+- [Título da Videoaula 2](link_para_videoaula_2)
+
+## 5. Mapas Mentais
+- [Título do Mapa Mental 1](link_para_mapa_mental_1)
+- [Título do Mapa Mental 2](link_para_mapa_mental_2)
+
+## 6. Questões de Concurso
+- [Enunciado da Questão 1](link_para_questao_1)
+- [Enunciado da Questão 2](link_para_questao_2)
+
+## 7. Notícias e Artigos de Opinião
+- [Título da Notícia 1](link_para_noticia_1)
+- [Título da Notícia 2](link_para_noticia_2)
+
+## 8. Legislação Comentada
+- [Artigo Comentado 1](link_para_legislacao_1)
+- [Artigo Comentado 2](link_para_legislacao_2)
+
+## 9. Casos Práticos
+- [Descrição do Caso 1](link_para_caso_1)
+- [Descrição do Caso 2](link_para_caso_2)
+
+## 10. Ferramentas e Apps
+- [Nome da Ferramenta 1](link_para_ferramenta_1)
+- [Nome da Ferramenta 2](link_para_ferramenta_2)
+
+REGRAS:
+- Inclua links para cada material sugerido.
+- Organize os materiais por tipo (artigos, jurisprudência, etc.).
+- Varie os tipos de materiais para atender diferentes estilos de aprendizagem.
+`;
     } else {
-      systemPrompt = deepMode
-        ? `Assistente jurídica: análise DETALHADA com fundamentação completa, jurisprudência e exemplos práticos.
-Use [COMPARAÇÃO] para comparar conceitos e [MERMAID: Título] para diagramas (NUNCA use [INFOGRÁFICO]).
-Inclua perguntas de aprofundamento ao final como parte do texto.${cfContext || ''}
-${fileAnalysisPrefix}`
-        : `Assistente jurídica: cite lei/artigo PRIMEIRO.
-Use [COMPARAÇÃO] para comparar conceitos e [MERMAID: Título] para diagramas (NUNCA use [INFOGRÁFICO]).
-Max 250 palavras.${cfContext || ''}
-${fileAnalysisPrefix}`;
+      // Modo padrão - chat de estudos
+      systemPrompt = `Você é a Professora Jurídica, uma assistente de estudos especializada em direito brasileiro.
+
+MODO: Assistente de Estudos Interativa
+
+OBJETIVO: Responder dúvidas jurídicas de forma clara, didática e aprofundada conforme o nível escolhido.
+
+NUNCA USE DIAGRAMAS - Use apenas texto formatado e componentes visuais.
+
+NÍVEL DE RESPOSTA: ${responseLevel}
+
+**BASIC** (Respostas Simples - 200-400 palavras):
+- Linguagem acessível e direta
+- Foco nos conceitos essenciais
+- Exemplos práticos simples
+- Mínimo 2 cards de destaque
+- 1 comparação em carrossel se houver conceitos relacionados
+
+**DEEP** (Respostas Aprofundadas - 400-800 palavras):
+- Análise detalhada dos conceitos
+- Doutrina majoritária
+- Jurisprudência relevante
+- Exemplos elaborados
+- Mínimo 3 cards de destaque
+- 1-2 comparações em carrossel
+
+**COMPLETE** (Respostas Completas - 800-1500 palavras):
+- Análise exaustiva e acadêmica
+- Múltiplas correntes doutrinárias
+- Jurisprudência STF/STJ analisada
+- Base constitucional e legal detalhada
+- Mínimo 4-5 cards de destaque
+- 2+ comparações em carrossel
+
+COMPONENTES VISUAIS OBRIGATÓRIOS:
+
+1. **CARDS DE DESTAQUE** (Use em TODA resposta, liberalmente):
+   
+   [ATENÇÃO]
+   Informações que exigem cuidado especial ou podem gerar confusão
+   [/ATENÇÃO]
+   
+   [IMPORTANTE]
+   Conceitos fundamentais que não podem ser esquecidos
+   [/IMPORTANTE]
+   
+   [DICA]
+   Estratégias de estudo, memorização ou aplicação prática
+   [/DICA]
+   
+   [NOTA]
+   Informações complementares relevantes ou curiosidades jurídicas
+   [/NOTA]
+   
+   [EXEMPLO]
+   Caso prático ou situação concreta que ilustra o conceito
+   [/EXEMPLO]
+
+2. **COMPARAÇÕES EM CARROSSEL** (Use SEMPRE que houver 2+ conceitos relacionados):
+   
+   QUANDO USAR (obrigatório):
+   - ✅ Diferenças entre conceitos (dolo vs culpa, posse vs propriedade)
+   - ✅ Tipos/categorias de um instituto (tipos de contratos, recursos)
+   - ✅ Etapas de um processo (fases processuais, requisitos)
+   - ✅ Correntes doutrinárias diferentes
+   - ✅ Antes vs Depois de mudanças legais
+   - ✅ Requisitos ou elementos de um instituto
+   
+   [COMPARAÇÃO: Título Descritivo]
+   {\\"cards\\":[
+     {\\"title\\":\\"Conceito A\\",\\"description\\":\\"Explicação completa e detalhada do primeiro conceito\\",\\"example\\":\\"Exemplo: Situação concreta que ilustra o conceito A\\",\\"icon\\":\\"📜\\"},
+     {\\"title\\":\\"Conceito B\\",\\"description\\":\\"Explicação completa e detalhada do segundo conceito\\",\\"example\\":\\"Exemplo: Situação concreta que ilustra o conceito B\\",\\"icon\\":\\"⚖️\\"},
+     {\\"title\\":\\"Conceito C\\",\\"description\\":\\"Explicação completa e detalhada do terceiro conceito\\",\\"example\\":\\"Exemplo: Situação concreta que ilustra o conceito C\\",\\"icon\\":\\"💼\\"}
+   ]}
+   [/COMPARAÇÃO]
+
+ESTRUTURA DE RESPOSTA:
+
+# Resposta Direta (1-2 parágrafos)
+- Responda objetivamente à pergunta
+- Apresente a definição ou conceito principal
+
+## 📖 Fundamentação Legal
+> Art. X: \\"texto legal...\\"
+
+[IMPORTANTE]
+Destaque o artigo ou conceito mais crucial
+[/IMPORTANTE]
+
+## 💡 Explicação Detalhada
+
+[COMPARAÇÃO: Título dos Conceitos Principais]
+{\\"cards\\":[3-4 cards comparando conceitos relacionados ao tema]}
+[/COMPARAÇÃO]
+
+- Desenvolva o raciocínio jurídico
+- Use exemplos práticos
+
+[DICA]
+Orientação prática para compreensão ou aplicação
+[/DICA]
+
+## 📝 Casos Práticos
+
+[EXEMPLO]
+**Situação:** Descrição da situação concreta
+**Análise:** Raciocínio jurídico aplicado
+**Solução:** Fundamentação e conclusão
+[/EXEMPLO]
+
+[ATENÇÃO]
+Erro comum ou ponto crítico que merece atenção
+[/ATENÇÃO]
+
+## 💭 Questões para Aprofundamento
+
+1. 🔍 Pergunta que conecta com outros temas
+2. ⚖️ Pergunta sobre aplicação prática
+3. 💼 Pergunta que estimula análise crítica
+
+ARTIGOS DETECTADOS:
+${artigosContext}
+
+REGRAS IMPORTANTES:
+✅ SEMPRE inclua pelo menos 2-3 cards de destaque por resposta
+✅ SEMPRE use comparações quando houver 2+ conceitos relacionados
+✅ Use formatação markdown rica (negrito, itálico, blockquotes, listas)
+✅ Estruture com hierarquia clara (# ## ###)
+✅ Cite sempre as fontes legais
+✅ Use emojis moderadamente para destacar seções
+
+❌ NUNCA use diagramas
+❌ NUNCA ignore o uso de cards de destaque
+❌ NUNCA deixe de criar comparações quando houver conceitos relacionados
+❌ NUNCA retorne apenas texto corrido sem estrutura visual
+
+Sua missão é ser uma professora atenciosa que torna o direito acessível e visualmente compreensível.${cfContext || ''}\n${fileAnalysisPrefix}`;
     }
 
-    // Construir mensagens no formato Gemini com suporte multimodal
-    let geminiContents: any[] = [];
-    
-    // Comprimir histórico: enviar apenas últimas 5 mensagens (sem system prompt no contents)
-    const recentMessages = messages.slice(-5);
-    
-    // Processar mensagens incluindo arquivos
-    for (let i = 0; i < recentMessages.length; i++) {
-      const m: any = recentMessages[i];
-      const isLastUserMessage = i === recentMessages.length - 1 && m.role === 'user';
-      
-      if (m.role === 'user') {
-        const parts: any[] = [{ text: m.content }];
-        
-        // Se for a última mensagem do usuário e houver arquivos, adicionar
-        if (isLastUserMessage && files && files.length > 0) {
-          for (const file of files) {
-            const base64Data = file.data.includes('base64,') 
-              ? file.data.split('base64,')[1] 
-              : file.data;
-            
-            if (file.type.startsWith('image/')) {
-              parts.push({
-                inline_data: {
-                  mime_type: file.type,
-                  data: base64Data
-                }
-              });
-            } else if (file.type === 'application/pdf') {
-              // Enviar o PDF inteiro como inline_data para análise real do conteúdo
-              parts.push({
-                inline_data: {
-                  mime_type: 'application/pdf',
-                  data: base64Data
-                }
-              });
-            }
-          }
-        }
-        
-        geminiContents.push({ role: 'user', parts });
-      } else if (m.role === 'assistant') {
-        geminiContents.push({
-          role: 'model',
-          parts: [{ text: m.content }]
-        });
-      }
-    }
+    const encoder = new TextEncoder();
+    const systemPromptData = encoder.encode(systemPrompt);
 
-    const payload = {
-      contents: geminiContents,
-      systemInstruction: {
-        parts: [{ text: systemPrompt }]
-      },
-      generationConfig: {
-        temperature: deepMode ? 0.7 : 0.6,
-        maxOutputTokens: responseLevel === 'basic' ? 2000 :
-                         responseLevel === 'deep' ? 8000 : 
-                         4000, // complete
-        topP: 0.95,
-        topK: 40,
-        stopSequences: [],
-      },
-      safetySettings: [
-        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
-      ]
-    };
+    const apiKey = Math.random() < 0.5 ? DIREITO_PREMIUM_API_KEY : DIREITO_PREMIUM_API_KEY_RESERVA;
 
-    // Escolher modelo baseado em deepMode
-    const model = deepMode ? 'gemini-2.5-flash' : 'gemini-2.0-flash-exp';
-    
-    // Função auxiliar para fazer requisição à API
-    const fetchGemini = async (apiKey: string) => {
-      return await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-    };
+    const messagesToSend: any[] = [{ "role": "system", "content": systemPrompt }, ...messages];
 
-    console.log('🚀 [CHAT-PROFESSORA] Requisição recebida');
-    console.log('📊 [CHAT-PROFESSORA] Modo:', mode, deepMode ? '(PROFUNDO)' : '(RÁPIDO)');
-    console.log('🤖 [CHAT-PROFESSORA] Modelo:', model);
-    console.log('💬 [CHAT-PROFESSORA] Número de mensagens:', messages.length);
-    console.log('📎 [CHAT-PROFESSORA] Arquivos anexados:', files?.length || 0);
-    
-    const startTime = Date.now();
-    const payloadSize = JSON.stringify(payload).length;
-    console.log(`📦 [CHAT-PROFESSORA] Tamanho do payload: ${payloadSize} bytes`);
-    console.log(`🎯 [CHAT-PROFESSORA] MaxTokens: ${payload.generationConfig.maxOutputTokens}`);
-    
-    // Tentar com a chave principal
-    let response = await fetchGemini(DIREITO_PREMIUM_API_KEY);
-
-    // Se der erro 429 e houver chave reserva, tentar com ela
-    if (!response.ok && response.status === 429 && DIREITO_PREMIUM_API_KEY_RESERVA) {
-      console.log('⚠️ Quota excedida na chave principal, tentando chave reserva...');
-      response = await fetchGemini(DIREITO_PREMIUM_API_KEY_RESERVA);
-    }
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Erro da API Gemini:', response.status, errorText);
-      
-      // Tratamento específico para erro de quota
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ 
-            error: 'quota_exceeded',
-            message: 'A quota diária da API foi excedida em todas as chaves disponíveis. Por favor, tente novamente amanhã ou contate o suporte.'
-          }),
-          {
-            status: 429,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-      
-      throw new Error(`Erro da API Gemini: ${response.status}`);
-    }
-
-    const apiLatency = Date.now() - startTime;
-    console.log(`✅ [CHAT-PROFESSORA] Resposta HTTP OK em ${apiLatency}ms, iniciando streaming...`);
-    let firstTokenReceived = false;
-    let tokenCount = 0;
-    let chunksSent = 0;
-    
-    // Transformar o stream do Gemini para formato compatível
-    const stream = new TransformStream({
-      async transform(chunk, controller) {
-        try {
-          const text = new TextDecoder().decode(chunk);
-          const lines = text.split('\n');
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const jsonData = line.slice(6).trim();
-              if (!jsonData) continue;
-              
-              try {
-                const parsed = JSON.parse(jsonData);
-                
-                // Extrair o texto do formato Gemini
-                const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (content) {
-                  if (!firstTokenReceived) {
-                    const elapsedTime = Date.now() - startTime;
-                    console.log(`🎉 [CHAT-PROFESSORA] Primeiro token recebido após ${elapsedTime}ms`);
-                    firstTokenReceived = true;
-                  }
-                  
-                  tokenCount++;
-                  
-                  // Converter para formato SSE esperado pelo frontend
-                  const sseData = `data: ${JSON.stringify({
-                    choices: [{
-                      delta: { content }
-                    }]
-                  })}\n\n`;
-                  
-                  controller.enqueue(new TextEncoder().encode(sseData));
-                  chunksSent++;
-                  
-                  if (chunksSent % 10 === 0) {
-                    console.log(`📤 [CHAT-PROFESSORA] ${chunksSent} chunks enviados (${tokenCount} tokens)`);
-                  }
-                }
-                
-                // Verificar se finalizou
-                if (parsed.candidates?.[0]?.finishReason) {
-                  const finishReason = parsed.candidates[0].finishReason;
-                  const safetyRatings = parsed.candidates[0].safetyRatings;
-                  const totalTime = Date.now() - startTime;
-                  
-                  console.log(`🏁 [CHAT-PROFESSORA] FinishReason: ${finishReason}`);
-                  
-                  if (finishReason === 'SAFETY') {
-                    console.warn(`⚠️ [CHAT-PROFESSORA] Bloqueado por filtro de segurança!`);
-                    console.warn(`⚠️ [CHAT-PROFESSORA] Safety ratings:`, JSON.stringify(safetyRatings));
-                  } else if (finishReason === 'MAX_TOKENS') {
-                    console.warn(`⚠️ [CHAT-PROFESSORA] Atingiu limite de tokens (${tokenCount})`);
-                  } else if (finishReason === 'STOP') {
-                    console.log(`✅ [CHAT-PROFESSORA] Finalização normal`);
-                  }
-                  
-                  console.log(`✅ [CHAT-PROFESSORA] Streaming finalizado após ${totalTime}ms`);
-                  console.log(`📊 [CHAT-PROFESSORA] Total: ${tokenCount} tokens, ${chunksSent} chunks enviados`);
-                  controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
-                }
-              } catch (e) {
-                console.warn('⚠️ [CHAT-PROFESSORA] Erro ao parsear JSON (chunk incompleto):', e);
-              }
-            }
-          }
-        } catch (transformError) {
-          console.error('❌ [CHAT-PROFESSORA] Erro no transform:', transformError);
-        }
-      },
-      flush(controller) {
-        // Garantir envio de [DONE] se ainda não foi enviado
-        if (firstTokenReceived && chunksSent > 0) {
-          console.log(`✨ [CHAT-PROFESSORA] Flush: enviando [DONE] final`);
-          controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
-        }
-        
-        if (!firstTokenReceived) {
-          console.error('⚠️ [CHAT-PROFESSORA] Streaming finalizado sem receber nenhum token!');
-          console.error('⚠️ [CHAT-PROFESSORA] Possível problema: API não retornou dados ou CORS bloqueou');
-        } else {
-          console.log(`✨ [CHAT-PROFESSORA] Stream concluído com sucesso: ${tokenCount} tokens, ${chunksSent} chunks`);
-        }
-      }
-    });
-
-    // Retornar o stream processado
-    return new Response(response.body?.pipeThrough(stream), {
+    const apiRequest = new Request("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
       headers: {
-        ...corsHeaders,
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
       },
-    });
-  } catch (error) {
-    console.error('❌ [CHAT-PROFESSORA] Erro fatal:', error);
-    console.error('❌ [CHAT-PROFESSORA] Stack:', error instanceof Error ? error.stack : 'N/A');
-    return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        message: 'Desculpe, ocorreu um erro. Por favor, tente novamente.'
+      body: JSON.stringify({
+        model: "mixtral-8x7b-32768",
+        messages: messagesToSend,
+        stream: false,
+        temperature: 0.7,
       }),
-      {
+    });
+
+    const response = await fetch(apiRequest);
+    if (!response.ok) {
+      console.error('Erro da API Groq:', response.status, response.statusText, await response.text());
+      throw new Error(`Erro na requisição para a API Groq: ${response.status} ${response.statusText}`);
+    }
+
+    const json = await response.json();
+    console.log("Resposta da API Groq:", json);
+
+    const content = json.choices[0].message.content;
+
+    return new Response(JSON.stringify({ data: content }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (error: any) {
+    console.error('Erro no chat-professora:', error);
+    return new Response(
+      JSON.stringify({ error: error?.message || 'Erro desconhecido' }),
+      { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
