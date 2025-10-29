@@ -138,6 +138,7 @@ const BibliotecaEstudos = () => {
         titulo="Biblioteca de Estudos"
         sobre={capa.sobre || "Explore uma vasta coleção de livros organizados por área do Direito. Encontre materiais de estudo essenciais para sua formação jurídica, desde conceitos fundamentais até tópicos avançados. Nossa biblioteca digital oferece acesso rápido e fácil aos melhores conteúdos para estudantes, professores e profissionais do Direito."}
         capaUrl={capa.capa}
+        totalLivros={items?.length}
         onAcessar={() => setMostrarIntro(false)}
       />
     );

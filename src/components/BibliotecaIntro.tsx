@@ -5,12 +5,14 @@ interface BibliotecaIntroProps {
   titulo: string;
   sobre: string;
   capaUrl: string | null;
+  totalLivros?: number;
   onAcessar: () => void;
 }
 export const BibliotecaIntro = ({
   titulo,
   sobre,
   capaUrl,
+  totalLivros,
   onAcessar
 }: BibliotecaIntroProps) => {
   const navigate = useNavigate();
@@ -29,6 +31,11 @@ export const BibliotecaIntro = ({
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
                 {titulo}
               </h1>
+              {totalLivros && (
+                <p className="text-white/90 text-lg md:text-xl font-medium bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg inline-block">
+                  📚 {totalLivros} {totalLivros === 1 ? 'livro disponível' : 'livros disponíveis'}
+                </p>
+              )}
             </div>
           </div>
 
