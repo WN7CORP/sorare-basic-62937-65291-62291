@@ -540,7 +540,32 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
               
               try {
                 const parsed = JSON.parse(trimmed);
-                const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                // Log detalhado para debug (apenas primeiros 3 chunks)
+                if (chunksCount < 3) {
+                  console.log('🔎 RAW LINE:', trimmed.substring(0, 200));
+                  console.log('🔎 PARSED:', JSON.stringify(parsed).substring(0, 300));
+                }
+                
+                // Tentar múltiplos formatos de resposta da Gemini
+                let text = null;
+                
+                // Formato padrão: candidates[0].content.parts[0].text
+                if (parsed.candidates?.[0]?.content?.parts?.[0]?.text) {
+                  text = parsed.candidates[0].content.parts[0].text;
+                }
+                // Formato direto: text
+                else if (parsed.text) {
+                  text = parsed.text;
+                }
+                // Formato aninhado: content.text
+                else if (parsed.content?.text) {
+                  text = parsed.content.text;
+                }
+                // Formato parts direta: parts[0].text
+                else if (parsed.parts?.[0]?.text) {
+                  text = parsed.parts[0].text;
+                }
                 
                 if (text) {
                   if (!firstChunkTime) {
@@ -561,9 +586,14 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
                   if (chunksCount % 10 === 0) {
                     console.log(`📤 ${chunksCount} chunks enviados`);
                   }
+                } else if (chunksCount < 3) {
+                  console.warn('⚠️ Chunk sem texto identificável');
                 }
               } catch (e) {
                 // Ignorar erros de parse de linhas incompletas
+                if (chunksCount < 3) {
+                  console.warn('⚠️ Erro ao parsear linha:', e);
+                }
               }
             }
           }
