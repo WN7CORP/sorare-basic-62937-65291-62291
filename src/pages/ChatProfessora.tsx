@@ -26,6 +26,7 @@ import { toast as sonnerToast } from "sonner";
 import { MessageActionsChat } from "@/components/MessageActionsChat";
 import ChatFlashcardsModal from "@/components/ChatFlashcardsModal";
 import ChatQuestoesModal from "@/components/ChatQuestoesModal";
+import { ThinkingIndicator } from "@/components/chat/ThinkingIndicator";
 import { getDocument, GlobalWorkerOptions, version as pdfjsVersion } from "pdfjs-dist";
 import { motion } from "framer-motion";
 import { SmartLoadingIndicator } from "@/components/chat/SmartLoadingIndicator";
@@ -70,6 +71,9 @@ const ChatProfessora = () => {
   const [currentContent, setCurrentContent] = useState("");
   const [responseLevel, setResponseLevel] = useState<'basic' | 'complete' | 'deep'>('complete');
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
+  const [thinkingStartTime, setThinkingStartTime] = useState<number | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [displayedContent, setDisplayedContent] = useState<Record<number, string>>({});
   
   // Configurar worker do PDF.js uma vez
   useEffect(() => {
@@ -85,6 +89,20 @@ const ChatProfessora = () => {
   
   const [userScrolledUp, setUserScrolledUp] = useState(false);
   const [showNewMessageButton, setShowNewMessageButton] = useState(false);
+
+  // Timer para elapsed time do thinking indicator
+  useEffect(() => {
+    if (!thinkingStartTime || !isLoading) {
+      setElapsedTime(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setElapsedTime(Date.now() - thinkingStartTime);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [thinkingStartTime, isLoading]);
 
   // Detectar se usuário rolou para cima
   useEffect(() => {
@@ -288,6 +306,8 @@ const ChatProfessora = () => {
   const streamResponse = async (userMessage: string, streamMode: 'chat' | 'lesson' = 'chat', filesOverride?: UploadedFile[], extractedText?: string, deepMode: boolean = false, responseLevelOverride?: 'basic' | 'complete' | 'deep') => {
     if (streamMode === 'chat') {
       setIsLoading(true);
+      setThinkingStartTime(Date.now());
+      setElapsedTime(0);
     } else {
       setIsCreatingLesson(true);
     }
@@ -508,9 +528,11 @@ const ChatProfessora = () => {
       });
       
       // Gerar sugestões de perguntas com base na resposta
+      console.log("🎯 Gerando sugestões para resposta:", accumulatedText.substring(0, 100));
       generateSuggestedQuestions(accumulatedText);
       
       setUploadedFiles([]);
+      setThinkingStartTime(null);
       clearInterval(watchdogInterval);
     } catch (error: any) {
       const totalTime = Date.now() - requestStartTime;
@@ -561,6 +583,9 @@ const ChatProfessora = () => {
   const sendMessage = async () => {
     if (!input.trim() && uploadedFiles.length === 0) return;
     
+    // Limpar sugestões anteriores ao enviar nova mensagem
+    setSuggestedQuestions([]);
+    
     // Se estiver no modo recommendation, buscar materiais de forma visual
     if (mode === 'recommendation' && input.trim()) {
       const queryLower = input.toLowerCase();
@@ -584,6 +609,11 @@ const ChatProfessora = () => {
     }
     
     setInput("");
+    
+    // Iniciar timer do thinking indicator
+    setThinkingStartTime(Date.now());
+    setElapsedTime(0);
+    
     await streamResponse(messageText, 'chat');
   };
   const handleCreateLesson = async (content: string) => {
@@ -1547,42 +1577,44 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
               )}
               </div>
             ))}
-            {/* Estado: Pensando (antes de começar a receber resposta) */}
+            {/* Estado: Pensando com indicador multi-fases */}
             {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
               <div className="flex justify-start mb-4 px-4">
-                <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-2 border-purple-400/40 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-lg">
-                  <Brain className="w-6 h-6 text-purple-400 animate-pulse" />
-                  <span className="text-[15px] font-medium text-purple-300">
-                    A professora está pensando...
-                  </span>
-                </div>
+                <ThinkingIndicator elapsedTime={elapsedTime} />
               </div>
             )}
             
-            {/* Sugestões de perguntas */}
-            {!isLoading && suggestedQuestions.length > 0 && messages.length > 0 && messages[messages.length - 1].role === "assistant" && !messages[messages.length - 1].isStreaming && (
-              <div className="space-y-2 pt-4 px-4 animate-in fade-in slide-in-from-bottom-2">
+            {/* Sugestões de perguntas - simplificada sem check de isStreaming */}
+            {!isLoading && suggestedQuestions.length > 0 && messages.length > 0 && messages[messages.length - 1].role === "assistant" && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="space-y-2 pt-4 px-4"
+              >
                 <p className="text-xs text-muted-foreground font-medium">💡 Perguntas sugeridas:</p>
                 <div className="flex flex-col gap-2">
                   {suggestedQuestions.map((pergunta, idx) => (
-                    <button
+                    <motion.button
                       key={idx}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.4 + idx * 0.1 }}
                       onClick={() => {
                         setInput(pergunta);
                         setSuggestedQuestions([]);
-                        // Focar no input após clicar
                         setTimeout(() => {
                           const inputElement = document.querySelector('input[placeholder="Digite sua pergunta..."]') as HTMLInputElement;
                           inputElement?.focus();
                         }, 100);
                       }}
-                      className="text-left text-sm p-3 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors border border-primary/20 hover:border-primary/40"
+                      className="text-left text-sm p-3 rounded-lg bg-primary/5 hover:bg-primary/10 transition-all hover:scale-[1.02] border border-primary/20 hover:border-primary/40"
                     >
                       {pergunta}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             )}
             
             {/* Removido "Gerando..." - usar apenas TypingIndicator */}
