@@ -14,7 +14,7 @@ export const JuriFlixCard = ({ titulo, onClick }: JuriFlixCardProps) => {
 
   return (
     <div
-      className="flex-[0_0_140px] cursor-pointer group"
+      className="flex-[0_0_180px] md:flex-[0_0_200px] cursor-pointer group"
       onClick={onClick}
     >
       <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-secondary mb-2">
