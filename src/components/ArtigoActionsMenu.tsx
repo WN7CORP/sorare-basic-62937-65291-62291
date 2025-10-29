@@ -75,7 +75,7 @@ export const ArtigoActionsMenu = ({
           {article["Narração"] && onPlayNarration && (
             <button
               onClick={() => onPlayNarration(article["Narração"]!)}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
               style={{ animationDelay: '0ms' }}
             >
               <Volume2 className="w-4 h-4" />
@@ -89,7 +89,7 @@ export const ArtigoActionsMenu = ({
                 article["Comentario"]!,
                 `Comentário - Art. ${article["Número do Artigo"]}`
               )}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
               style={{ animationDelay: '50ms' }}
             >
               <MessageSquare className="w-4 h-4" />
@@ -100,7 +100,7 @@ export const ArtigoActionsMenu = ({
           {hasAula && onOpenAula && (
             <button
               onClick={onOpenAula}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
               style={{ animationDelay: '100ms' }}
             >
               <GraduationCap className="w-4 h-4" />
@@ -111,7 +111,7 @@ export const ArtigoActionsMenu = ({
           {onOpenExplicacao && (
             <button
               onClick={() => onOpenExplicacao("explicacao")}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
               style={{ animationDelay: '150ms' }}
             >
               <Lightbulb className="w-4 h-4" />
@@ -122,7 +122,7 @@ export const ArtigoActionsMenu = ({
           {onOpenExplicacao && (
             <button
               onClick={() => onOpenExplicacao("exemplo")}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
               style={{ animationDelay: '200ms' }}
             >
               <BookOpen className="w-4 h-4" />
@@ -134,7 +134,7 @@ export const ArtigoActionsMenu = ({
             <button
               onClick={onGenerateFlashcards}
               disabled={loadingFlashcards}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50 disabled:opacity-50"
               style={{ animationDelay: '250ms' }}
             >
               <Bookmark className="w-4 h-4" />
@@ -145,7 +145,7 @@ export const ArtigoActionsMenu = ({
           {onOpenTermos && (
             <button
               onClick={onOpenTermos}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
               style={{ animationDelay: '300ms' }}
             >
               <BookMarked className="w-4 h-4" />
@@ -156,7 +156,7 @@ export const ArtigoActionsMenu = ({
           {onOpenQuestoes && (
             <button
               onClick={onOpenQuestoes}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
               style={{ animationDelay: '350ms' }}
             >
               <FileQuestion className="w-4 h-4" />
@@ -167,7 +167,7 @@ export const ArtigoActionsMenu = ({
           {onPerguntar && (
             <button
               onClick={onPerguntar}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-secondary/50 hover:bg-secondary text-foreground rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in"
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
               style={{ animationDelay: '400ms' }}
             >
               <MessageSquare className="w-4 h-4" />
