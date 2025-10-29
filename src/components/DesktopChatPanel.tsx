@@ -12,6 +12,72 @@ import remarkGfm from "remark-gfm";
 import { useLocation } from "react-router-dom";
 import { FileUploadModal } from "@/components/FileUploadModal";
 
+// Componentes customizados para renderização de Markdown
+const MarkdownComponents = {
+  h1: ({ children }: any) => (
+    <h1 className="text-lg font-bold text-primary flex items-center gap-2 mb-3 mt-4">
+      <GraduationCap className="w-5 h-5" />
+      {children}
+    </h1>
+  ),
+  h2: ({ children }: any) => (
+    <h2 className="text-base font-semibold text-foreground flex items-center gap-2 mb-2 mt-3">
+      <Lightbulb className="w-4 h-4 text-primary" />
+      {children}
+    </h2>
+  ),
+  h3: ({ children }: any) => (
+    <h3 className="text-sm font-semibold text-foreground mb-2 mt-2">
+      {children}
+    </h3>
+  ),
+  p: ({ children }: any) => (
+    <p className="mb-2 leading-relaxed text-sm">
+      {children}
+    </p>
+  ),
+  ul: ({ children }: any) => (
+    <ul className="list-disc ml-4 space-y-1 mb-2 text-sm">
+      {children}
+    </ul>
+  ),
+  ol: ({ children }: any) => (
+    <ol className="list-decimal ml-4 space-y-1 mb-2 text-sm">
+      {children}
+    </ol>
+  ),
+  li: ({ children }: any) => (
+    <li className="text-sm">
+      {children}
+    </li>
+  ),
+  code: ({ inline, children }: any) => 
+    inline ? (
+      <code className="bg-secondary/80 px-1.5 py-0.5 rounded text-xs font-mono border border-border/50">
+        {children}
+      </code>
+    ) : (
+      <code className="block bg-secondary/80 p-3 rounded-lg text-xs font-mono border border-border/50 my-2 overflow-x-auto">
+        {children}
+      </code>
+    ),
+  blockquote: ({ children }: any) => (
+    <blockquote className="border-l-4 border-primary/50 pl-3 py-1 my-2 bg-primary/5 rounded-r text-sm italic">
+      {children}
+    </blockquote>
+  ),
+  strong: ({ children }: any) => (
+    <strong className="font-bold text-foreground">
+      {children}
+    </strong>
+  ),
+  a: ({ href, children }: any) => (
+    <a href={href} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+      {children}
+    </a>
+  ),
+};
+
 type ChatMode = "study" | "realcase";
 
 interface Message {
@@ -441,15 +507,28 @@ export const DesktopChatPanel = () => {
               >
                 <div
                   className={cn(
-                    "rounded-lg px-3 py-2 max-w-[85%] text-sm",
+                    "rounded-lg px-4 py-3 max-w-[85%]",
                     message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-foreground"
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "bg-card border border-border shadow-sm"
                   )}
                 >
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {message.content}
-                  </ReactMarkdown>
+                  {message.role === "assistant" && (
+                    <div className="flex items-center gap-2 mb-2 pb-2 border-b border-border/50">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                        <GraduationCap className="w-4 h-4 text-primary" />
+                      </div>
+                      <span className="text-xs font-medium text-muted-foreground">Professora</span>
+                    </div>
+                  )}
+                  <div className="prose-sm max-w-none">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={MarkdownComponents}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
             ))}

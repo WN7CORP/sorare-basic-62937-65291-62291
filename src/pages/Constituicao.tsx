@@ -319,6 +319,46 @@ const Constituicao = () => {
                   {filteredArticles.length} {filteredArticles.length === 1 ? 'artigo encontrado' : 'artigos encontrados'}
                 </p>
               )}
+              
+              {/* Controles de Texto e Navegação */}
+              <div className="flex items-center justify-center gap-4 py-3 border-t border-border/50 mt-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Tamanho:</span>
+                  <Button
+                    onClick={decreaseFontSize}
+                    size="sm"
+                    variant="outline"
+                    className="h-7 w-7 p-0"
+                    disabled={fontSize <= 12}
+                  >
+                    <Minus className="w-3 h-3" />
+                  </Button>
+                  <span className="text-xs font-medium text-foreground min-w-[3rem] text-center">
+                    {fontSize}px
+                  </span>
+                  <Button
+                    onClick={increaseFontSize}
+                    size="sm"
+                    variant="outline"
+                    className="h-7 w-7 p-0"
+                    disabled={fontSize >= 24}
+                  >
+                    <Plus className="w-3 h-3" />
+                  </Button>
+                </div>
+                
+                <div className="h-4 w-px bg-border" />
+                
+                <Button
+                  onClick={scrollToTop}
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1.5"
+                >
+                  <ArrowUp className="w-3 h-3" />
+                  <span className="text-xs">Topo</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -365,7 +405,7 @@ const Constituicao = () => {
 
       {/* Content */}
       <div ref={contentRef} className="px-4 max-w-4xl mx-auto pb-0 overflow-y-auto" style={{ 
-        height: activeTab === 'artigos' ? 'calc(100vh - 126px)' : 'calc(100vh - 60px)' 
+        height: activeTab === 'artigos' ? 'calc(100vh - 184px)' : 'calc(100vh - 60px)' 
       }}>
         
         {/* Playlist Tab */}
@@ -512,25 +552,6 @@ const Constituicao = () => {
       })}
           </>
         )}
-      </div>
-
-      {/* Floating Controls - Bottom */}
-      <div className="fixed bottom-4 left-4 flex flex-col gap-2 z-30 animate-fade-in">
-        <button onClick={increaseFontSize} className="bg-gradient-to-br from-accent to-accent/80 hover:scale-110 hover:shadow-xl hover:shadow-accent/30 text-accent-foreground w-10 h-10 rounded-full flex items-center justify-center shadow-lg shadow-accent/20 transition-all">
-          <Plus className="w-4 h-4" />
-        </button>
-        <button onClick={decreaseFontSize} className="bg-gradient-to-br from-accent to-accent/80 hover:scale-110 hover:shadow-xl hover:shadow-accent/30 text-accent-foreground w-10 h-10 rounded-full flex items-center justify-center shadow-lg shadow-accent/20 transition-all">
-          <Minus className="w-4 h-4" />
-        </button>
-        <div className="bg-card border border-border text-foreground text-xs font-medium px-2 py-1.5 rounded-full text-center shadow-lg">
-          {fontSize}px
-        </div>
-      </div>
-
-      <div className="fixed bottom-6 right-4 z-30 animate-fade-in">
-        <button onClick={scrollToTop} className="bg-gradient-to-br from-accent to-accent/80 hover:scale-110 hover:shadow-xl hover:shadow-accent/30 text-accent-foreground w-12 h-12 rounded-full flex items-center justify-center shadow-lg shadow-accent/20 transition-all">
-          <ArrowUp className="w-5 h-5" />
-        </button>
       </div>
     </div>;
 };
