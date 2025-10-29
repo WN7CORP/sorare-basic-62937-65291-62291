@@ -163,7 +163,7 @@ const MeuBrasilInstituicoes = () => {
         {filteredInstituicoes.map((item) => (
           <button
             key={item.sigla}
-            onClick={() => navigate(`/meu-brasil/artigo/${encodeURIComponent(item.nome)}`)}
+            onClick={() => navigate(`/meu-brasil/instituicao/${encodeURIComponent(item.nome)}`)}
             className="bg-card border border-border rounded-lg p-4 text-left hover:border-primary hover:shadow-md transition-all group"
           >
             <div className="flex flex-col items-center text-center gap-3">

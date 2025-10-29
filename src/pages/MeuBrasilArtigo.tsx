@@ -16,7 +16,11 @@ const MeuBrasilArtigo = () => {
   const categoria = location.pathname.includes('/sistema/') 
     ? 'sistema' 
     : location.pathname.includes('/caso/') 
-    ? 'caso' 
+    ? 'caso'
+    : location.pathname.includes('/instituicao/')
+    ? 'instituicao'
+    : location.pathname.includes('/jurista/')
+    ? 'jurista'
     : 'artigo';
 
   return (

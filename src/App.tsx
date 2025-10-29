@@ -300,6 +300,7 @@ const App = () => {
               <Route path="/meu-brasil/juristas" element={<MeuBrasilJuristas />} />
               <Route path="/meu-brasil/jurista/:nome" element={<MeuBrasilJuristaView />} />
               <Route path="/meu-brasil/instituicoes" element={<MeuBrasilInstituicoes />} />
+              <Route path="/meu-brasil/instituicao/:titulo" element={<MeuBrasilArtigo />} />
               <Route path="/meu-brasil/casos" element={<MeuBrasilCasos />} />
               <Route path="/meu-brasil/busca" element={<MeuBrasilBusca />} />
               <Route path="/meu-brasil/artigo/:titulo" element={<MeuBrasilArtigo />} />

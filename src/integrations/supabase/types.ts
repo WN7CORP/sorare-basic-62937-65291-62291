@@ -2698,6 +2698,7 @@ export type Database = {
           created_at: string | null
           id: number
           imagens: Json | null
+          links_relacionados: Json | null
           logo_url: string | null
           nome: string
           sigla: string | null
@@ -2710,6 +2711,7 @@ export type Database = {
           created_at?: string | null
           id?: number
           imagens?: Json | null
+          links_relacionados?: Json | null
           logo_url?: string | null
           nome: string
           sigla?: string | null
@@ -2722,6 +2724,7 @@ export type Database = {
           created_at?: string | null
           id?: number
           imagens?: Json | null
+          links_relacionados?: Json | null
           logo_url?: string | null
           nome?: string
           sigla?: string | null

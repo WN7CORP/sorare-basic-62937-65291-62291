@@ -342,8 +342,8 @@ Deno.serve(async (req) => {
         links_relacionados
       };
 
-      // 🆕 ENRIQUECER AUTOMATICAMENTE COM GEMINI para casos e sistemas
-      if (categoria === 'caso' || categoria === 'sistema') {
+      // 🆕 ENRIQUECER AUTOMATICAMENTE COM GEMINI para casos, sistemas e instituições
+      if (categoria === 'caso' || categoria === 'sistema' || categoria === 'instituicao') {
         console.log(`Enriquecendo automaticamente com Gemini: ${categoria} - ${finalTitulo}`);
         
         try {
@@ -365,7 +365,12 @@ Deno.serve(async (req) => {
             
             if (enrichData.success && enrichData.conteudo_melhorado) {
               // Salvar na tabela específica
-              const tableName = categoria === 'caso' ? 'meu_brasil_casos' : 'meu_brasil_sistemas';
+              const tableName = categoria === 'caso' 
+                ? 'meu_brasil_casos' 
+                : categoria === 'sistema' 
+                ? 'meu_brasil_sistemas'
+                : 'meu_brasil_instituicoes';
+              
               const dataToSave: any = {
                 nome: finalTitulo,
                 conteudo_melhorado: enrichData.conteudo_melhorado,
@@ -378,6 +383,37 @@ Deno.serve(async (req) => {
                 dataToSave.pais = finalTitulo.replace('Direito de ', '').replace('Direito do ', '');
                 if (imagens[0]) {
                   dataToSave.bandeira_url = imagens[0];
+                }
+              } else if (categoria === 'instituicao') {
+                // Extrair sigla (ex: "STJ" de "Superior Tribunal de Justiça")
+                const siglas: Record<string, string> = {
+                  'Supremo Tribunal Federal': 'STF',
+                  'Superior Tribunal de Justiça': 'STJ',
+                  'Tribunal Superior do Trabalho': 'TST',
+                  'Tribunal Superior Eleitoral': 'TSE',
+                  'Superior Tribunal Militar': 'STM',
+                  'Conselho Nacional de Justiça': 'CNJ',
+                  'Ordem dos Advogados do Brasil': 'OAB',
+                  'Ministério Público Federal': 'MPF',
+                  'Defensoria Pública da União': 'DPU'
+                };
+                dataToSave.sigla = siglas[finalTitulo] || '';
+                
+                // Identificar tipo
+                if (finalTitulo.includes('Tribunal')) {
+                  dataToSave.tipo = 'Tribunal';
+                } else if (finalTitulo.includes('Conselho')) {
+                  dataToSave.tipo = 'Órgão de Controle';
+                } else if (finalTitulo.includes('Ministério Público')) {
+                  dataToSave.tipo = 'Ministério Público';
+                } else if (finalTitulo.includes('Defensoria')) {
+                  dataToSave.tipo = 'Defensoria';
+                } else {
+                  dataToSave.tipo = 'Instituição';
+                }
+                
+                if (imagens[0]) {
+                  dataToSave.logo_url = imagens[0];
                 }
               }
 
