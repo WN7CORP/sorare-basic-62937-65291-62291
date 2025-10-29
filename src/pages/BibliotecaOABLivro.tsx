@@ -60,11 +60,13 @@ const BibliotecaOABLivro = () => {
         <div className="flex flex-col items-center">
           <div className="w-56 md:w-72 mb-8 rounded-xl overflow-hidden shadow-2xl hover:shadow-accent/50 transition-shadow duration-300">
             {livro["Capa-livro"] ? (
-              <img
-                src={livro["Capa-livro"]}
-                alt={livro.Tema || ""}
-                className="w-full h-full object-contain rounded-xl"
-              />
+              <div className="w-full aspect-[2/3]">
+                <img
+                  src={livro["Capa-livro"]}
+                  alt={livro.Tema || ""}
+                  className="w-full h-full object-cover rounded-xl"
+                />
+              </div>
             ) : (
               <div className="w-full aspect-[2/3] bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center">
                 <BookOpen className="w-24 h-24 text-accent/50" />
