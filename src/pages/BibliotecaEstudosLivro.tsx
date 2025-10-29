@@ -2,11 +2,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, BookOpen, Monitor, Video } from "lucide-react";
+import { Loader2, BookOpen } from "lucide-react";
 import { useState } from "react";
 import PDFViewerModal from "@/components/PDFViewerModal";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import VideoPlayer from "@/components/VideoPlayer";
+import { BibliotecaLivroTabs } from "@/components/BibliotecaLivroTabs";
 
 const BibliotecaEstudosLivro = () => {
   const { livroId } = useParams();
@@ -95,92 +94,14 @@ const BibliotecaEstudosLivro = () => {
               </div>
             )}
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 mb-6">
-                <TabsTrigger value="sobre">Sobre</TabsTrigger>
-                <TabsTrigger value="aula" disabled={!livro.aula}>Aula</TabsTrigger>
-                <TabsTrigger value="desktop">Desktop</TabsTrigger>
-                <TabsTrigger value="download" disabled={!livro.Download}>Download</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="sobre">
-                {livro.Sobre && (
-                  <div className="text-left bg-card/50 backdrop-blur-sm rounded-xl p-6 border border-accent/20">
-                    <h2 className="text-xl font-semibold mb-4">Sobre o livro</h2>
-                    <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                      {livro.Sobre}
-                    </p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="aula">
-                {livro.aula && (
-                  <div className="bg-card/50 backdrop-blur-sm rounded-xl overflow-hidden border border-accent/20">
-                    <div className="aspect-video">
-                      <VideoPlayer src={livro.aula} autoPlay={false} />
-                    </div>
-                    <div className="p-6">
-                      <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
-                        <Video className="w-5 h-5" />
-                        Videoaula sobre {livro.Tema}
-                      </h2>
-                      <p className="text-muted-foreground">
-                        Assista à aula completa sobre este material
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="desktop">
-                <div className="text-center bg-card/50 backdrop-blur-sm rounded-xl p-8 border border-accent/20">
-                  <Monitor className="w-16 h-16 mx-auto mb-4 text-accent" />
-                  <h2 className="text-xl font-semibold mb-4">Acesso Desktop</h2>
-                  <p className="text-muted-foreground mb-6">
-                    Leia este livro diretamente no seu computador através do nosso sistema desktop
-                  </p>
-                  <Button
-                    onClick={() => navigate("/acesso-desktop")}
-                    size="lg"
-                    className="min-w-[200px]"
-                  >
-                    <Monitor className="w-5 h-5 mr-2" />
-                    Acessar Desktop
-                  </Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="download">
-                <div className="text-center bg-card/50 backdrop-blur-sm rounded-xl p-8 border border-accent/20">
-                  {livro.Download ? (
-                    <>
-                      <Download className="w-16 h-16 mx-auto mb-4 text-accent" />
-                      <h2 className="text-xl font-semibold mb-4">Download do Livro</h2>
-                      <p className="text-muted-foreground mb-6">
-                        Faça o download do livro para ler offline
-                      </p>
-                      <Button
-                        onClick={() => window.open(livro.Download!, "_blank")}
-                        size="lg"
-                        className="min-w-[200px]"
-                      >
-                        <Download className="w-5 h-5 mr-2" />
-                        Baixar Agora
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                      <h2 className="text-xl font-semibold mb-4">Em breve</h2>
-                      <p className="text-muted-foreground">
-                        Download estará disponível em breve
-                      </p>
-                    </>
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
+            <BibliotecaLivroTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              sobre={livro.Sobre}
+              aulaUrl={livro.aula}
+              downloadUrl={livro.Download}
+              livroTitulo={livro.Tema}
+            />
           </div>
         </div>
       </div>
