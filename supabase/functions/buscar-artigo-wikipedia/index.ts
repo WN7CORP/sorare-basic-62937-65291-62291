@@ -342,6 +342,90 @@ Deno.serve(async (req) => {
         links_relacionados
       };
 
+      // 🆕 ENRIQUECER AUTOMATICAMENTE COM GEMINI para casos e sistemas
+      if (categoria === 'caso' || categoria === 'sistema') {
+        console.log(`Enriquecendo automaticamente com Gemini: ${categoria} - ${finalTitulo}`);
+        
+        try {
+          const enrichResponse = await fetch(`${supabaseUrl}/functions/v1/enriquecer-conteudo-meu-brasil`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              tipo: categoria,
+              nome: finalTitulo,
+              conteudo_original: article
+            })
+          });
+
+          if (enrichResponse.ok) {
+            const enrichData = await enrichResponse.json();
+            
+            if (enrichData.success && enrichData.conteudo_melhorado) {
+              // Salvar na tabela específica
+              const tableName = categoria === 'caso' ? 'meu_brasil_casos' : 'meu_brasil_sistemas';
+              const dataToSave: any = {
+                nome: finalTitulo,
+                conteudo_melhorado: enrichData.conteudo_melhorado,
+                imagens,
+                links_relacionados,
+                updated_at: new Date().toISOString()
+              };
+
+              if (categoria === 'sistema') {
+                dataToSave.pais = finalTitulo.replace('Direito de ', '').replace('Direito do ', '');
+                if (imagens[0]) {
+                  dataToSave.bandeira_url = imagens[0];
+                }
+              }
+
+              await supabase.from(tableName as any).upsert(dataToSave);
+
+              console.log('Conteúdo enriquecido e salvo com sucesso');
+
+              // Registrar histórico antes de retornar
+              const authHeader = req.headers.get('Authorization');
+              if (authHeader && categoria) {
+                try {
+                  const token = authHeader.replace('Bearer ', '');
+                  const { data: { user } } = await supabase.auth.getUser(token);
+                  
+                  if (user) {
+                    await supabase.from('wikipedia_historico').insert({
+                      user_id: user.id,
+                      titulo: finalTitulo,
+                      categoria
+                    });
+                  }
+                } catch (e) {
+                  console.log('Erro ao registrar histórico');
+                }
+              }
+
+              // Retornar conteúdo enriquecido
+              return new Response(
+                JSON.stringify({
+                  titulo: finalTitulo,
+                  conteudo: enrichData.conteudo_melhorado.resumo_executivo || article.conteudo,
+                  html: article.html,
+                  imagens,
+                  links_relacionados,
+                  conteudo_completo: enrichData.conteudo_melhorado
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              );
+            }
+          } else {
+            console.error('Erro ao enriquecer:', await enrichResponse.text());
+          }
+        } catch (enrichError) {
+          console.error('Erro ao enriquecer conteúdo:', enrichError);
+          // Continuar com o artigo não enriquecido
+        }
+      }
+
       // Salvar no cache
       await supabase.from('wikipedia_cache').upsert({
         titulo,
