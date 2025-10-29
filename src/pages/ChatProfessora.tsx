@@ -69,6 +69,7 @@ const ChatProfessora = () => {
   const [showQuestoesModal, setShowQuestoesModal] = useState(false);
   const [currentContent, setCurrentContent] = useState("");
   const [responseLevel, setResponseLevel] = useState<'basic' | 'complete' | 'deep'>('complete');
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   
   // Configurar worker do PDF.js uma vez
   useEffect(() => {
@@ -505,6 +506,10 @@ const ChatProfessora = () => {
         };
         return newMessages;
       });
+      
+      // Gerar sugestões de perguntas com base na resposta
+      generateSuggestedQuestions(accumulatedText);
+      
       setUploadedFiles([]);
       clearInterval(watchdogInterval);
     } catch (error: any) {
@@ -601,6 +606,42 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
   const handleGenerateQuestions = (content: string) => {
     setCurrentContent(content);
     setShowQuestoesModal(true);
+  };
+  
+  const generateSuggestedQuestions = (response: string) => {
+    // Gerar 3-4 perguntas baseadas na resposta
+    const suggestions: string[] = [];
+    
+    if (response.toLowerCase().includes("direito") || response.toLowerCase().includes("lei")) {
+      suggestions.push("Pode explicar mais sobre esse conceito?");
+    }
+    if (response.toLowerCase().includes("artigo") || response.toLowerCase().includes("código")) {
+      suggestions.push("Quais são as aplicações práticas disso?");
+    }
+    if (response.toLowerCase().includes("jurisprudência") || response.toLowerCase().includes("stf") || response.toLowerCase().includes("stj")) {
+      suggestions.push("Há casos famosos relacionados?");
+    }
+    if (response.toLowerCase().includes("exemplo") || response.toLowerCase().includes("prática")) {
+      suggestions.push("Pode trazer mais exemplos práticos?");
+    }
+    
+    // Adicionar perguntas genéricas se necessário
+    if (suggestions.length < 4) {
+      const genericQuestions = [
+        "Como isso se relaciona com outros temas?",
+        "Pode dar um exemplo do dia a dia?",
+        "Quais são as exceções ou casos especiais?",
+        "Como isso é cobrado em provas?"
+      ];
+      
+      genericQuestions.forEach(q => {
+        if (suggestions.length < 4) {
+          suggestions.push(q);
+        }
+      });
+    }
+    
+    setSuggestedQuestions(suggestions.slice(0, 4));
   };
 
   // Função para renderizar conteúdo com links clicáveis
@@ -1518,6 +1559,32 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
               </div>
             )}
             
+            {/* Sugestões de perguntas */}
+            {!isLoading && suggestedQuestions.length > 0 && messages.length > 0 && messages[messages.length - 1].role === "assistant" && !messages[messages.length - 1].isStreaming && (
+              <div className="space-y-2 pt-4 px-4 animate-in fade-in slide-in-from-bottom-2">
+                <p className="text-xs text-muted-foreground font-medium">💡 Perguntas sugeridas:</p>
+                <div className="flex flex-col gap-2">
+                  {suggestedQuestions.map((pergunta, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setInput(pergunta);
+                        setSuggestedQuestions([]);
+                        // Focar no input após clicar
+                        setTimeout(() => {
+                          const inputElement = document.querySelector('input[placeholder="Digite sua pergunta..."]') as HTMLInputElement;
+                          inputElement?.focus();
+                        }, 100);
+                      }}
+                      className="text-left text-sm p-3 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors border border-primary/20 hover:border-primary/40"
+                    >
+                      {pergunta}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             {/* Removido "Gerando..." - usar apenas TypingIndicator */}
           </>}
         </ScrollArea>
@@ -1575,6 +1642,19 @@ Seja mais detalhado, traga exemplos práticos, jurisprudências relevantes e an�
           </div>
         </div>
       </div>
+      
+      {/* Modais */}
+      <ChatFlashcardsModal
+        isOpen={showFlashcardsModal}
+        onClose={() => setShowFlashcardsModal(false)}
+        content={currentContent}
+      />
+      
+      <ChatQuestoesModal
+        isOpen={showQuestoesModal}
+        onClose={() => setShowQuestoesModal(false)}
+        content={currentContent}
+      />
     </div>;
 };
 export default ChatProfessora;
