@@ -414,32 +414,54 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
 
     const apiKey = Math.random() < 0.5 ? DIREITO_PREMIUM_API_KEY : DIREITO_PREMIUM_API_KEY_RESERVA;
 
-    const messagesToSend: any[] = [{ "role": "system", "content": systemPrompt }, ...messages];
+    // Preparar mensagens no formato do Gemini
+    const geminiContents: any[] = [];
+    
+    // Adicionar system prompt como primeira mensagem do usuário
+    geminiContents.push({
+      role: "user",
+      parts: [{ text: systemPrompt }]
+    });
+    
+    geminiContents.push({
+      role: "model",
+      parts: [{ text: "Entendido. Estou pronta para ajudar com suas dúvidas jurídicas seguindo essas diretrizes." }]
+    });
+    
+    // Adicionar as mensagens da conversa
+    for (const msg of messages) {
+      geminiContents.push({
+        role: msg.role === "assistant" ? "model" : "user",
+        parts: [{ text: msg.content }]
+      });
+    }
 
-    const apiRequest = new Request("https://api.groq.com/openai/v1/chat/completions", {
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+    
+    const apiRequest = new Request(apiUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "mixtral-8x7b-32768",
-        messages: messagesToSend,
-        stream: false,
-        temperature: 0.7,
+        contents: geminiContents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 8192,
+        }
       }),
     });
 
     const response = await fetch(apiRequest);
     if (!response.ok) {
-      console.error('Erro da API Groq:', response.status, response.statusText, await response.text());
-      throw new Error(`Erro na requisição para a API Groq: ${response.status} ${response.statusText}`);
+      console.error('Erro da API Gemini:', response.status, response.statusText, await response.text());
+      throw new Error(`Erro na requisição para a API Gemini: ${response.status} ${response.statusText}`);
     }
 
     const json = await response.json();
-    console.log("Resposta da API Groq:", json);
+    console.log("Resposta da API Gemini:", json);
 
-    const content = json.choices[0].message.content;
+    const content = json.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui gerar uma resposta.";
 
     return new Response(JSON.stringify({ data: content }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
