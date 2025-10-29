@@ -8,7 +8,8 @@ import {
   BookMarked, 
   FileQuestion, 
   Sparkles,
-  ChevronDown 
+  ChevronDown,
+  Share2
 } from "lucide-react";
 import {
   Collapsible,
@@ -36,6 +37,7 @@ interface ArtigoActionsMenuProps {
   onOpenTermos?: () => void;
   onOpenQuestoes?: () => void;
   onPerguntar?: () => void;
+  onShareWhatsApp?: () => void;
   loadingFlashcards?: boolean;
   isCommentPlaying?: boolean;
 }
@@ -50,11 +52,11 @@ export const ArtigoActionsMenu = ({
   onOpenTermos,
   onOpenQuestoes,
   onPerguntar,
+  onShareWhatsApp,
   loadingFlashcards = false,
   isCommentPlaying = false,
 }: ArtigoActionsMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const hasAudio = article["Narração"] || article["Comentario"];
   const hasAula = article["Aula"];
 
   return (
@@ -72,17 +74,68 @@ export const ArtigoActionsMenu = ({
       
       <CollapsibleContent className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
         <div className="pt-3 grid grid-cols-2 gap-2">
-          {article["Narração"] && onPlayNarration && (
+          {/* Explicar */}
+          {onOpenExplicacao && (
             <button
-              onClick={() => onPlayNarration(article["Narração"]!)}
+              onClick={() => onOpenExplicacao("explicacao")}
               className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
               style={{ animationDelay: '0ms' }}
             >
-              <Volume2 className="w-4 h-4" />
-              <span>Narração</span>
+              <Lightbulb className="w-4 h-4" />
+              <span>Explicar</span>
             </button>
           )}
 
+          {/* Exemplo */}
+          {onOpenExplicacao && (
+            <button
+              onClick={() => onOpenExplicacao("exemplo")}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
+              style={{ animationDelay: '50ms' }}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Exemplo</span>
+            </button>
+          )}
+
+          {/* Termos */}
+          {onOpenTermos && (
+            <button
+              onClick={onOpenTermos}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
+              style={{ animationDelay: '100ms' }}
+            >
+              <BookMarked className="w-4 h-4" />
+              <span>Termos</span>
+            </button>
+          )}
+
+          {/* Questões */}
+          {onOpenQuestoes && (
+            <button
+              onClick={onOpenQuestoes}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
+              style={{ animationDelay: '150ms' }}
+            >
+              <FileQuestion className="w-4 h-4" />
+              <span>Questões</span>
+            </button>
+          )}
+
+          {/* Flashcards */}
+          {onGenerateFlashcards && (
+            <button
+              onClick={onGenerateFlashcards}
+              disabled={loadingFlashcards}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50 disabled:opacity-50"
+              style={{ animationDelay: '200ms' }}
+            >
+              <Bookmark className="w-4 h-4" />
+              <span>{loadingFlashcards ? "Gerando..." : "Flashcards"}</span>
+            </button>
+          )}
+
+          {/* Comentário */}
           {article["Comentario"] && onPlayComment && (
             <button
               onClick={() => onPlayComment(
@@ -90,88 +143,46 @@ export const ArtigoActionsMenu = ({
                 `Comentário - Art. ${article["Número do Artigo"]}`
               )}
               className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
-              style={{ animationDelay: '50ms' }}
+              style={{ animationDelay: '6250ms' }}
             >
               <MessageSquare className="w-4 h-4" />
               <span>Comentário</span>
             </button>
           )}
 
+          {/* Aula (se disponível) */}
           {hasAula && onOpenAula && (
             <button
               onClick={onOpenAula}
               className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
-              style={{ animationDelay: '100ms' }}
+              style={{ animationDelay: '6300ms' }}
             >
               <GraduationCap className="w-4 h-4" />
               <span>Aula</span>
             </button>
           )}
 
-          {onOpenExplicacao && (
-            <button
-              onClick={() => onOpenExplicacao("explicacao")}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
-              style={{ animationDelay: '150ms' }}
-            >
-              <Lightbulb className="w-4 h-4" />
-              <span>Explicar</span>
-            </button>
-          )}
-
-          {onOpenExplicacao && (
-            <button
-              onClick={() => onOpenExplicacao("exemplo")}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
-              style={{ animationDelay: '200ms' }}
-            >
-              <BookOpen className="w-4 h-4" />
-              <span>Exemplo</span>
-            </button>
-          )}
-
-          {onGenerateFlashcards && (
-            <button
-              onClick={onGenerateFlashcards}
-              disabled={loadingFlashcards}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50 disabled:opacity-50"
-              style={{ animationDelay: '250ms' }}
-            >
-              <Bookmark className="w-4 h-4" />
-              <span>{loadingFlashcards ? "Gerando..." : "Flashcards"}</span>
-            </button>
-          )}
-
-          {onOpenTermos && (
-            <button
-              onClick={onOpenTermos}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
-              style={{ animationDelay: '300ms' }}
-            >
-              <BookMarked className="w-4 h-4" />
-              <span>Termos</span>
-            </button>
-          )}
-
-          {onOpenQuestoes && (
-            <button
-              onClick={onOpenQuestoes}
-              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
-              style={{ animationDelay: '350ms' }}
-            >
-              <FileQuestion className="w-4 h-4" />
-              <span>Questões</span>
-            </button>
-          )}
-
+          {/* Perguntar */}
           {onPerguntar && (
             <button
               onClick={onPerguntar}
               className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
-              style={{ animationDelay: '400ms' }}
+              style={{ animationDelay: '6350ms' }}
             >
               <MessageSquare className="w-4 h-4" />
               <span>Perguntar</span>
+            </button>
+          )}
+
+          {/* WhatsApp - último */}
+          {onShareWhatsApp && (
+            <button
+              onClick={onShareWhatsApp}
+              className="flex items-center justify-center gap-2 px-3 py-2.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all text-sm font-medium hover:scale-[1.02] animate-fade-in shadow-lg shadow-black/50"
+              style={{ animationDelay: '6400ms' }}
+            >
+              <Share2 className="w-4 h-4" />
+              <span>WhatsApp</span>
             </button>
           )}
         </div>

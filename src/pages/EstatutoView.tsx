@@ -1,17 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Search, MessageSquare, GraduationCap, Lightbulb, BookOpen, Bookmark, Plus, Minus, ArrowUp, BookMarked, FileQuestion, ChevronDown, X } from "lucide-react";
+import { ArrowLeft, Search, MessageSquare, GraduationCap, Lightbulb, BookOpen, Bookmark, Plus, Minus, ArrowUp, BookMarked, FileQuestion, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllRows } from "@/lib/fetchAllRows";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import InlineAudioButton from "@/components/InlineAudioButton";
 import AudioCommentButton from "@/components/AudioCommentButton";
 import StickyAudioPlayer from "@/components/StickyAudioPlayer";
@@ -27,6 +21,7 @@ import { VadeMecumTabs } from "@/components/VadeMecumTabs";
 import { VadeMecumPlaylist } from "@/components/VadeMecumPlaylist";
 import { VadeMecumRanking } from "@/components/VadeMecumRanking";
 import { ArtigoActionsMenu } from "@/components/ArtigoActionsMenu";
+import { formatForWhatsApp } from "@/lib/formatWhatsApp";
 
 interface Article {
   id: number;
@@ -495,10 +490,11 @@ const EstatutoView = () => {
                   animationFillMode: 'backwards'
                 }}
               >
-                {/* Copy Button */}
+                {/* Narration Button */}
                 <CopyButton 
                   text={article["Artigo"] || ""}
                   articleNumber={article["Número do Artigo"] || ""}
+                  narrationUrl={article["Narração"] || undefined}
                 />
                 
                 <h2 className="text-accent font-bold text-xl md:text-2xl mb-3 animate-scale-in">
@@ -520,10 +516,6 @@ const EstatutoView = () => {
                 <div className="animate-fade-in">
                   <ArtigoActionsMenu
                     article={article}
-                    onPlayNarration={(audioUrl) => {
-                      const audio = new Audio(audioUrl);
-                      audio.play();
-                    }}
                     onPlayComment={handlePlayComment}
                     onOpenAula={() => handleOpenAula(article)}
                     onOpenExplicacao={(tipo) => handleOpenExplicacao(article["Artigo"] || "", article["Número do Artigo"] || "", tipo)}
@@ -548,6 +540,13 @@ const EstatutoView = () => {
                         numeroArtigo: article["Número do Artigo"] || "" 
                       });
                       setPerguntaModalOpen(true);
+                    }}
+                    onShareWhatsApp={() => {
+                      const fullText = `*Art. ${article["Número do Artigo"]}*\n\n${article["Artigo"]}`;
+                      const formattedText = formatForWhatsApp(fullText);
+                      const encodedText = encodeURIComponent(formattedText);
+                      const whatsappUrl = `https://wa.me/?text=${encodedText}`;
+                      window.open(whatsappUrl, '_blank');
                     }}
                     loadingFlashcards={loadingFlashcards}
                     isCommentPlaying={currentAudio.url === article["Comentario"] && stickyPlayerOpen}

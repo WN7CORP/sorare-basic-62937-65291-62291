@@ -22,6 +22,7 @@ import { VadeMecumPlaylist } from "@/components/VadeMecumPlaylist";
 import { VadeMecumRanking } from "@/components/VadeMecumRanking";
 import { useArticleTracking } from "@/hooks/useArticleTracking";
 import { ArtigoActionsMenu } from "@/components/ArtigoActionsMenu";
+import { formatForWhatsApp } from "@/lib/formatWhatsApp";
 interface Article {
   id: number;
   "Número do Artigo": string | null;
@@ -540,10 +541,11 @@ const CodigoView = () => {
             animationDelay: `${index * 0.05}s`,
             animationFillMode: 'backwards'
           }}>
-                {/* Copy Button */}
+                {/* Narration Button */}
                 <CopyButton 
                   text={article["Artigo"] || ""}
                   articleNumber={article["Número do Artigo"] || ""}
+                  narrationUrl={article["Narração"] || undefined}
                 />
                 
                 {/* Article Header */}
@@ -567,11 +569,6 @@ const CodigoView = () => {
                 <div className="mb-4 animate-fade-in">
                   <ArtigoActionsMenu
                     article={article}
-                    onPlayNarration={(audioUrl) => {
-                      // Usar o InlineAudioButton internamente para manter a funcionalidade
-                      const audio = new Audio(audioUrl);
-                      audio.play();
-                    }}
                     onPlayComment={handlePlayComment}
                     onOpenAula={() => handleOpenAula(article)}
                     onOpenExplicacao={(tipo) => handleOpenExplicacao(article["Artigo"]!, article["Número do Artigo"]!, tipo)}
@@ -587,6 +584,13 @@ const CodigoView = () => {
                     onPerguntar={() => {
                       setPerguntaData({ artigo: article["Artigo"]!, numeroArtigo: article["Número do Artigo"]! });
                       setPerguntaModalOpen(true);
+                    }}
+                    onShareWhatsApp={() => {
+                      const fullText = `*Art. ${article["Número do Artigo"]}*\n\n${article["Artigo"]}`;
+                      const formattedText = formatForWhatsApp(fullText);
+                      const encodedText = encodeURIComponent(formattedText);
+                      const whatsappUrl = `https://wa.me/?text=${encodedText}`;
+                      window.open(whatsappUrl, '_blank');
                     }}
                     loadingFlashcards={loadingFlashcards}
                     isCommentPlaying={stickyPlayerOpen && currentAudio.isComment && currentAudio.title.includes(article["Número do Artigo"]!)}
