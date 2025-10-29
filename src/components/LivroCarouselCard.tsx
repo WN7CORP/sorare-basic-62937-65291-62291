@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Card } from "@/components/ui/card";
 
 interface LivroCarouselCardProps {
@@ -7,7 +8,7 @@ interface LivroCarouselCardProps {
   numero?: number;
 }
 
-export const LivroCarouselCard = ({ titulo, capaUrl, onClick, numero }: LivroCarouselCardProps) => {
+export const LivroCarouselCard = memo(({ titulo, capaUrl, onClick, numero }: LivroCarouselCardProps) => {
   return (
     <Card
       onClick={onClick}
@@ -27,6 +28,7 @@ export const LivroCarouselCard = ({ titulo, capaUrl, onClick, numero }: LivroCar
             alt={titulo}
             className="absolute inset-0 w-full h-full object-cover"
             loading="lazy"
+            decoding="async"
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).style.display = "none";
             }}
@@ -49,4 +51,11 @@ export const LivroCarouselCard = ({ titulo, capaUrl, onClick, numero }: LivroCar
       </div>
     </Card>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison para evitar re-renders desnecessários
+  return (
+    prevProps.titulo === nextProps.titulo &&
+    prevProps.capaUrl === nextProps.capaUrl &&
+    prevProps.numero === nextProps.numero
+  );
+});

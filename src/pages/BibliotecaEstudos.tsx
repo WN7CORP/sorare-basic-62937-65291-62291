@@ -9,6 +9,8 @@ import { AreaLivrosCarousel } from "@/components/AreaLivrosCarousel";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/useDebounce";
+import { fetchAllRows } from "@/lib/fetchAllRows";
 interface BibliotecaItem {
   id: number;
   Área: string | null;
@@ -25,6 +27,7 @@ const BibliotecaEstudos = () => {
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [mostrarIntro, setMostrarIntro] = useState(true);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   const { data: capa } = useQuery({
     queryKey: ["capa-biblioteca-estudos"],
@@ -46,25 +49,22 @@ const BibliotecaEstudos = () => {
   } = useQuery({
     queryKey: ["biblioteca-estudos"],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from("BIBLIOTECA-ESTUDOS").select("*").order("Ordem", {
-        ascending: true
-      });
-      if (error) throw error;
-      return data as BibliotecaItem[];
-    }
+      const data = await fetchAllRows<BibliotecaItem>("BIBLIOTECA-ESTUDOS", "Ordem");
+      return data;
+    },
+    staleTime: 1000 * 60 * 60, // 1 hora
+    gcTime: 1000 * 60 * 60 * 24, // 24 horas
   });
 
-  // Agrupar por área com useMemo para otimização
+  // Agrupar por área com useMemo e limitar para carrossel
   const areaGroups = useMemo(() => {
     return items?.reduce((acc, item) => {
       const area = item.Área || "Sem Área";
       if (!acc[area]) {
         acc[area] = {
           capa: item["Capa-area"],
-          livros: []
+          livros: [],
+          livrosCarrossel: []
         };
       }
       acc[area].livros.push(item);
@@ -72,21 +72,36 @@ const BibliotecaEstudos = () => {
     }, {} as Record<string, {
       capa: string | null;
       livros: BibliotecaItem[];
+      livrosCarrossel: BibliotecaItem[];
     }>);
   }, [items]);
+
+  // Criar versão limitada para carrosséis (performance)
+  const areaGroupsWithLimit = useMemo(() => {
+    if (!areaGroups) return areaGroups;
+    
+    const limited = { ...areaGroups };
+    Object.keys(limited).forEach(area => {
+      limited[area] = {
+        ...limited[area],
+        livrosCarrossel: limited[area].livros.slice(0, 20) // Apenas primeiros 20
+      };
+    });
+    return limited;
+  }, [areaGroups]);
 
   // Função para remover acentuação
   const removerAcentuacao = (texto: string) => {
     return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   };
 
-  // Filtrar áreas e livros com useMemo - DEVE vir ANTES dos returns condicionais
+  // Filtrar áreas e livros com useMemo (usando debounced search)
   const areasFiltradas = useMemo(() => {
-    if (!areaGroups) return [];
+    if (!areaGroupsWithLimit) return [];
     
-    const searchLower = removerAcentuacao(searchTerm.toLowerCase());
+    const searchLower = removerAcentuacao(debouncedSearch.toLowerCase());
     
-    return Object.entries(areaGroups)
+    return Object.entries(areaGroupsWithLimit)
       .map(([area, data]) => {
         // Filtrar livros que correspondem à busca (sem acentuação)
         const livrosFiltrados = data.livros.filter(livro =>
@@ -99,12 +114,16 @@ const BibliotecaEstudos = () => {
           livrosFiltrados.length > 0;
         
         return incluirArea 
-          ? [area, { ...data, livros: searchTerm ? livrosFiltrados : data.livros }] as const
+          ? [area, { 
+              ...data, 
+              livros: debouncedSearch ? livrosFiltrados : data.livros,
+              livrosCarrossel: debouncedSearch ? livrosFiltrados.slice(0, 20) : data.livrosCarrossel
+            }] as const
           : null;
       })
-      .filter((item): item is [string, typeof areaGroups[string]] => item !== null)
+      .filter((item): item is [string, typeof areaGroupsWithLimit[string]] => item !== null)
       .sort(([a], [b]) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
-  }, [areaGroups, searchTerm]);
+  }, [areaGroupsWithLimit, debouncedSearch]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-[50vh]">
@@ -235,7 +254,8 @@ const BibliotecaEstudos = () => {
               <AreaLivrosCarousel
                 key={area}
                 area={area}
-                livros={data.livros}
+                livros={debouncedSearch ? data.livros : data.livrosCarrossel}
+                totalLivros={data.livros.length}
                 onVerTodos={(area) => setSelectedArea(area)}
                 onLivroClick={(id) => navigate(`/biblioteca-estudos/${id}`)}
               />
@@ -243,7 +263,7 @@ const BibliotecaEstudos = () => {
           ) : (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
-                Nenhum resultado encontrado para "{searchTerm}"
+                Nenhum resultado encontrado para "{debouncedSearch}"
               </p>
             </div>
           )}

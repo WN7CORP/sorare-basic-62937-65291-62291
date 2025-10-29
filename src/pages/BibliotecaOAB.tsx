@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/useDebounce";
 interface BibliotecaItem {
   id: number;
   Área: string | null;
@@ -26,6 +27,7 @@ const BibliotecaOAB = () => {
   const navigate = useNavigate();
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   const { data: capa } = useQuery({
     queryKey: ["capa-biblioteca-oab"],
@@ -55,17 +57,20 @@ const BibliotecaOAB = () => {
       });
       if (error) throw error;
       return data as BibliotecaItem[];
-    }
+    },
+    staleTime: 1000 * 60 * 60, // 1 hora
+    gcTime: 1000 * 60 * 60 * 24, // 24 horas
   });
 
-  // Agrupar por área com useMemo
+  // Agrupar por área com useMemo e limitar para carrossel
   const areaGroups = useMemo(() => {
     return items?.reduce((acc, item) => {
       const area = item.Área || "Sem Área";
       if (!acc[area]) {
         acc[area] = {
           capa: item["Capa-area"],
-          livros: []
+          livros: [],
+          livrosCarrossel: []
         };
       }
       acc[area].livros.push(item);
@@ -73,16 +78,31 @@ const BibliotecaOAB = () => {
     }, {} as Record<string, {
       capa: string | null;
       livros: BibliotecaItem[];
+      livrosCarrossel: BibliotecaItem[];
     }>);
   }, [items]);
 
-  // Filtrar áreas e livros com useMemo
+  // Criar versão limitada para carrosséis (performance)
+  const areaGroupsWithLimit = useMemo(() => {
+    if (!areaGroups) return areaGroups;
+    
+    const limited = { ...areaGroups };
+    Object.keys(limited).forEach(area => {
+      limited[area] = {
+        ...limited[area],
+        livrosCarrossel: limited[area].livros.slice(0, 20) // Apenas primeiros 20
+      };
+    });
+    return limited;
+  }, [areaGroups]);
+
+  // Filtrar áreas e livros com useMemo (usando debounced search)
   const areasFiltradas = useMemo(() => {
-    if (!areaGroups) return [];
+    if (!areaGroupsWithLimit) return [];
     
-    const searchLower = searchTerm.toLowerCase();
+    const searchLower = debouncedSearch.toLowerCase();
     
-    return Object.entries(areaGroups)
+    return Object.entries(areaGroupsWithLimit)
       .map(([area, data]) => {
         const livrosFiltrados = data.livros.filter(livro =>
           (livro.Tema?.toLowerCase() || '').includes(searchLower)
@@ -93,12 +113,16 @@ const BibliotecaOAB = () => {
           livrosFiltrados.length > 0;
         
         return incluirArea 
-          ? [area, { ...data, livros: searchTerm ? livrosFiltrados : data.livros }] as const
+          ? [area, { 
+              ...data, 
+              livros: debouncedSearch ? livrosFiltrados : data.livros,
+              livrosCarrossel: debouncedSearch ? livrosFiltrados.slice(0, 20) : data.livrosCarrossel
+            }] as const
           : null;
       })
-      .filter((item): item is [string, typeof areaGroups[string]] => item !== null)
+      .filter((item): item is [string, typeof areaGroupsWithLimit[string]] => item !== null)
       .sort(([a], [b]) => a.localeCompare(b, 'pt-BR'));
-  }, [areaGroups, searchTerm]);
+  }, [areaGroupsWithLimit, debouncedSearch]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-[50vh]">
@@ -184,11 +208,18 @@ const BibliotecaOAB = () => {
         <div className="space-y-8">
           {areasFiltradas.length > 0 ? (
             areasFiltradas.map(([area, data]) => (
-              <AreaLivrosCarousel key={area} area={area} livros={data.livros} onVerTodos={(area) => setSelectedArea(area)} onLivroClick={(id) => navigate(`/biblioteca-oab/${id}`)} />
+              <AreaLivrosCarousel 
+                key={area} 
+                area={area} 
+                livros={debouncedSearch ? data.livros : data.livrosCarrossel}
+                totalLivros={data.livros.length}
+                onVerTodos={(area) => setSelectedArea(area)} 
+                onLivroClick={(id) => navigate(`/biblioteca-oab/${id}`)} 
+              />
             ))
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Nenhum resultado encontrado para "{searchTerm}"</p>
+              <p className="text-muted-foreground">Nenhum resultado encontrado para "{debouncedSearch}"</p>
             </div>
           )}
         </div>

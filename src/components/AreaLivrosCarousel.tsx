@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { memo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { Button } from "@/components/ui/button";
 import { LivroCarouselCard } from "@/components/LivroCarouselCard";
@@ -13,13 +13,15 @@ interface BibliotecaItem {
 interface AreaLivrosCarouselProps {
   area: string;
   livros: BibliotecaItem[];
+  totalLivros: number;
   onVerTodos: (area: string) => void;
   onLivroClick: (id: number) => void;
 }
 
-export const AreaLivrosCarousel = ({
+export const AreaLivrosCarousel = memo(({
   area,
   livros,
+  totalLivros,
   onVerTodos,
   onLivroClick,
 }: AreaLivrosCarouselProps) => {
@@ -27,15 +29,23 @@ export const AreaLivrosCarousel = ({
     align: "start",
     containScroll: "trimSnaps",
     dragFree: true,
+    skipSnaps: true,
   });
 
   return (
     <div className="space-y-3">
       {/* Header with area name and "Ver Todos" button */}
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-lg md:text-xl font-bold text-foreground">
-          {area}
-        </h2>
+        <div>
+          <h2 className="text-lg md:text-xl font-bold text-foreground">
+            {area}
+          </h2>
+          {livros.length < totalLivros && (
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Mostrando {livros.length} de {totalLivros} livros
+            </p>
+          )}
+        </div>
         <Button
           variant="secondary"
           onClick={() => onVerTodos(area)}
@@ -62,4 +72,12 @@ export const AreaLivrosCarousel = ({
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison para evitar re-renders desnecessários
+  return (
+    prevProps.area === nextProps.area &&
+    prevProps.livros.length === nextProps.livros.length &&
+    prevProps.totalLivros === nextProps.totalLivros &&
+    prevProps.livros[0]?.id === nextProps.livros[0]?.id
+  );
+});
