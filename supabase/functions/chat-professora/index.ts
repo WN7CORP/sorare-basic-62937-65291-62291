@@ -412,7 +412,10 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
     const encoder = new TextEncoder();
     const systemPromptData = encoder.encode(systemPrompt);
 
-    const apiKey = Math.random() < 0.5 ? DIREITO_PREMIUM_API_KEY : DIREITO_PREMIUM_API_KEY_RESERVA;
+    // Usar chave reserva apenas se existir, caso contrário usar a principal
+    const apiKey = (DIREITO_PREMIUM_API_KEY_RESERVA && Math.random() < 0.5) 
+      ? DIREITO_PREMIUM_API_KEY_RESERVA 
+      : DIREITO_PREMIUM_API_KEY;
 
     // Preparar mensagens no formato do Gemini
     const geminiContents: any[] = [];
