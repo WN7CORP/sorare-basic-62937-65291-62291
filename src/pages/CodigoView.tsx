@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Search, MessageSquare, GraduationCap, Lightbulb, BookOpen, Bookmark, Plus, Minus, ArrowUp, BookMarked, FileQuestion } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/fetchAllRows";
 import { Skeleton } from "@/components/ui/skeleton";
 import InlineAudioButton from "@/components/InlineAudioButton";
 import AudioCommentButton from "@/components/AudioCommentButton";
@@ -153,19 +154,8 @@ const CodigoView = () => {
         return [];
       }
 
-      const {
-        data,
-        error
-      } = await supabase.from(tableName as any).select("*").order("id", {
-        ascending: true
-      });
-      
-      if (error) {
-        console.error("Erro ao buscar artigos:", error);
-        throw error;
-      }
-      
-      return (data || []) as any as Article[];
+      const data = await fetchAllRows<Article>(tableName, "id");
+      return data as any as Article[];
     },
     staleTime: 1000 * 60 * 30,
     // Cache válido por 30 minutos

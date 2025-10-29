@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Search, MessageSquare, GraduationCap, Lightbulb, BookOpen, Bookmark, Plus, Minus, ArrowUp, BookMarked, FileQuestion, ChevronDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/fetchAllRows";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -106,17 +107,8 @@ const Constituicao = () => {
   } = useQuery({
     queryKey: ['constituicao-articles'],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from("CF - Constituição Federal").select("*").order("id", {
-        ascending: true
-      });
-      if (error) {
-        console.error("Erro ao buscar artigos:", error);
-        throw error;
-      }
-      return data || [];
+      const data = await fetchAllRows<Article>("CF - Constituição Federal", "id");
+      return data as any[];
     },
     staleTime: 1000 * 60 * 30,
     // Cache válido por 30 minutos
