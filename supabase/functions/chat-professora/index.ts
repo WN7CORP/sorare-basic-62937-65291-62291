@@ -1,10 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, accept',
 };
 
 serve(async (request) => {
@@ -14,12 +13,22 @@ serve(async (request) => {
 
   try {
     const { messages, files, mode, extractedText, deepMode = false, responseLevel = 'complete' }: any = await request.json();
-    const DIREITO_PREMIUM_API_KEY = Deno.env.get('DIREITO_PREMIUM_API_KEY');
-    const DIREITO_PREMIUM_API_KEY_RESERVA = Deno.env.get('DIREITO_PREMIUM_API_KEY_RESERVA');
+    console.log('🎓 Chat Professora - Mensagens recebidas:', messages?.length);
+    
+    const DIREITO_PREMIUM_API_KEY = Deno.env.get('DIREITO_PREMIUM_API_KEY') || 
+                                     Deno.env.get('DIREITO_PREMIUM_API_KEY_RESERVA');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
+    if (!DIREITO_PREMIUM_API_KEY) {
+      console.error('❌ DIREITO_PREMIUM_API_KEY não configurada');
+      return new Response(
+        JSON.stringify({ error: 'Chave API não configurada. Configure DIREITO_PREMIUM_API_KEY nos secrets do Supabase.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    console.log('✅ Usando Gemini 2.0 Flash com DIREITO_PREMIUM_API_KEY');
 
     const supabaseClient = createClient(
       SUPABASE_URL!,
@@ -33,7 +42,7 @@ serve(async (request) => {
 
     // Função para detectar artigos
     async function detectArtigos(text: string) {
-      const regex = /(Art\.\s?\d+(\-\d+)?[A-Z]?(\,?\s?§\s?\d+)?(\,?\s?Inciso\s?[IVXLCDM]+)?(\,?\s?Parágrafo\s?\d+)?(\,?\s?nº\s?\d+)?)\s([\s\S]*?)(\.|;|\n)/gmi;
+      const regex = /(Art\.\s?\d+(\-\d+)?[A-Z]?(\,?\s?§\s?\d+)?(\,?\s?Inciso\s?[IVXLCDM]+)?(\,?\s?Parágrafo\s?\d+)?(\,?\s?nº\s?\d+)?)\s([\s\S]*?)(\.|;|\\n)/gmi;
       let matches = [...text.matchAll(regex)];
       let artigos = matches.map(match => {
         return {
@@ -74,6 +83,11 @@ serve(async (request) => {
       cfContext = `\n\nCONTEXTO:\n- O usuário pediu análise aprofundada\n`;
     }
 
+    // Construir o prompt do sistema
+    // Adicionar contexto dos arquivos, se houver
+    // Adicionar contexto customizado, se houver
+
+    
     // Preparar o prompt do sistema baseado no modo e nível de resposta
     let systemPrompt = '';
     
@@ -404,67 +418,173 @@ REGRAS IMPORTANTES:
 ❌ NUNCA deixe de criar comparações quando houver conceitos relacionados
 ❌ NUNCA retorne apenas texto corrido sem estrutura visual
 
-Sua missão é ser uma professora atenciosa que torna o direito acessível e visualmente compreensível.${cfContext || ''}\n${fileAnalysisPrefix}`;
+Sua missão é ser uma professora atenciosa que torna o direito acessível e visualmente compreensível.${cfContext || ''}\
+${fileAnalysisPrefix}`;
     }
 
+    // Converter mensagens para formato Gemini
+    const geminiContents = messages.map((m: any) => ({
+      role: m.role === 'user' ? 'user' : 'model',
+      parts: [{ text: m.content }]
+    }));
 
-    // Validar LOVABLE_API_KEY
-    if (!LOVABLE_API_KEY) {
-      console.error('❌ LOVABLE_API_KEY não configurada!');
-      return new Response(
-        JSON.stringify({ error: 'AI gateway indisponível. Habilite Lovable AI (LOVABLE_API_KEY) nos secrets.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-
-    console.log('✅ Usando Lovable AI Gateway com LOVABLE_API_KEY');
-
-    // Preparar mensagens no formato OpenAI (Lovable AI)
-    const openAIMessages = [
-      { role: "system", content: systemPrompt },
-      ...messages.map((m: any) => ({ role: m.role, content: m.content }))
-    ];
+    // Preparar payload Gemini
+    const geminiPayload = {
+      system_instruction: {
+        parts: [{ text: systemPrompt }]
+      },
+      contents: geminiContents,
+      generationConfig: {
+        temperature: 0.6,
+        topP: 0.9,
+        maxOutputTokens: 2048
+      }
+    };
 
     // Detectar se cliente quer SSE
     const acceptHeader = request.headers.get('Accept') || '';
     const wantsSSE = acceptHeader.includes('text/event-stream');
     
-    const modelName = 'google/gemini-2.5-flash';
-    const gatewayUrl = 'https://ai.gateway.lovable.dev/v1/chat/completions';
-    console.log(`🔄 Chamando Lovable AI Gateway (${modelName})...`);
+    const modelName = 'gemini-2.0-flash';
+    const endpoint = wantsSSE ? 'streamGenerateContent' : 'generateContent';
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:${endpoint}`;
+    
+    console.log(`🔄 Chamando Gemini API (${modelName}, streaming: ${wantsSSE})...`);
     const apiStartTime = Date.now();
     
     if (wantsSSE) {
-      const response = await fetch(gatewayUrl, {
+      // Streaming
+      const response = await fetch(geminiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+          "x-goog-api-key": DIREITO_PREMIUM_API_KEY,
         },
-        body: JSON.stringify({
-          model: modelName,
-          messages: openAIMessages,
-          stream: true,
-        }),
+        body: JSON.stringify(geminiPayload),
       });
 
       if (!response.ok) {
-        const t = await response.text();
-        console.error("❌ Gateway erro:", response.status, t);
-        const status = response.status === 429 || response.status === 402 ? response.status : 500;
-        const msg = response.status === 429
-          ? "Rate limits exceeded, please try again later."
-          : response.status === 402
-          ? "Payment required, please add funds to your Lovable AI workspace."
-          : "AI gateway error";
-        return new Response(JSON.stringify({ error: msg }), {
-          status,
+        const errorText = await response.text();
+        console.error("❌ Gemini API erro:", response.status, errorText);
+        
+        let errorMessage = "Erro ao chamar a API Gemini.";
+        if (response.status === 400 && errorText.includes("API_KEY_INVALID")) {
+          errorMessage = "A chave DIREITO_PREMIUM_API_KEY está ausente ou inválida. Verifique nos secrets.";
+        } else if (response.status === 429) {
+          errorMessage = "Rate limit excedido. Tente novamente em alguns segundos.";
+        }
+        
+        return new Response(JSON.stringify({ error: errorMessage }), {
+          status: response.status,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      console.log("🌊 Encaminhando stream do gateway...");
-      return new Response(response.body, {
+      console.log(`✅ Stream iniciado (latência: ${Date.now() - apiStartTime}ms)`);
+
+      // Ponte: Gemini stream -> SSE OpenAI format
+      const reader = response.body!.getReader();
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+      
+      let chunkCount = 0;
+      let firstTokenTime: number | null = null;
+
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            let buffer = "";
+            
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              
+              buffer += decoder.decode(value, { stream: true });
+              
+              // Processar linha por linha
+              let newlineIndex: number;
+              while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+                let line = buffer.slice(0, newlineIndex);
+                buffer = buffer.slice(newlineIndex + 1);
+                
+                if (line.endsWith("\r")) line = line.slice(0, -1);
+                if (line.trim() === "" || line.startsWith(":")) continue;
+                
+                // Remover prefixo "data: " se existir
+                if (line.startsWith("data: ")) {
+                  line = line.slice(6);
+                }
+                
+                if (line === "[DONE]") continue;
+                
+                try {
+                  const parsed = JSON.parse(line);
+                  
+                  // Extrair texto com múltiplos fallbacks
+                  const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text ||
+                              parsed.text ||
+                              parsed.content?.text ||
+                              parsed.parts?.[0]?.text ||
+                              "";
+                  
+                  if (text) {
+                    if (firstTokenTime === null) {
+                      firstTokenTime = Date.now();
+                      console.log(`🎯 Primeiro token em ${firstTokenTime - apiStartTime}ms`);
+                    }
+                    
+                    chunkCount++;
+                    
+                    // Converter para formato OpenAI SSE
+                    const openAIChunk = {
+                      choices: [{
+                        delta: { content: text },
+                        index: 0,
+                        finish_reason: null
+                      }]
+                    };
+                    
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAIChunk)}\n\n`));
+                  }
+                } catch (e) {
+                  console.warn("⚠️ Erro ao parsear linha:", line.slice(0, 100));
+                }
+              }
+            }
+            
+            // Flush buffer final
+            if (buffer.trim()) {
+              try {
+                const parsed = JSON.parse(buffer.trim());
+                const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                if (text) {
+                  chunkCount++;
+                  const openAIChunk = {
+                    choices: [{
+                      delta: { content: text },
+                      index: 0,
+                      finish_reason: null
+                    }]
+                  };
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAIChunk)}\n\n`));
+                }
+              } catch (e) {
+                console.warn("⚠️ Erro ao processar buffer final");
+              }
+            }
+            
+            // Enviar [DONE]
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            console.log(`✅ Stream concluído: ${chunkCount} chunks, tempo total: ${Date.now() - apiStartTime}ms`);
+            controller.close();
+          } catch (error) {
+            console.error("❌ Erro no stream:", error);
+            controller.error(error);
+          }
+        }
+      });
+
+      return new Response(stream, {
         headers: {
           ...corsHeaders,
           "Content-Type": "text/event-stream",
@@ -475,43 +595,44 @@ Sua missão é ser uma professora atenciosa que torna o direito acessível e vis
       });
     }
 
-    // Non streaming
-    const response = await fetch(gatewayUrl, {
+    // Non-streaming
+    const response = await fetch(geminiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "x-goog-api-key": DIREITO_PREMIUM_API_KEY,
       },
-      body: JSON.stringify({
-        model: modelName,
-        messages: openAIMessages,
-        stream: false,
-      }),
+      body: JSON.stringify(geminiPayload),
     });
 
     if (!response.ok) {
-      const t = await response.text();
-      console.error("❌ Gateway erro:", response.status, t);
-      const status = response.status === 429 || response.status === 402 ? response.status : 500;
-      const msg = response.status === 429
-        ? "Rate limits exceeded, please try again later."
-        : response.status === 402
-        ? "Payment required, please add funds to your Lovable AI workspace."
-        : "AI gateway error";
-      return new Response(JSON.stringify({ error: msg }), {
-        status,
+      const errorText = await response.text();
+      console.error("❌ Gemini API erro:", response.status, errorText);
+      
+      let errorMessage = "Erro ao chamar a API Gemini.";
+      if (response.status === 400 && errorText.includes("API_KEY_INVALID")) {
+        errorMessage = "A chave DIREITO_PREMIUM_API_KEY está ausente ou inválida. Verifique nos secrets.";
+      } else if (response.status === 429) {
+        errorMessage = "Rate limit excedido. Tente novamente em alguns segundos.";
+      }
+      
+      return new Response(JSON.stringify({ error: errorMessage }), {
+        status: response.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const json = await response.json();
-    const content = json.choices?.[0]?.message?.content || "Desculpe, não consegui gerar uma resposta.";
+    const content = json.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui gerar uma resposta.";
+    
+    console.log(`✅ Resposta completa recebida (${Date.now() - apiStartTime}ms)`);
+    
     return new Response(JSON.stringify({ data: content }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error: any) {
-    console.error('Erro no chat-professora:', error);
+    console.error('❌ Erro no chat-professora:', error);
     return new Response(
       JSON.stringify({ error: error?.message || 'Erro desconhecido' }),
       { 
