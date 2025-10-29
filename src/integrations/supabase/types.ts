@@ -571,6 +571,51 @@ export type Database = {
         }
         Relationships: []
       }
+      cache_leis_recentes: {
+        Row: {
+          ano: string
+          autoridade: string | null
+          codigo_relacionado: string | null
+          data_publicacao: string | null
+          ementa: string | null
+          id_norma: string
+          link_pdf: string | null
+          link_texto_integral: string | null
+          numero: string
+          tipo: string
+          titulo_gerado_ia: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ano: string
+          autoridade?: string | null
+          codigo_relacionado?: string | null
+          data_publicacao?: string | null
+          ementa?: string | null
+          id_norma: string
+          link_pdf?: string | null
+          link_texto_integral?: string | null
+          numero: string
+          tipo: string
+          titulo_gerado_ia?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ano?: string
+          autoridade?: string | null
+          codigo_relacionado?: string | null
+          data_publicacao?: string | null
+          ementa?: string | null
+          id_norma?: string
+          link_pdf?: string | null
+          link_texto_integral?: string | null
+          numero?: string
+          tipo?: string
+          titulo_gerado_ia?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       cache_pesquisas: {
         Row: {
           created_at: string

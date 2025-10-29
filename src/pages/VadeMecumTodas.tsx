@@ -6,12 +6,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import VadeMecumInfoModal from "@/components/VadeMecumInfoModal";
 import ProposicoesRecentesCarousel from "@/components/ProposicoesRecentesCarousel";
+import { VadeMecumTabs } from "@/components/VadeMecumTabs";
+import LeisRecentesLista from "@/components/LeisRecentesLista";
 
 const VadeMecumTodas = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [activeTab, setActiveTab] = useState("legislacao");
 
   const categories = [
     {
@@ -58,8 +61,8 @@ const VadeMecumTodas = () => {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6 pb-24">
-      <div className="space-y-4">
+    <div className="pb-24">
+      <div className="px-4 py-6 space-y-4">
         <h1 className="text-2xl font-bold text-foreground animate-fade-in">Vade Mecum Elite</h1>
         
         {/* Caixa de Pesquisa - Só aparece quando clicada */}
@@ -97,8 +100,14 @@ const VadeMecumTodas = () => {
           </form>
         )}
       </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+      {/* Tabs de navegação */}
+      <VadeMecumTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Conteúdo baseado na tab ativa */}
+      {activeTab === "legislacao" ? (
+        <div className="px-4 space-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {categories.map((category, index) => {
           const Icon = category.icon;
           return (
@@ -125,13 +134,13 @@ const VadeMecumTodas = () => {
         })}
       </div>
 
-      {/* Projetos de Lei Recentes - Grid 2 por linha */}
-      <div className="animate-fade-in" style={{ animationDelay: '0.4s', animationFillMode: 'backwards' }}>
-        <ProposicoesRecentesCarousel />
-      </div>
+          {/* Projetos de Lei Recentes */}
+          <div className="animate-fade-in" style={{ animationDelay: '0.4s', animationFillMode: 'backwards' }}>
+            <ProposicoesRecentesCarousel />
+          </div>
 
-      {/* Seção Poder Legislativo */}
-      <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.5s', animationFillMode: 'backwards' }}>
+          {/* Seção Poder Legislativo */}
+          <div className="space-y-4 animate-fade-in" style={{ animationDelay: '0.5s', animationFillMode: 'backwards' }}>
         <h2 className="text-xl font-bold text-foreground">Poder Legislativo</h2>
         
         <div className="grid grid-cols-2 gap-4">
@@ -166,11 +175,11 @@ const VadeMecumTodas = () => {
               Deputados e votações
             </p>
           </button>
+          </div>
         </div>
-      </div>
 
-      {/* Card "Sobre o Vade Mecum" - Movido para baixo */}
-      <Card className="bg-accent/5 border-accent/20">
+        {/* Card "Sobre o Vade Mecum" */}
+        <Card className="bg-accent/5 border-accent/20">
         <CardContent className="p-6">
           <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
             <Scale className="w-5 h-5 text-accent" />
@@ -187,8 +196,14 @@ const VadeMecumTodas = () => {
             <Info className="w-4 h-4" />
             Ver mais
           </Button>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        </div>
+      ) : (
+        <div className="px-4 py-6">
+          <LeisRecentesLista />
+        </div>
+      )}
 
       <VadeMecumInfoModal 
         isOpen={isInfoModalOpen} 
